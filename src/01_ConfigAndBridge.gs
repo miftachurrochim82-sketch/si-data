@@ -247,6 +247,16 @@ function isRefSheet_(name) {
   return isSimpegSheet_(n);
 }
 var isReferenceSheet_ = isRefSheet_; // alias untuk kompatibilitas 99_TestSuite lama
+function canonicalSimpegSheet_(name) {
+  var n = String(name || '').trim();
+  var upper = n.toUpperCase();
+  if (upper === 'PEGAWAI' || upper === 'JABATAN' || upper === 'UNIT_KERJA') return upper;
+  if (upper === 'M_PEGAWAI') return 'PEGAWAI';
+  if (upper === 'M_JABATAN') return 'JABATAN';
+  if (upper === 'M_UNIT_KERJA') return 'UNIT_KERJA';
+  return null;
+}
+var getSimpegCanonical_ = canonicalSimpegSheet_; // alias
 
 
 // ==================== §4 NORMALISASI DOMAIN SIMPEG ====================
