@@ -183,155 +183,52 @@ var PLATFORM_API_URL = CoreLib.getEnvProperty('PLATFORM_API_URL', appProps_())
 // v2.11.0: 5 master + 5 tabel = 10 sheet bisnis (baseline, fleksibel).
 
 var LOCAL_SHEETS = {
-  // Master (5) — tiap sheet = 1 dimensi laporan
-  M_KATEGORI: 'M_KATEGORI',
-  M_JENIS:    'M_JENIS',
-  M_PERIODE:  'M_PERIODE',
-  M_SATUAN:   'M_SATUAN',
-  M_LOKASI:   'M_LOKASI',
-  // Tabel (5) — transaksi inti
+  // Master (5) — Satu Data tematik
+  M_KLASIFIKASI: 'M_KLASIFIKASI',
+  M_PEJABAT:     'M_PEJABAT',
+  M_TEMPLATE:    'M_TEMPLATE',
+  M_PERIODE:     'M_PERIODE',
+  M_SATUAN:      'M_SATUAN',
+  // Tabel (5) — inti Satu Data
   T_UTAMA:         'T_UTAMA',
   T_ITEM:          'T_ITEM',
   T_LAMPIRAN:      'T_LAMPIRAN',
-  T_APPROVAL:      'T_APPROVAL',
-  T_TINDAK_LANJUT: 'T_TINDAK_LANJUT'
+  T_TINDAK_LANJUT: 'T_TINDAK_LANJUT',
+  T_LOGBOOK:       'T_LOGBOOK'
 };
 
-// Prefix ID per-sheet (dipakai localPreSaveHook_ + CoreLib.genUniqueCode).
-// [SESUAIKAN] Boleh diubah sesuai singkatan Anda.
+// Prefix ID per-sheet (dipakai localPreSaveHook_ P1)
 var LOCAL_ID_PREFIX_ = {
-  'M_KATEGORI':      'kat',
-  'M_JENIS':         'jen',
-  'M_PERIODE':       'per',
-  'M_SATUAN':        'sat',
-  'M_LOKASI':        'lok',
-  'T_UTAMA':         'utm',
-  'T_ITEM':          'itm',
-  'T_LAMPIRAN':      'lmp',
-  'T_APPROVAL':      'apr',
-  'T_TINDAK_LANJUT': 'rtl'
+  'M_KLASIFIKASI':  'kls',
+  'M_PEJABAT':      'pjb',
+  'M_TEMPLATE':     'tpl',
+  'M_PERIODE':      'prd',
+  'M_SATUAN':       'sat',
+  'T_UTAMA':        'utm',
+  'T_ITEM':         'itm',
+  'T_LAMPIRAN':     'lmp',
+  'T_TINDAK_LANJUT':'rtl',
+  'T_LOGBOOK':      'log'
 };
 
-// Alias nama sheet SIMPEG → kanonik (dibaca dari MASTER via CoreLib)
+// Alias SIMPEG
 var SIMPEG_SHEET_ALIAS_ = {
   'PEGAWAI': 'PEGAWAI', 'M_PEGAWAI': 'PEGAWAI', 'pegawai': 'PEGAWAI',
-  'UNIT_KERJA': 'UNIT_KERJA', 'M_UNIT_KERJA': 'UNIT_KERJA', 'unit_kerja': 'UNIT_KERJA', 'units': 'UNIT_KERJA',
-  'JABATAN': 'JABATAN', 'M_JABATAN': 'JABATAN', 'jabatan': 'JABATAN'
+  'JABATAN': 'JABATAN', 'M_JABATAN': 'JABATAN', 'jabatan': 'JABATAN',
+  'UNIT_KERJA': 'UNIT_KERJA', 'M_UNIT_KERJA': 'UNIT_KERJA', 'unit_kerja': 'UNIT_KERJA'
 };
 
-function canonicalSimpegSheet_(sheetName) {
-  var s = String(sheetName || '').trim();
-  if (SIMPEG_SHEET_ALIAS_[s]) return SIMPEG_SHEET_ALIAS_[s];
-  var u = s.toUpperCase();
-  if (SIMPEG_SHEET_ALIAS_[u]) return SIMPEG_SHEET_ALIAS_[u];
-  return null;
-}
-
-function isSimpegSheet_(sheetName) {
-  return canonicalSimpegSheet_(sheetName) !== null;
-}
-
-// Sheet referensi READ-ONLY — HANYA master SIMPEG (PEGAWAI/UNIT_KERJA/JABATAN).
-// (Warisan fix K1 v2.10.1, tetap berlaku di v2.11.0): sheet lokal ber-prefix
-// M_ BUKAN referensi — mereka harus tetap bisa ditulis.
-function isRefSheet_(name) {
-  var n = String(name || '').trim();
-  if (!n) return false;
-  var upper = n.toUpperCase();
-  // Sheet lokal (terdaftar di LOCAL_SHEETS) → boleh ditulis
-  if (LOCAL_SHEETS[n] || LOCAL_SHEETS[upper]) return false;
-  // Hanya master SIMPEG yang read-only
-  return isSimpegSheet_(n);
-}
-
-// ==================== §3b HEADER MAP ====================
-// Header lengkap semua sheet bisnis + ZZ_TEST_CRUD + 3 SIMPEG.
-//
-// ⚠️ Kolom audit ('created_at','updated_at','created_by','updated_by','deleted_at')
-// WAJIB ada di setiap sheet — dipakai CoreLib.
-//
-// [SESUAIKAN] Field bisnis per sheet — bebas diubah sesuai kebutuhan.
-//             Yang penting: 'id' selalu kolom pertama.
-//
-// OPSIONAL (v2.11.0 tidak membuat otomatis — salin bila app membutuhkannya):
-//   T_JADWAL:  ['id','utama_id','judul','tanggal_mulai','tanggal_selesai',
-//               'lokasi','pegawai_id','status','keterangan', + 5 audit]
-//   T_LOGBOOK: ['id','utama_id','tanggal','pegawai_id','aksi','catatan_sebelum',
-//               'catatan_sesudah', + 5 audit]
-
 var ALL_SHEET_HEADERS = {
-
-  // ==================== MASTER (5 DIMENSI) ====================
-  M_KATEGORI: [
-    'id', 'kode', 'nama', 'parent_id', 'deskripsi', 'urutan', 'status_aktif',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  M_JENIS: [
-    'id', 'kode', 'nama', 'kategori_id', 'periode', 'deskripsi', 'urutan', 'status_aktif',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  M_PERIODE: [
-    'id', 'kode', 'label', 'tahun', 'bulan', 'status_aktif',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  M_SATUAN: [
-    'id', 'kode', 'nama', 'simbol', 'keterangan', 'status_aktif',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  M_LOKASI: [
-    'id', 'kode', 'nama', 'alamat', 'keterangan', 'status_aktif',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-
-  // ==================== TABEL (5 TRANSASKSI INTI) ====================
-  T_UTAMA: [
-    'id', 'kode', 'judul', 'deskripsi', 'pegawai_id', 'kategori_id', 'jenis_id',
-    'lokasi_id', 'periode_id', 'satuan_id', 'tanggal', 'jumlah', 'nilai', 'status', 'catatan',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  T_ITEM: [
-    'id', 'utama_id', 'nama_item', 'kode_item', 'jumlah', 'satuan_id', 'nilai', 'catatan',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  T_LAMPIRAN: [
-    'id', 'utama_id', 'jenis_lampiran', 'nama_file', 'url', 'keterangan',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  T_APPROVAL: [
-    'id', 'utama_id', 'urutan', 'role_approver', 'approver_id', 'status',
-    'catatan', 'tanggal_approve',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  T_TINDAK_LANJUT: [
-    'id', 'sumber_evaluasi', 'judul_rtl', 'deskripsi', 'assigned_to', 'due_date',
-    'status_rtl', 'progress_pct', 'dokumen_terkait', 'catatan',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-
-  // ==================== INFRA UJI (dipakai CoreLib.runCoreTests) ====================
-  ZZ_TEST_CRUD: ['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru'],
-
-  // ==================== SIMPEG (read-only — dokumentasi skema master) ====================
-  PEGAWAI: [
-    'pegawai_id', 'nip', 'nik', 'nama', 'gelar_depan', 'gelar_belakang',
-    'jenis_kelamin', 'tanggal_lahir', 'pangkat_golongan', 'status_kepegawaian',
-    'pendidikan_terakhir', 'email', 'no_hp', 'alamat', 'foto_url',
-    'unit_id', 'jabatan_id', 'atasan_id', 'role', 'status',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  UNIT_KERJA: [
-    'unit_id', 'kode_unit', 'nama_unit', 'kategori_unit', 'parent_unit_id', 'lokasi',
-    'telepon_unit', 'kepala_nip', 'kepala_hp', 'kepala_unit_id', 'jenis_unit',
-    'status_aktif', 'keterangan', 'status',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ],
-  JABATAN: [
-    'jabatan_id', 'kode_jabatan', 'nama_jabatan', 'jenis_jabatan', 'rumpun_jabatan',
-    'jenjang_jabatan', 'kelas_jabatan', 'unit_id', 'status_jabatan', 'plt_pegawai_id',
-    'tanggal_mulai_jabatan', 'tanggal_selesai_jabatan', 'target_jp_tahunan',
-    'status_aktif', 'keterangan', 'status',
-    'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'
-  ]
+  M_KLASIFIKASI: ['id', 'kode', 'nama_tematik', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_PEJABAT:     ['id', 'nama', 'nip', 'bidang', 'jabatan', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_TEMPLATE:    ['id', 'kode_tematik', 'nama_template', 'format', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_PERIODE:     ['id', 'tahun', 'bulan', 'label', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_SATUAN:      ['id', 'kode', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_UTAMA:       ['id', 'pegawai_id', 'tanggal', 'kode_tematik', 'klasifikasi_id', 'pejabat_id', 'uraian', 'nilai', 'satuan_id', 'periode', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_ITEM:        ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_LAMPIRAN:    ['id', 'utama_id', 'file_url', 'nama_file', 'tipe', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_TINDAK_LANJUT:['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_LOGBOOK:     ['id', 'utama_id', 'aksi', 'actor', 'waktu', 'detail', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
 };
 
 // ==================== §4 NORMALISASI DOMAIN SIMPEG ====================
