@@ -15,7 +15,7 @@ var StarterKitMixin = {
     getMyScope: function(){ try{ return (window.AppCore && AppCore.getMyScope) ? AppCore.getMyScope() : (this.filterScope || 'all'); }catch(e){ return this.filterScope || 'all'; } },
     setMyScope: function(v){
       this.filterScope = v;
-      try{ if(window.AppCore && AppCore.setMyScope) AppCore.setMyScope(v); else localStorage.setItem('sicontoh_scope', v); }catch(e){}
+      try{ if(window.AppCore && AppCore.setMyScope) AppCore.setMyScope(v); else localStorage.setItem('sidata_scope', v); }catch(e){}
       this.$forceUpdate();
       if(this.loadUtama) this.loadUtama(1);
       if(this.loadAll) this.loadAll();
@@ -48,17 +48,17 @@ var StarterKitMixin = {
 
 var app = AppCore.create({
 
-  appCode: 'SI-CONTOH',
-  appTitle: 'SI-CONTOH v2.12.0',
+  appCode: 'SIDATA',
+  appTitle: 'SI-DATA v2.11.0',
   initialPage: 'dashboard',
-  storagePrefix: 'sicontoh',
+  storagePrefix: 'sidata',
   platformUrl: 'https://script.google.com/macros/s/AKfycbwh_OUVqmxLcuF81FHmPZtT33Wrm8Ce9Da1SQ3hfkSr7gM5P8ofyAlHSgW40mq3eo-PoQ/exec',
 
   brand: {
-    title: 'SI-CONTOH',
-    subtitle: 'Starter Kit v2.12.0',
+    title: 'SI-DATA',
+    subtitle: 'Satu Data v2.11.0',
     logoIcon: 'fa-solid fa-cube',
-    logoChar: 'SC',
+    logoChar: 'SD',
     logoSvg: ''
   },
 
