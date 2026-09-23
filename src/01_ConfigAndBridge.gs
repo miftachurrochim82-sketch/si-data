@@ -228,7 +228,8 @@ var ALL_SHEET_HEADERS = {
   T_ITEM:        ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LAMPIRAN:    ['id', 'utama_id', 'file_url', 'nama_file', 'tipe', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_TINDAK_LANJUT:['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_LOGBOOK:     ['id', 'utama_id', 'aksi', 'actor', 'waktu', 'detail', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
+  T_LOGBOOK:     ['id', 'utama_id', 'aksi', 'actor', 'waktu', 'detail', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  ZZ_TEST_CRUD:['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru']
 };
 
 // ==================== §3b SHEET REF CHECK (FIX K1) ====================
