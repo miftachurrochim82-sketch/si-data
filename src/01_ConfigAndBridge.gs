@@ -231,6 +231,24 @@ var ALL_SHEET_HEADERS = {
   T_LOGBOOK:     ['id', 'utama_id', 'aksi', 'actor', 'waktu', 'detail', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at']
 };
 
+// ==================== §3b SHEET REF CHECK (FIX K1) ====================
+function isSimpegSheet_(name) {
+  var n = String(name || '').trim();
+  var upper = n.toUpperCase();
+  return upper === 'PEGAWAI' || upper === 'JABATAN' || upper === 'UNIT_KERJA' ||
+         upper === 'M_PEGAWAI' || upper === 'M_JABATAN' || upper === 'M_UNIT_KERJA';
+}
+function isRefSheet_(name) {
+  var n = String(name || '').trim();
+  var upper = n.toUpperCase();
+  // Sheet lokal (terdaftar di LOCAL_SHEETS) → bukan ref
+  if (LOCAL_SHEETS[n] || LOCAL_SHEETS[upper]) return false;
+  // Hanya master SIMPEG yang read-only
+  return isSimpegSheet_(n);
+}
+var isReferenceSheet_ = isRefSheet_; // alias untuk kompatibilitas 99_TestSuite lama
+
+
 // ==================== §4 NORMALISASI DOMAIN SIMPEG ====================
 
 function normalizeEntityId_(id) {
