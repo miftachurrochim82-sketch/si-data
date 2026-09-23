@@ -74,6 +74,28 @@ function seedSatuData() {
       });
     }
   } catch(e) {}
+  // --- 4b. Master starter-kit untuk kompatibilitas piramida (M_KATEGORI/JENIS/LOKASI) ---
+  try {
+    if (!findUnique_('M_KATEGORI', 'kode', 'TRANTIBUM')) {
+      [{kode:'TRANTIBUM', nama:'Ketertiban Umum', parent_id:''}, {kode:'GAKDA', nama:'Penegakan Perda', parent_id:''}, {kode:'DAMKAR', nama:'Damkar & Penyelamatan', parent_id:''}].forEach(function(r){
+        if(!findUnique_('M_KATEGORI','kode',r.kode)){ writeRecordNoLock_('M_KATEGORI', { id: makeId_('kat'), kode: r.kode, nama: r.nama, parent_id:'', urutan:99, status_aktif:'true' }, false, actor); results.masters++; }
+      });
+    }
+  } catch(e){}
+  try {
+    if (!findUnique_('M_JENIS', 'kode', 'PATROLI')) {
+      [{kode:'PATROLI', nama:'Patroli Rutin', kategori_id:''}, {kode:'SIDANG', nama:'Sidang Tipiring'}, {kode:'KEBAKARAN', nama:'Kebakaran'}].forEach(function(r){
+        if(!findUnique_('M_JENIS','kode',r.kode)){ writeRecordNoLock_('M_JENIS', { id: makeId_('jen'), kode: r.kode, nama: r.nama, kategori_id:'', periode:'Fleksibel', status_aktif:'true' }, false, actor); results.masters++; }
+      });
+    }
+  } catch(e){}
+  try {
+    if (!findUnique_('M_LOKASI', 'kode', 'TRG')) {
+      [{kode:'TRG', nama:'Kec. Trenggalek'}, {kode:'PGU', nama:'Kec. Panggul'}, {kode:'WAT', nama:'Kec. Watulimo'}].forEach(function(r){
+        if(!findUnique_('M_LOKASI','kode',r.kode)){ writeRecordNoLock_('M_LOKASI', { id: makeId_('lok'), kode: r.kode, nama: r.nama, status_aktif:'true' }, false, actor); results.masters++; }
+      });
+    }
+  } catch(e){}
 
   // --- 5. T_UTAMA: 15 baris contoh (5 per bidang) ---
   // Ambil id referensi untuk klasifikasi & pejabat (pakai yang baru di-seed)
@@ -119,6 +141,13 @@ function seedSatuData() {
         for (var i=0;i<all.length;i++) if (String(all[i].uraian)===r.uraian) { exists=true; break; }
       } catch(e) {}
       if (exists) return;
+      // Map tematik ke starter-kit untuk piramida: kategori_id~klasifikasi, jenis_id/lokasi_id demo
+      var _katId = r.klasifikasi_id || '';
+      try { var _allKat = getSheetDataCached_('M_KATEGORI')||[]; for(var _k=0; _k<_allKat.length; _k++){ if(String(_allKat[_k].kode)===String(r.kode_tematik)){ _katId = _allKat[_k].id; break; } } } catch(e){}
+      var _jenisId = '';
+      try { var _allJenis = getSheetDataCached_('M_JENIS')||[]; if(_allJenis.length) _jenisId = _allJenis[0].id; } catch(e){}
+      var _lokasiId = '';
+      try { var _allLok = getSheetDataCached_('M_LOKASI')||[]; if(_allLok.length) _lokasiId = _allLok[idx % _allLok.length].id; } catch(e){}
       writeRecordNoLock_('T_UTAMA', {
         id: makeId_('utm'),
         pegawai_id: pegawaiId,
@@ -127,7 +156,13 @@ function seedSatuData() {
         klasifikasi_id: r.klasifikasi_id,
         pejabat_id: '',
         uraian: r.uraian,
+        judul: r.uraian,
+        kategori_id: _katId,
+        jenis_id: _jenisId,
+        lokasi_id: _lokasiId,
+        periode_id: '',
         nilai: r.nilai,
+        jumlah: r.nilai,
         satuan_id: '',
         periode: periodeBulan_(now) || now.slice(0,7),
         status: r.status

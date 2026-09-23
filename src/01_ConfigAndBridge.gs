@@ -160,6 +160,12 @@ function periodeBulan_(tanggalStr){ try{ return CoreLib.periodeBulan(tanggalStr)
 function dalamPeriode_(tgl, start, end){ try{ return CoreLib.dalamPeriode(tgl, start, end); }catch(e){ return false; } }
 function hitungHariKerja_(start, end){ try{ return CoreLib.hitungHariKerja(start, end); }catch(e){ return 0; } }
 function findUnique_(sheet, field, value){ return CoreLib.findUnique(SPREADSHEET_ID, sheet, field, value, ALL_SHEET_HEADERS); }
+function makeId_(prefix){ try{ return CoreLib.makeId(prefix); } catch(e){ return (String(prefix||'id')+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)); } }
+function systemActor_(){ try{ return CoreLib.systemActor ? CoreLib.systemActor() : { id:'system', email:'system@trenggalek.go.id', role:'super' }; } catch(e){ return { id:'system', email:'system@trenggalek.go.id', role:'super' }; } }
+function todayIsoLocal_(){ try{ return CoreLib.todayIsoLocal(); } catch(e){ return Utilities.formatDate(new Date(), 'Asia/Jakarta', 'yyyy-MM-dd'); } }
+function getSheetDataCached_(sheetName){ try{ return getSheetData_(sheetName); } catch(e){ return []; } }
+function invalidateSheetCache_(sheetName){ try{ if(CoreLib.invalidateSheetCache) CoreLib.invalidateSheetCache(SPREADSHEET_ID, sheetName); else if(CoreLib.clearCache) CoreLib.clearCache(); } catch(e){} }
+function writeRecordNoLock_(sheetName, record, isUpdate, actor){ try{ return CoreLib.writeRecordNoLock(SPREADSHEET_ID, sheetName, record, isUpdate, actor, ALL_SHEET_HEADERS, isRefSheet_, 'id'); } catch(e){ throw e; } }
 
 // ==================== §2 PROPERTIES & SPREADSHEET ====================
 // Store MILIK APP (bukan library) — wajib dioper ke CoreLib.getEnvProperty.
@@ -234,7 +240,7 @@ var ALL_SHEET_HEADERS = {
   M_KLASIFIKASI: ['id', 'kode', 'nama_tematik', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   M_PEJABAT:     ['id', 'nama', 'nip', 'bidang', 'jabatan', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   M_TEMPLATE:    ['id', 'kode_tematik', 'nama_template', 'format', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_UTAMA:       ['id', 'pegawai_id', 'tanggal', 'kode_tematik', 'klasifikasi_id', 'pejabat_id', 'uraian', 'nilai', 'satuan_id', 'periode', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_UTAMA:       ['id', 'pegawai_id', 'tanggal', 'judul', 'uraian', 'kode_tematik', 'klasifikasi_id', 'pejabat_id', 'kategori_id', 'jenis_id', 'lokasi_id', 'periode_id', 'nilai', 'jumlah', 'satuan_id', 'periode', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_ITEM:        ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LAMPIRAN:    ['id', 'utama_id', 'file_url', 'nama_file', 'tipe', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_TINDAK_LANJUT:['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
