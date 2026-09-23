@@ -203,6 +203,7 @@ var LOCAL_SHEETS = {
   T_UTAMA:         'T_UTAMA',
   T_ITEM:          'T_ITEM',
   T_LAMPIRAN:      'T_LAMPIRAN',
+  T_APPROVAL:     'T_APPROVAL',
   T_TINDAK_LANJUT: 'T_TINDAK_LANJUT',
   T_LOGBOOK:       'T_LOGBOOK'
 };
@@ -220,11 +221,13 @@ var LOCAL_ID_PREFIX_ = {
   'T_UTAMA':        'utm',
   'T_ITEM':         'itm',
   'T_LAMPIRAN':     'lmp',
+  'T_APPROVAL':    'apr',
   'T_TINDAK_LANJUT':'rtl',
   'T_LOGBOOK':      'log'
 };
 
 // Alias SIMPEG
+var SHEET_ALIAS_ = { 'T_APROVAL': 'T_APPROVAL' };
 var SIMPEG_SHEET_ALIAS_ = {
   'PEGAWAI': 'PEGAWAI', 'M_PEGAWAI': 'PEGAWAI', 'pegawai': 'PEGAWAI',
   'JABATAN': 'JABATAN', 'M_JABATAN': 'JABATAN', 'jabatan': 'JABATAN',
@@ -243,6 +246,7 @@ var ALL_SHEET_HEADERS = {
   T_UTAMA:       ['id', 'pegawai_id', 'tanggal', 'judul', 'uraian', 'kode_tematik', 'klasifikasi_id', 'pejabat_id', 'kategori_id', 'jenis_id', 'lokasi_id', 'periode_id', 'nilai', 'jumlah', 'satuan_id', 'periode', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_ITEM:        ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LAMPIRAN:    ['id', 'utama_id', 'file_url', 'nama_file', 'tipe', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_APPROVAL:    ['id', 'utama_id', 'approver_id', 'status', 'catatan', 'tanggal_approve', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_TINDAK_LANJUT:['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LOGBOOK:     ['id', 'utama_id', 'aksi', 'actor', 'waktu', 'detail', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   ZZ_TEST_CRUD:['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru']
