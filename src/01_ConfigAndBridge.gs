@@ -75,6 +75,8 @@
 // [SESUAIKAN] Kode aplikasi — harus terdaftar di si-platform (sheet applications)
 var APP_CODE  = 'SIDATA';
 var APP_TITLE = 'SI-DATA — Satu Data Satpol PP & Damkar Trenggalek';
+// Satu Data tematik (Permendagri 27/2010): TRANTIBUM | GAKDA | DAMKAR — kode di T_UTAMA.kode_tematik
+var TEMATIK_LIST = ['TRANTIBUM', 'GAKDA', 'DAMKAR']; // 3 bidang Satpol PP & Damkar
 
 // ID spreadsheet MASTER SIMPEG (jangan diubah — PEGAWAI/JABATAN/UNIT_KERJA)
 var DEFAULT_MASTER_SPREADSHEET_ID = '1HvMXmvdtgAUZ9A0-SQHZp9QjnYv1A7Ku_oJIjbT8gT0';

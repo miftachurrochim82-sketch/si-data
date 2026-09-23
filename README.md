@@ -20,6 +20,21 @@ Aplikasi **Satu Data** — admin Satu Data Satpol PP & Damkar Kab. Trenggalek. D
 - **Integrasi** SIMPEG (pegawai/unit/jabatan) + si-platform SSO — semua satelit baca Satu Data yang sama.
 - Skema awal **5 master + 5 tabel** starter-kit = baseline fleksibel — tambah/kurangi sheet sesuai kebutuhan Satu Data (tidak wajib).
 
+### 📜 Sumber Hukum & Data Tematik (Permendagri 27/2010)
+
+> **Dasar:** **Permendagri No. 27 Tahun 2010** tentang Pedoman Penyusunan Laporan Penyelenggaraan Pemerintahan Daerah — menjadi rujukan **Satu Data** Satpol PP & Damkar Trenggalek (definisi, kodefikasi, dan periode pelaporan seragam).
+
+**3 Data Tematik Wajib (sesuai tupoksi Satpol PP & Damkar):**
+
+| # | Bidang Tematik | Contoh Data Satu Data | Periode |
+|---|---|---|---|
+| **1** | **Bidang Ketertiban Umum (Trantibum)** | Patroli rutin, operasi penertiban, pengamanan acara, gangguan trantibum, pembinaan masyarakat | Harian → Bulanan |
+| **2** | **Bidang Penegakan Perda** | Penyelidikan, penyidikan PPNS, penindakan pelanggaran Perda/Perkada, sidang Tipiring, pembinaan pelaku usaha | Harian → Bulanan |
+| **3** | **Bidang Pemadam Kebakaran & Penyelamatan Non-Kebakaran** | Kejadian kebakaran (waktu tanggap, luas, kerugian), penyelamatan (evakuasi, banjir, hewan, pohon tumbang), sarana Damkar | Harian → Bulanan |
+
+- Setiap data tematik punya **kode tematik** (`TRANTIBUM`, `GAKDA`, `DAMKAR`) — dipakai di sheet `T_UTAMA.kode_tematik` untuk filter Laporan/Analisa/Evaluasi.
+- **Piramida Satu Data** memecah 3 bidang ini jadi 12 Laporan → 8 Analisa → 6 Evaluasi → 4 RTL (fokus ke bidang yang gap-nya terbesar).
+
 ---
 
 ## 🏗️ Yang sudah diurus ekosistem (JANGAN bikin sendiri)
