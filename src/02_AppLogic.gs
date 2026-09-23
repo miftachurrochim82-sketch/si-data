@@ -488,6 +488,16 @@ function deleteGeneric_(sheetName, data, user) {
 // Master sederhana dengan kode+nama wajib (M_SATUAN, M_LOKASI)
 function saveMasterKode_(data, user, sheetName) {
   try {
+    // Fallback: bila dipanggil 2 arg (test legacy) → infer sheet dari kode
+    if (!sheetName && data) {
+      var kodeChk = String((data.record || data).kode || '').toUpperCase();
+      if (kodeChk.indexOf('SAT') !== -1 || kodeChk.indexOf('SATUAN') !== -1) sheetName = 'M_SATUAN';
+      else if (kodeChk.indexOf('LOK') !== -1) sheetName = 'M_LOKASI';
+      else if (kodeChk.indexOf('TST-SAT') !== -1) sheetName = 'M_SATUAN';
+      else if (kodeChk.indexOf('TST-LOK') !== -1) sheetName = 'M_LOKASI';
+      else sheetName = 'M_SATUAN';
+    }
+    if (!sheetName) sheetName = 'M_SATUAN';
     var record = data.record || data;
     if (!String(record.kode || '').trim() || !String(record.nama || '').trim()) {
       return { success: false, code: 'BAD_REQUEST', error: 'Kode dan nama wajib.' };

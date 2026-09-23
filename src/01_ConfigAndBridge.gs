@@ -183,12 +183,16 @@ var PLATFORM_API_URL = CoreLib.getEnvProperty('PLATFORM_API_URL', appProps_())
 // v2.11.0: 5 master + 5 tabel = 10 sheet bisnis (baseline, fleksibel).
 
 var LOCAL_SHEETS = {
-  // Master (5) — Satu Data tematik
+  // Master starter-kit 5 dimensi (untuk kompatibilitas test + Satu Data)
+  M_KATEGORI:    'M_KATEGORI',
+  M_JENIS:       'M_JENIS',
+  M_PERIODE:     'M_PERIODE',
+  M_SATUAN:      'M_SATUAN',
+  M_LOKASI:      'M_LOKASI',
+  // Master tematik Satu Data (ekstensi)
   M_KLASIFIKASI: 'M_KLASIFIKASI',
   M_PEJABAT:     'M_PEJABAT',
   M_TEMPLATE:    'M_TEMPLATE',
-  M_PERIODE:     'M_PERIODE',
-  M_SATUAN:      'M_SATUAN',
   // Tabel (5) — inti Satu Data
   T_UTAMA:         'T_UTAMA',
   T_ITEM:          'T_ITEM',
@@ -199,11 +203,14 @@ var LOCAL_SHEETS = {
 
 // Prefix ID per-sheet (dipakai localPreSaveHook_ P1)
 var LOCAL_ID_PREFIX_ = {
+  'M_KATEGORI':     'kat',
+  'M_JENIS':        'jen',
+  'M_PERIODE':      'per',
+  'M_SATUAN':       'sat',
+  'M_LOKASI':       'lok',
   'M_KLASIFIKASI':  'kls',
   'M_PEJABAT':      'pjb',
   'M_TEMPLATE':     'tpl',
-  'M_PERIODE':      'prd',
-  'M_SATUAN':       'sat',
   'T_UTAMA':        'utm',
   'T_ITEM':         'itm',
   'T_LAMPIRAN':     'lmp',
@@ -219,11 +226,14 @@ var SIMPEG_SHEET_ALIAS_ = {
 };
 
 var ALL_SHEET_HEADERS = {
+  M_KATEGORI:    ['id', 'kode', 'nama', 'parent_id', 'urutan', 'status_aktif', 'deskripsi', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_JENIS:       ['id', 'kode', 'nama', 'kategori_id', 'periode', 'status_aktif', 'deskripsi', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_PERIODE:     ['id', 'tahun', 'bulan', 'kode', 'label', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_SATUAN:      ['id', 'kode', 'nama', 'simbol', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_LOKASI:      ['id', 'kode', 'nama', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   M_KLASIFIKASI: ['id', 'kode', 'nama_tematik', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   M_PEJABAT:     ['id', 'nama', 'nip', 'bidang', 'jabatan', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   M_TEMPLATE:    ['id', 'kode_tematik', 'nama_template', 'format', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_PERIODE:     ['id', 'tahun', 'bulan', 'label', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_SATUAN:      ['id', 'kode', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_UTAMA:       ['id', 'pegawai_id', 'tanggal', 'kode_tematik', 'klasifikasi_id', 'pejabat_id', 'uraian', 'nilai', 'satuan_id', 'periode', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_ITEM:        ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LAMPIRAN:    ['id', 'utama_id', 'file_url', 'nama_file', 'tipe', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
