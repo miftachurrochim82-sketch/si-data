@@ -102,6 +102,10 @@ function buildLocalHandlers_() {
   h['get_jabatan_list']   = function () { return getJabatanList_(); };
   h['get_master_satelit'] = function () { return getMasterSatelit_(); };
 
+  // Tema (Satu Data)
+  h['get_theme']  = function (d, u) { return { success: true, data: getThemeConfig_() }; };
+  h['save_theme'] = function (d, u) { try { var css = saveThemeConfig_(d); appProps_().setProperty('THEME_JSON', JSON.stringify(d)); return { success: true, data: getThemeConfig_(), css: css }; } catch(e) { return { success:false, error: e.message }; } };
+
   // Config
   h['get_config']         = function () { return getConfigList_(); };
   h['get_config_list']    = function () { return getConfigList_(); };
