@@ -4,7 +4,7 @@
      Grup 1 Dimensi: L1-L7 (kategori, jenis, lokasi, periode, pegawai, status, satuan)
      Grup 2 Matriks: L8-L12 (jenis×tahun, jenis×lokasi, detail, lampiran, approval)
      ============================================================ -->
-<section v-if="currentPage === 'laporan'" class="space-y-6 animate-fade-in px-3 sm:px-4">
+<section v-if="currentPage === 'laporan'" class="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-6">
 
   <div>
     <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
@@ -29,7 +29,7 @@
   <div v-if="lapLoading && !lapData['kategori'] && !lapData['jenis_periode']" class="card"><app-skeleton type="table"></app-skeleton></div>
 
   <!-- GRUP DIMENSI: 7 laporan grid 2 kolom (tabel kecil) -->
-  <div v-if="!lapLoading && laporanGrupTab==='dimensi'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div v-if="!lapLoading && laporanGrupTab==='dimensi'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
     <!-- L1 Kategori -->
     <div v-if="lapData['kategori']" class="card space-y-4">
@@ -81,13 +81,13 @@
   </div>
 
   <!-- GRUP MATRIKS: 5 laporan grid 2 kolom -->
-  <div v-if="!lapLoading && laporanGrupTab==='matriks'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div v-if="!lapLoading && laporanGrupTab==='matriks'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
     <!-- L8 Jenis x Tahun -->
     <div v-if="lapData['jenis_periode']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-table-cells text-sky-500"></i> L8 — Matriks Jenis × Tahun</h3>
       <div v-if="!(lapData['jenis_periode'].rekap||[]).length" class="text-center py-6 text-xs text-slate-400">Tidak ada data tahun {{ lapData['jenis_periode'].tahun }}</div>
-      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-left py-2 px-2 min-w-[80px]">Tahun</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_periode'].rekap" :key="r.jenis_id + r.tahun"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2 text-center">{{ r.tahun }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-center py-2 px-2 min-w-[80px]">Tahun</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_periode'].rekap" :key="r.jenis_id + r.tahun"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2 text-center">{{ r.tahun }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L9 Jenis x Lokasi -->
@@ -108,7 +108,7 @@
     <!-- L11 Lampiran — lebar penuh -->
     <div v-if="lapData['lampiran']" class="card space-y-4 lg:col-span-2">
       <h3 class="font-bold"><i class="fa-solid fa-paperclip text-sky-500"></i> L11 — Rekap Lampiran</h3>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Transaksi</th><th class="text-left py-2 px-2 min-w-[80px]">Jml</th><th class="text-left py-2 px-2 min-w-[240px]">File</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['lampiran'].rekap" :key="r.kode"><td class="py-2 px-2"><div class="font-bold">{{ r.kode }}</div><div class="text-[10px] text-slate-400">{{ r.judul }}</div></td><td class="py-2 px-2 text-center">{{ r.jml_lampiran }}</td><td class="py-2 px-2 text-slate-400">{{ (r.lampiran||[]).map(x=>x.nama_file).join(', ') || '—' }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Transaksi</th><th class="text-center py-2 px-2 min-w-[80px]">Jml</th><th class="text-left py-2 px-2 min-w-[240px]">File</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['lampiran'].rekap" :key="r.kode"><td class="py-2 px-2"><div class="font-bold">{{ r.kode }}</div><div class="text-[10px] text-slate-400">{{ r.judul }}</div></td><td class="py-2 px-2 text-center">{{ r.jml_lampiran }}</td><td class="py-2 px-2 text-slate-400">{{ (r.lampiran||[]).map(x=>x.nama_file).join(', ') || '—' }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L12 Approval — rekap status + menanti -->
