@@ -4,7 +4,7 @@
      Grup 1 Dimensi: L1-L7 (kategori, jenis, lokasi, periode, pegawai, status, satuan)
      Grup 2 Matriks: L8-L12 (jenis×tahun, jenis×lokasi, detail, lampiran, approval)
      ============================================================ -->
-<section v-if="currentPage === 'laporan'" class="space-y-6 animate-fade-in">
+<section v-if="currentPage === 'laporan'" class="space-y-6 animate-fade-in px-3 sm:px-4">
 
   <div>
     <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
@@ -38,44 +38,44 @@
         <app-stat-card title="Total Data" :value="lapData['kategori'].total" icon="fa-solid fa-sitemap" color="sky" :subtext="lapData['kategori'].tahun"></app-stat-card>
         <app-stat-card title="Kategori" :value="(lapData['kategori'].rekap||[]).length" icon="fa-solid fa-list" color="emerald" subtext="termasuk anak"></app-stat-card>
       </div>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Kategori</th><th class="text-left py-2 px-2 min-w-[100px]">Parent</th><th class="text-right py-2 px-2 min-w-[80px]">Langsung</th><th class="text-right py-2 px-2 min-w-[90px]">Total</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['kategori'].rekap" :key="r.kategori_id"><td class="py-2 px-2">{{ r.kategori_nama }}</td><td class="py-2 px-2 text-slate-400">{{ r.parent_id ? namaKategori_(r.parent_id) : '—' }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td><td class="py-2 px-2 text-right font-bold text-sky-600">{{ r.jml_total }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Kategori</th><th class="text-left py-2 px-2 min-w-[100px]">Parent</th><th class="text-center py-2 px-2 min-w-[80px]">Langsung</th><th class="text-center py-2 px-2 min-w-[90px]">Total</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['kategori'].rekap" :key="r.kategori_id"><td class="py-2 px-2">{{ r.kategori_nama }}</td><td class="py-2 px-2 text-slate-400">{{ r.parent_id ? namaKategori_(r.parent_id) : '—' }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td><td class="py-2 px-2 text-center font-bold text-sky-600">{{ r.jml_total }}</td></tr></tbody></table></div>
     </div>
     <div v-else class="card text-center py-6 text-xs text-slate-400">L1 belum dimuat — klik Tampilkan</div>
 
     <!-- L2 Jenis -->
     <div v-if="lapData['jenis']" class="card space-y-4">
       <div class="flex items-center justify-between"><h3 class="font-bold"><i class="fa-solid fa-tag text-sky-500"></i> L2 — Rekap per Jenis</h3><span class="text-xs text-slate-400">{{ lapData['jenis'].tahun }}</span></div>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Jenis</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th><th class="text-right py-2 px-2 min-w-[100px]">Total Nilai</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis'].rekap" :key="r.jenis_id"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td><td class="py-2 px-2 text-right">{{ r.total_nilai || '—' }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Jenis</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th><th class="text-center py-2 px-2 min-w-[100px]">Total Nilai</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis'].rekap" :key="r.jenis_id"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td><td class="py-2 px-2 text-center">{{ r.total_nilai || '—' }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L3 Lokasi -->
     <div v-if="lapData['lokasi']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-location-dot text-sky-500"></i> L3 — Rekap per Lokasi</h3>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[200px]">Lokasi</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['lokasi'].rekap" :key="r.lokasi_id"><td class="py-2 px-2">{{ r.lokasi_nama }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[200px]">Lokasi</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['lokasi'].rekap" :key="r.lokasi_id"><td class="py-2 px-2">{{ r.lokasi_nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L4 Periode -->
     <div v-if="lapData['periode']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-calendar-days text-sky-500"></i> L4 — Rekap per Periode</h3>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[140px]">Periode</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['periode'].rekap" :key="r.periode"><td class="py-2 px-2">{{ r.periode }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[140px]">Periode</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['periode'].rekap" :key="r.periode"><td class="py-2 px-2">{{ r.periode }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L5 Pegawai -->
     <div v-if="lapData['pegawai']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-user-tie text-sky-500"></i> L5 — Rekap per Pegawai</h3>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Pegawai</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['pegawai'].rekap" :key="r.pegawai_id"><td class="py-2 px-2">{{ r.pegawai_nama }}<div class="font-mono text-[10px] text-slate-400">{{ r.pegawai_id }}</div></td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Pegawai</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['pegawai'].rekap" :key="r.pegawai_id"><td class="py-2 px-2">{{ r.pegawai_nama }}<div class="font-mono text-[10px] text-slate-400">{{ r.pegawai_id }}</div></td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L6 Status -->
     <div v-if="lapData['status']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-flag text-sky-500"></i> L6 — Rekap per Status</h3>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[140px]">Status</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['status'].rekap" :key="r.status"><td class="py-2 px-2"><app-badge :label="r.status" :status="r.status"></app-badge></td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[140px]">Status</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['status'].rekap" :key="r.status"><td class="py-2 px-2"><app-badge :label="r.status" :status="r.status"></app-badge></td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L7 Satuan — center bila sendiri -->
     <div v-if="lapData['satuan']" class="card space-y-4 lg:col-span-2 max-w-xl mx-auto w-full">
       <h3 class="font-bold"><i class="fa-solid fa-ruler text-sky-500"></i> L7 — Rekap per Satuan</h3>
-      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Satuan</th><th class="text-right py-2 px-2 min-w-[80px]">Jml Data</th><th class="text-right py-2 px-2 min-w-[100px]">Total Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['satuan'].rekap" :key="r.satuan_id"><td class="py-2 px-2">{{ r.satuan_nama }}</td><td class="py-2 px-2 text-right">{{ r.jml_data }}</td><td class="py-2 px-2 text-right font-bold">{{ r.total_jumlah || '—' }}</td></tr></tbody></table></div>
+      <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Satuan</th><th class="text-center py-2 px-2 min-w-[80px]">Jml Data</th><th class="text-center py-2 px-2 min-w-[100px]">Total Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['satuan'].rekap" :key="r.satuan_id"><td class="py-2 px-2">{{ r.satuan_nama }}</td><td class="py-2 px-2 text-center">{{ r.jml_data }}</td><td class="py-2 px-2 text-center font-bold">{{ r.total_jumlah || '—' }}</td></tr></tbody></table></div>
     </div>
 
   </div>
@@ -87,14 +87,14 @@
     <div v-if="lapData['jenis_periode']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-table-cells text-sky-500"></i> L8 — Matriks Jenis × Tahun</h3>
       <div v-if="!(lapData['jenis_periode'].rekap||[]).length" class="text-center py-6 text-xs text-slate-400">Tidak ada data tahun {{ lapData['jenis_periode'].tahun }}</div>
-      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-left py-2 px-2 min-w-[80px]">Tahun</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_periode'].rekap" :key="r.jenis_id + r.tahun"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2">{{ r.tahun }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-left py-2 px-2 min-w-[80px]">Tahun</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_periode'].rekap" :key="r.jenis_id + r.tahun"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2 text-center">{{ r.tahun }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L9 Jenis x Lokasi -->
     <div v-if="lapData['jenis_lokasi']" class="card space-y-4">
       <h3 class="font-bold"><i class="fa-solid fa-table-cells-large text-sky-500"></i> L9 — Matriks Jenis × Lokasi</h3>
       <div v-if="!(lapData['jenis_lokasi'].rekap||[]).length" class="text-center py-6 text-xs text-slate-400">Tidak ada data</div>
-      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-left py-2 px-2 min-w-[140px]">Lokasi</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_lokasi'].rekap" :key="r.jenis_id + r.lokasi_id"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2">{{ r.lokasi_nama }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-left py-2 px-2 min-w-[140px]">Lokasi</th><th class="text-center py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_lokasi'].rekap" :key="r.jenis_id + r.lokasi_id"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2">{{ r.lokasi_nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
     <!-- L10 Detail — lebar penuh -->
