@@ -90,7 +90,7 @@
 
   <!-- Stats -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-    <app-stat-card title="Total RTL" :value="rtlTotalData" icon="fa-solid fa-list-check" color="sky" subtext="halaman ini: " + rtlList.length></app-stat-card>
+    <app-stat-card title="Total RTL" :value="rtlTotalData" icon="fa-solid fa-list-check" color="sky" :subtext="'halaman ini: ' + rtlList.length"></app-stat-card>
     <app-stat-card title="Baru" :value="rtlList.filter(function(r){return (r.status_rtl||r.status)==='baru'}).length" icon="fa-solid fa-clock" color="sky" subtext="perlu diproses"></app-stat-card>
     <app-stat-card title="Diproses" :value="rtlList.filter(function(r){return (r.status_rtl||r.status)==='diproses'}).length" icon="fa-solid fa-spinner" color="amber" subtext="sedang jalan"></app-stat-card>
     <app-stat-card title="Selesai" :value="rtlList.filter(function(r){return (r.status_rtl||r.status)==='selesai'}).length" icon="fa-solid fa-check" color="emerald" subtext="sudah tuntas"></app-stat-card>
