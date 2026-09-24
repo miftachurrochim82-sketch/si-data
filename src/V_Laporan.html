@@ -28,8 +28,8 @@
 
   <div v-if="lapLoading && !lapData['kategori'] && !lapData['jenis_periode']" class="card"><app-skeleton type="table"></app-skeleton></div>
 
-  <!-- GRUP DIMENSI: 7 laporan berurutan -->
-  <div v-if="!lapLoading && laporanGrupTab==='dimensi'" class="space-y-6">
+  <!-- GRUP DIMENSI: 7 laporan grid 2 kolom (tabel kecil) -->
+  <div v-if="!lapLoading && laporanGrupTab==='dimensi'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
     <!-- L1 Kategori -->
     <div v-if="lapData['kategori']" class="card space-y-4">
@@ -80,8 +80,8 @@
 
   </div>
 
-  <!-- GRUP MATRIKS: 5 laporan berurutan -->
-  <div v-if="!lapLoading && laporanGrupTab==='matriks'" class="space-y-6">
+  <!-- GRUP MATRIKS: 5 laporan grid 2 kolom -->
+  <div v-if="!lapLoading && laporanGrupTab==='matriks'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
     <!-- L8 Jenis x Tahun -->
     <div v-if="lapData['jenis_periode']" class="card space-y-4">
@@ -95,15 +95,15 @@
       <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[180px]">Jenis</th><th class="text-left py-2 px-2 min-w-[140px]">Lokasi</th><th class="text-right py-2 px-2 min-w-[80px]">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['jenis_lokasi'].rekap" :key="r.jenis_id + r.lokasi_id"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2">{{ r.lokasi_nama }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
     </div>
 
-    <!-- L10 Detail -->
-    <div v-if="lapData['detail']" class="card space-y-4">
+    <!-- L10 Detail — lebar penuh -->
+    <div v-if="lapData['detail']" class="card space-y-4 lg:col-span-2">
       <h3 class="font-bold"><i class="fa-solid fa-list text-sky-500"></i> L10 — Detail Transaksi</h3>
       <div class="text-xs text-slate-400">{{ (lapData['detail'].data||[]).length }} dari {{ lapData['detail'].total }} — filter lengkap di menu Transaksi</div>
       <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[140px]">Kode/Tgl</th><th class="text-left py-2 px-2 min-w-[220px]">Judul</th><th class="text-left py-2 px-2 min-w-[120px]">Jenis</th><th class="text-left py-2 px-2 min-w-[120px]">Lokasi</th><th class="text-left py-2 px-2 min-w-[80px]">Status</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['detail'].data" :key="r.id"><td class="py-2 px-2"><div class="font-mono font-bold">{{ r.kode }}</div><div class="text-[10px] text-slate-400">{{ fmtTgl(r.tanggal) }}</div></td><td class="py-2 px-2">{{ r.judul }}</td><td class="py-2 px-2">{{ namaJenis_(r.jenis_id) }}</td><td class="py-2 px-2">{{ namaLokasi_(r.lokasi_id) }}</td><td class="py-2 px-2"><app-badge :label="r.status" :status="r.status"></app-badge></td></tr></tbody></table></div>
     </div>
 
-    <!-- L11 Lampiran -->
-    <div v-if="lapData['lampiran']" class="card space-y-4">
+    <!-- L11 Lampiran — lebar penuh -->
+    <div v-if="lapData['lampiran']" class="card space-y-4 lg:col-span-2">
       <h3 class="font-bold"><i class="fa-solid fa-paperclip text-sky-500"></i> L11 — Rekap Lampiran</h3>
       <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Transaksi</th><th class="text-left py-2 px-2 min-w-[80px]">Jml</th><th class="text-left py-2 px-2 min-w-[240px]">File</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['lampiran'].rekap" :key="r.kode"><td class="py-2 px-2"><div class="font-bold">{{ r.kode }}</div><div class="text-[10px] text-slate-400">{{ r.judul }}</div></td><td class="py-2 px-2 text-center">{{ r.jml_lampiran }}</td><td class="py-2 px-2 text-slate-400">{{ (r.lampiran||[]).map(x=>x.nama_file).join(', ') || '—' }}</td></tr></tbody></table></div>
     </div>
@@ -116,7 +116,7 @@
 
   </div>
 
-  <app-empty-state v-if="!lapLoading && laporanGrupTab==='dimensi' && !lapData['kategori']" icon="fa-solid fa-table-list" title="Belum dimuat" subtitle="Klik Tampilkan 7 Dimensi untuk mengambil data."></app-empty-state>
+  <app-empty-state v-if="!lapLoading && laporanGrupTab==='dimensi' && !lapData['kategori']" class="lg:col-span-2" icon="fa-solid fa-table-list" title="Belum dimuat" subtitle="Klik Tampilkan 7 Dimensi untuk mengambil data."></app-empty-state>
   <app-empty-state v-if="!lapLoading && laporanGrupTab==='matriks' && !lapData['jenis_periode']" icon="fa-solid fa-table-list" title="Belum dimuat" subtitle="Klik Tampilkan 5 Matriks untuk mengambil data."></app-empty-state>
 
 </section>
