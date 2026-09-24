@@ -146,7 +146,18 @@ window.StarterKitApi = {
         var promises = tabs.map(async (t) => {
           var aksi = window.SK_MAPS.LAP_AKSI[t];
           if (!aksi) return;
-          try { var res = await this.callServer(aksi, { tahun: this.lapTahun }); if (res && res.success) this.lapData[t] = res.data; } catch(e) {}
+          try {
+            var res = await this.callServer(aksi, { tahun: this.lapTahun });
+            if (res && res.success) {
+              if (t==='detail') {
+                // getUtamaList returns {data:[], total, total_pages, page} — wrap to {data, total}
+                if (Array.isArray(res.data)) this.lapData[t] = { data: res.data, total: res.total || res.data.length, tahun: this.lapTahun };
+                else this.lapData[t] = res.data;
+              } else {
+                this.lapData[t] = res.data;
+              }
+            }
+          } catch(e) {}
         });
         await Promise.all(promises);
       } finally { this.lapLoading = false; }
