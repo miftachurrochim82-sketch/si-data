@@ -2,7 +2,7 @@
      SI-DATA - V_Analisa.html (v2.11.1 — grid 1 halaman 8 analisa)
      Tanpa 8 tab berderet — 1 halaman scroll: A1-A8 berurutan, 1 baris kosong antar analisa (space-y-6)
      ============================================================ -->
-<section v-if="currentPage === 'analisa'" class="space-y-6 animate-fade-in">
+<section v-if="currentPage === 'analisa'" class="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-6">
 
   <div>
     <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
@@ -28,12 +28,12 @@
       <div v-if="anaData['lokasi']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-location-dot text-sky-500"></i> A1 — Distribusi per Lokasi</h3>
         <app-stat-card title="Total" :value="anaData['lokasi'].total" icon="fa-solid fa-location-dot" color="sky" :subtext="anaData['lokasi'].tahun"></app-stat-card>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Lokasi</th><th class="text-right py-2 px-2">Jumlah</th><th class="text-right py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['lokasi'].distribusi" :key="r.id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jumlah }}</td><td class="py-2 px-2 text-right text-slate-400">{{ r.pct }}%</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Lokasi</th><th class="text-center py-2 px-2">Jumlah</th><th class="text-center py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['lokasi'].distribusi" :key="r.id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jumlah }}</td><td class="py-2 px-2 text-center text-slate-400">{{ r.pct }}%</td></tr></tbody></table></div>
       </div>
       <div v-if="anaData['jenis']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-tag text-sky-500"></i> A2 — Distribusi per Jenis</h3>
         <app-stat-card title="Total" :value="anaData['jenis'].total" icon="fa-solid fa-tag" color="emerald" :subtext="anaData['jenis'].tahun"></app-stat-card>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Jenis</th><th class="text-right py-2 px-2">Jumlah</th><th class="text-right py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['jenis'].distribusi" :key="r.id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jumlah }}</td><td class="py-2 px-2 text-right text-slate-400">{{ r.pct }}%</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Jenis</th><th class="text-center py-2 px-2">Jumlah</th><th class="text-center py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['jenis'].distribusi" :key="r.id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jumlah }}</td><td class="py-2 px-2 text-center text-slate-400">{{ r.pct }}%</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -41,11 +41,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div v-if="anaData['top_pegawai']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-ranking-star text-sky-500"></i> A3 — Top Pegawai</h3>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">#</th><th class="text-left py-2 px-2">Pegawai</th><th class="text-right py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="(r, i) in anaData['top_pegawai'].top" :key="r.pegawai_id"><td class="py-2 px-2 font-bold">{{ i+1 }}</td><td class="py-2 px-2"><div>{{ r.nama }}</div><div class="font-mono text-[10px] text-slate-400">{{ r.pegawai_id }}</div></td><td class="py-2 px-2 text-right font-bold">{{ r.jumlah }}</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">#</th><th class="text-left py-2 px-2">Pegawai</th><th class="text-center py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="(r, i) in anaData['top_pegawai'].top" :key="r.pegawai_id"><td class="py-2 px-2 font-bold">{{ i+1 }}</td><td class="py-2 px-2"><div>{{ r.nama }}</div><div class="font-mono text-[10px] text-slate-400">{{ r.pegawai_id }}</div></td><td class="py-2 px-2 text-center font-bold">{{ r.jumlah }}</td></tr></tbody></table></div>
       </div>
       <div v-if="anaData['beban_lokasi']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-weight-hanging text-sky-500"></i> A4 — Beban per Lokasi</h3>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Lokasi</th><th class="text-right py-2 px-2">Total</th><th class="text-right py-2 px-2">Selesai</th><th class="text-right py-2 px-2">Belum</th><th class="text-right py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['beban_lokasi'].beban" :key="r.lokasi_id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-right">{{ r.total }}</td><td class="py-2 px-2 text-right text-emerald-600">{{ r.selesai }}</td><td class="py-2 px-2 text-right text-amber-600">{{ r.belum }}</td><td class="py-2 px-2 text-right">{{ r.total ? Math.round(r.selesai / r.total * 100) : 0 }}%</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Lokasi</th><th class="text-center py-2 px-2">Total</th><th class="text-center py-2 px-2">Selesai</th><th class="text-center py-2 px-2">Belum</th><th class="text-center py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['beban_lokasi'].beban" :key="r.lokasi_id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-center">{{ r.total }}</td><td class="py-2 px-2 text-center text-emerald-600">{{ r.selesai }}</td><td class="py-2 px-2 text-center text-amber-600">{{ r.belum }}</td><td class="py-2 px-2 text-center">{{ r.total ? Math.round(r.selesai / r.total * 100) : 0 }}%</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -66,7 +66,7 @@
       <div v-if="anaData['umur']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-hourglass text-sky-500"></i> A7 — Umur Data</h3>
         <app-stat-card title="Total" :value="anaData['umur'].total" icon="fa-solid fa-hourglass" color="sky"></app-stat-card>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Rentang</th><th class="text-right py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="b in anaData['umur'].buckets" :key="b.label"><td class="py-2 px-2">{{ b.label }}</td><td class="py-2 px-2 text-right font-bold">{{ b.jml }}</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Rentang</th><th class="text-center py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="b in anaData['umur'].buckets" :key="b.label"><td class="py-2 px-2">{{ b.label }}</td><td class="py-2 px-2 text-center font-bold">{{ b.jml }}</td></tr></tbody></table></div>
       </div>
       <div v-if="anaData['sla']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-stopwatch text-sky-500"></i> A8 — SLA Approval</h3>

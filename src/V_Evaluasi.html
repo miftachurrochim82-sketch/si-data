@@ -2,7 +2,7 @@
      SI-DATA - V_Evaluasi.html (v2.11.1 — grid 1 halaman 6 evaluasi)
      Tanpa 6 tab berderet — 1 halaman scroll: E1-E6 berurutan, 1 baris kosong antar evaluasi (space-y-6)
      ============================================================ -->
-<section v-if="currentPage === 'evaluasi'" class="space-y-6 animate-fade-in">
+<section v-if="currentPage === 'evaluasi'" class="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-6">
 
   <div>
     <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
@@ -41,7 +41,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div v-if="evaData['periode']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-calendar-check text-amber-600"></i> E3 — Kepatuhan Periode {{ evaData['periode'].tahun }}</h3>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Jenis</th><th class="text-left py-2 px-2">Periode</th><th class="text-right py-2 px-2">Jml</th></tr></thead><tbody class="divide-y"><tr v-for="r in evaData['periode'].rekap" :key="r.jenis_id + r.periode"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2">{{ r.periode }}</td><td class="py-2 px-2 text-right font-bold">{{ r.jml }}</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Jenis</th><th class="text-left py-2 px-2">Periode</th><th class="text-center py-2 px-2">Jml</th></tr></thead><tbody class="divide-y"><tr v-for="r in evaData['periode'].rekap" :key="r.jenis_id + r.periode"><td class="py-2 px-2">{{ r.jenis_nama }}</td><td class="py-2 px-2">{{ r.periode }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jml }}</td></tr></tbody></table></div>
       </div>
       <div v-if="evaData['kualitas']" class="card space-y-3">
         <h3 class="font-bold text-sm"><i class="fa-solid fa-shield-halved text-amber-600"></i> E4 — Kualitas Data</h3>
