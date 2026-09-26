@@ -707,7 +707,36 @@ function getAppConfig_() {
 
       // Tema per-app (admin) — 2
       'get_theme':            'viewer',
-      'save_theme':           'admin'
+      'save_theme':           'admin',
+
+      // Tematik baru (adopsi sumber) — 20
+      'get_ringkasan':              'viewer',
+      'get_trend_bulanan':          'viewer',
+      'get_per_fungsi':             'viewer',
+      'get_per_grup':               'viewer',
+      'get_per_unit':               'viewer',
+      'get_per_lokasi':             'viewer',
+      'get_top_pegawai':            'viewer',
+      'get_leaderboard_unit':       'viewer',
+      'get_heatmap':                'viewer',
+      'get_heatmap_bulan_grup':     'viewer',
+      'get_master_options':         'viewer',
+      'get_kegiatan_list':          'viewer',
+      'get_dimensi_for_form':       'viewer',
+      'simpan_kegiatan_tematik':    'user',
+      'get_kegiatan_detail_tematik':'viewer',
+      'get_atribut_detail':         'viewer',
+      'get_cross_tab_per_grup':     'viewer',
+      'get_cross_tab_tematik':      'viewer',
+      'get_perbandingan':           'viewer',
+      'get_peta_kegiatan':          'viewer',
+      'get_target_evaluasi':        'viewer',
+      'get_target_list':            'viewer',
+      'upload_lampiran_tematik':    'user',
+      'get_audit_logs':             'viewer',
+      'audit_master':               'admin',
+      'get_filter_options':         'viewer',
+      'get_periode_list_simple':    'viewer'
     },
 
     // Resource RLS declarative (dipakai CoreLib.dispatchAction untuk filter ownerField)
