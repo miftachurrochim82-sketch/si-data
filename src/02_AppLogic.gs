@@ -1825,12 +1825,12 @@ function setupApp(actor) {
 // ==================== §16 HEALTH CHECK ====================
 
 function testAppLogicSelfCheck() {
-  Logger.log('=== 02_AppLogic.gs v2.14.0-tematik self-check (5M+5T, 86 handler, piramida 12/8/6/4) ===');
+  Logger.log('=== 02_AppLogic.gs v2.14.0-tematik self-check — 7 file medium + 115 handler (tematik) ===');
   if (typeof CoreLib === 'undefined') { Logger.log('❌ CoreLib tidak terpasang!'); return; }
   Logger.log('✅ CoreLib terdeteksi.');
   var h = buildLocalHandlers_();
   var actions = Object.keys(h);
-  Logger.log('📋 localHandlers: ' + actions.length + ' aksi (target 86)');
+  Logger.log('📋 localHandlers: ' + actions.length + ' aksi (target 115 — tematik)');
   var cfg = getAppConfig_();
   var actionLevels = cfg.actionLevels || {};
   var NATIVE = ['exchange_platform_ticket', 'logout'];
@@ -1842,7 +1842,7 @@ function testAppLogicSelfCheck() {
   });
   Logger.log((missingHandlers.length === 0 ? '✅' : '❌') + ' Semua actionLevels punya handler' + (missingHandlers.length ? ' — MISSING: ' + missingHandlers.join(', ') : ''));
   var ping = handleAction({ action: 'ping' });
-  Logger.log((ping && ping.success ? '✅' : '❌') + ' ping via dispatcher');
+  Logger.log((ping && ping.success ? '✅' : '❌') + ' ping via dispatcher' + (ping && !ping.success ? ' → ' + JSON.stringify(ping).slice(0,300) : ''));
   var aneh = handleAction({ action: 'aksi_aneh_xyz' });
   Logger.log((aneh && aneh.success === false ? '✅' : '❌') + ' aksi tak dikenal DITOLAK (code=' + (aneh && aneh.code) + ')');
   Logger.log('=== Selesai ===');
