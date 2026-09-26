@@ -102,6 +102,7 @@
             <td class="py-2 px-3"><app-badge size="sm" :status="badgeStatusUtama(r.status)" :label="r.status"></app-badge></td>
             <td class="py-2 px-3 text-right">
               <div class="flex gap-1 justify-end">
+                <button class="btn-icon" @click="openDetail(r)" title="Detail / Lampiran / Riwayat"><i class="fa-solid fa-eye"></i></button>
                 <button v-can="'viewer'" class="btn-icon" @click="utamaForm=Object.assign({}, r); showUtamaForm=true" title="Edit"><i class="fa-solid fa-pen"></i></button>
                 <button v-can="'viewer'" class="btn-icon-danger" @click="hapusUtama(r)" title="Hapus"><i class="fa-solid fa-trash"></i></button>
               </div>

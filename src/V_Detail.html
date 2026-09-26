@@ -1,0 +1,121 @@
+<!-- ============================================================
+     STARTER-KIT - V_Detail.html (Tahap 5 — Drawer Detail Transaksi)
+     3 tab: Informasi + Lampiran Galeri + Riwayat Audit
+     ============================================================ -->
+<app-modal v-if="showDetailDrawer" @close="closeDetail()" title="Detail Transaksi" :subtitle="detailData.utama ? (detailData.utama.kode || detailData.utama.id) + ' · ' + (detailData.utama.judul || detailData.utama.uraian || '') : 'Memuat...'" icon="fa-solid fa-eye" size="2xl" :loading="detailLoading" confirm-text="Tutup" cancel-text="" @confirm="closeDetail()">
+
+  <!-- Tabs -->
+  <div class="flex gap-1 mb-4 border-b border-slate-200 dark:border-slate-700">
+    <button class="px-3 py-2 text-xs font-bold border-b-2" :class="detailTab==='info' ? 'border-sky-600 text-sky-700 dark:text-sky-300' : 'border-transparent text-slate-400'" @click="detailTab='info'"><i class="fa-solid fa-circle-info"></i> Informasi</button>
+    <button class="px-3 py-2 text-xs font-bold border-b-2" :class="detailTab==='lampiran' ? 'border-sky-600 text-sky-700 dark:text-sky-300' : 'border-transparent text-slate-400'" @click="detailTab='lampiran'"><i class="fa-solid fa-paperclip"></i> Lampiran <span v-if="detailData.lampiran && detailData.lampiran.length" class="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-sky-600 text-white text-[10px]">{{ detailData.lampiran.length }}</span></button>
+    <button class="px-3 py-2 text-xs font-bold border-b-2" :class="detailTab==='riwayat' ? 'border-sky-600 text-sky-700 dark:text-sky-300' : 'border-transparent text-slate-400'" @click="detailTab='riwayat'"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</button>
+  </div>
+
+  <div v-if="detailLoading" class="py-8 flex flex-col items-center gap-2 text-slate-400">
+    <i class="fa-solid fa-spinner fa-spin text-xl"></i>
+    <span class="text-xs">Memuat detail...</span>
+  </div>
+
+  <!-- TAB: Informasi -->
+  <div v-else-if="detailTab==='info' && detailData.utama" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="card p-3 bg-slate-50 dark:bg-slate-800/50">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Kode / Tanggal</div>
+        <div class="font-mono font-bold text-sm">{{ detailData.utama.kode || detailData.utama.id }}</div>
+        <div class="text-xs text-slate-500">{{ fmtTgl(detailData.utama.tanggal) }} · <app-badge size="sm" :status="badgeStatusUtama(detailData.utama.status)" :label="detailData.utama.status"></app-badge></div>
+      </div>
+      <div class="card p-3 bg-slate-50 dark:bg-slate-800/50">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Bidang / Seksi / Fungsi</div>
+        <div class="text-xs font-semibold">{{ namaUnit_(detailData.utama.unit_id) }} <span v-if="detailData.utama.fungsi_id">· {{ namaFungsi_(detailData.utama.fungsi_id) }}</span></div>
+        <div class="text-[11px] text-slate-500">Kategori: {{ namaKategori_(detailData.utama.kategori_id) }} · Jenis: {{ namaJenis_(detailData.utama.jenis_id) }}</div>
+      </div>
+      <div class="card p-3 bg-slate-50 dark:bg-slate-800/50">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Lokasi / Periode / Satuan</div>
+        <div class="text-xs">{{ namaLokasi_(detailData.utama.lokasi_id) }} · {{ namaPeriode_(detailData.utama.periode_id) }} · {{ namaSatuan_(detailData.utama.satuan_id) }}</div>
+        <div class="text-xs mt-1">Penanggung jawab: <b>{{ namaPegawai_(detailData.utama.pegawai_id) }}</b></div>
+      </div>
+      <div class="card p-3 bg-slate-50 dark:bg-slate-800/50">
+        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Jumlah / Anggaran</div>
+        <div class="text-lg font-black text-sky-700 dark:text-sky-300">{{ detailData.utama.jumlah || 0 }} <span class="text-xs font-normal text-slate-500">{{ namaSatuan_(detailData.utama.satuan_id) }}</span></div>
+        <div class="text-xs">Rp {{ Number(detailData.utama.anggaran||0).toLocaleString('id-ID') }}</div>
+      </div>
+    </div>
+    <div class="card p-3">
+      <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Uraian / Judul</div>
+      <div class="text-sm font-semibold">{{ detailData.utama.uraian || detailData.utama.judul || '—' }}</div>
+      <div v-if="detailData.utama.deskripsi" class="text-xs text-slate-500 mt-1">{{ detailData.utama.deskripsi }}</div>
+      <div v-if="detailData.utama.catatan || detailData.utama.keterangan" class="text-xs text-slate-400 mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-100 dark:border-amber-800">Catatan: {{ detailData.utama.catatan || detailData.utama.keterangan }}</div>
+    </div>
+    <!-- Tematik dimensi -->
+    <div v-if="detailData.atribut && detailData.atribut.length" class="card p-3 border-l-4" style="border-left-color:#0369a1">
+      <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-2"><i class="fa-solid fa-list-check text-sky-600"></i> Data Tematik ({{ detailData.atribut.length }})</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div v-for="a in detailData.atribut" :key="a.dimensi_id" class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800/50 rounded">
+          <span class="text-xs text-slate-500">{{ a.dimensi_nama || a.dimensi_id }}</span>
+          <span class="text-xs font-bold text-slate-800 dark:text-white">{{ a.nilai_text || a.nilai_number || a.nilai_date || a.nilai || '—' }}</span>
+        </div>
+      </div>
+    </div>
+    <div v-else class="text-[11px] text-slate-400 text-center py-2">Tidak ada data tematik.</div>
+  </div>
+
+  <!-- TAB: Lampiran Galeri -->
+  <div v-else-if="detailTab==='lampiran'" class="space-y-3">
+    <div class="flex items-center gap-2">
+      <label class="btn btn-ghost btn-sm text-xs flex-1 justify-center border border-dashed !border-slate-300 dark:!border-slate-600 cursor-pointer">
+        <i class="fa-solid fa-upload"></i> Upload Lampiran
+        <input type="file" class="hidden" @change="uploadDetailLampiran($event)" :disabled="detailUploading" />
+      </label>
+      <button class="btn btn-ghost btn-sm text-xs" @click="loadDetail(detailData.utama && detailData.utama.id)" :disabled="detailUploading"><i class="fa-solid fa-rotate" :class="{'fa-spin': detailUploading}"></i> Refresh</button>
+    </div>
+    <div v-if="detailUploading" class="text-xs text-sky-600 flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Mengunggah...</div>
+    <div v-if="!detailData.lampiran || !detailData.lampiran.length" class="text-center py-8 text-slate-400">
+      <i class="fa-solid fa-folder-open text-2xl mb-2"></i>
+      <div class="text-xs">Belum ada lampiran — upload file pendukung di atas.</div>
+    </div>
+    <div v-else class="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div v-for="f in detailData.lampiran" :key="f.id" class="card !p-0 overflow-hidden group hover:shadow-md transition">
+        <div class="h-28 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+          <img v-if="isImageLampiran_(f)" :src="f.url || f.file_url" class="w-full h-full object-cover" @error="$event.target.style.display='none'" />
+          <i v-else-if="isPdfLampiran_(f)" class="fa-solid fa-file-pdf text-3xl text-rose-500"></i>
+          <i v-else class="fa-solid fa-file text-2xl text-slate-400"></i>
+        </div>
+        <div class="p-2">
+          <div class="text-xs font-semibold truncate" :title="f.nama_file || f.file_name">{{ f.nama_file || f.file_name || f.jenis_lampiran || 'Lampiran' }}</div>
+          <div class="text-[10px] text-slate-400 truncate">{{ f.jenis_lampiran || '' }} · {{ formatBytes_(f.ukuran||f.size||0) }}</div>
+          <div class="flex gap-1 mt-2">
+            <a v-if="f.url || f.file_url" :href="f.url || f.file_url" target="_blank" class="btn btn-ghost btn-xs flex-1 text-[11px]"><i class="fa-solid fa-eye"></i> Lihat</a>
+            <a v-if="f.url || f.file_url" :href="f.url || f.file_url" download class="btn btn-ghost btn-xs text-[11px]"><i class="fa-solid fa-download"></i></a>
+            <button v-can="'viewer'" class="btn btn-ghost btn-xs text-rose-600" @click="hapusDetailLampiran(f)" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Riwayat Audit -->
+  <div v-else-if="detailTab==='riwayat'" class="space-y-3">
+    <div v-if="!detailData.audit || !detailData.audit.length" class="text-center py-8 text-slate-400">
+      <i class="fa-solid fa-clock text-2xl mb-2"></i>
+      <div class="text-xs">Belum ada riwayat audit untuk transaksi ini.</div>
+      <div class="text-[11px] mt-1">Audit tercatat otomatis di <span class="font-mono">AUDIT_LOGS</span> setiap create/update/delete.</div>
+    </div>
+    <div v-else class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700 space-y-4">
+      <div v-for="(a, idx) in detailData.audit" :key="a.id || idx" class="relative">
+        <span class="absolute -left-[25px] top-1 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900" :style="{background: idx===0 ? '#0ea5e9' : '#cbd5e1'}"></span>
+        <div class="card p-3 !py-2">
+          <div class="flex items-center gap-2 text-xs">
+            <span class="font-bold" :class="a.aksi==='CREATE' ? 'text-emerald-600' : a.aksi==='UPDATE' ? 'text-sky-600' : 'text-rose-600'">{{ a.aksi || '—' }}</span>
+            <span class="text-slate-400">·</span>
+            <span class="font-mono text-[11px]">{{ a.tabel || 'T_UTAMA' }}</span>
+            <span class="ml-auto text-[11px] text-slate-400">{{ fmtTgl(a.timestamp || a.created_at) }}</span>
+          </div>
+          <div class="text-xs text-slate-600 dark:text-slate-300 mt-1">Oleh: <b>{{ a.user || a.actor || '—' }}</b> <span v-if="a.detail" class="text-slate-400">· {{ a.detail }}</span></div>
+          <div v-if="a.perubahan || a.diff" class="text-[11px] font-mono bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded mt-1 overflow-x-auto">{{ a.perubahan || a.diff }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-else class="text-center py-6 text-slate-400 text-xs">Pilih tab di atas.</div>
+</app-modal>

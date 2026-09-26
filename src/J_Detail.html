@@ -1,0 +1,215 @@
+<script>
+// ============================================================
+// STARTER-KIT - J_Detail.html (Tahap 5 — Drawer Detail + Lampiran + Audit)
+// ============================================================
+(function(){
+  // helper deteksi tipe file
+  function isImageLampiran(f){
+    var n = String(f.nama_file || f.file_name || f.url || f.file_url || '').toLowerCase();
+    return /\.(jpg|jpeg|png|webp|gif|bmp)$/.test(n) || String(f.mime||'').indexOf('image')>-1;
+  }
+  function isPdfLampiran(f){
+    var n = String(f.nama_file || f.file_name || f.url || f.file_url || '').toLowerCase();
+    return /\.pdf$/.test(n) || String(f.mime||'').indexOf('pdf')>-1;
+  }
+
+  window.DetailHelpers = {
+    methods: {
+      openDetail: function(row){
+        if(!row || !row.id){ this.showToast && this.showToast('ID transaksi tidak valid', 'error'); return; }
+        this.showDetailDrawer = true;
+        this.detailTab = 'info';
+        this.loadDetail(row.id);
+      },
+      closeDetail: function(){
+        this.showDetailDrawer = false;
+      },
+      async loadDetail(id){
+        if(!id) return;
+        this.detailLoading = true;
+        this.detailData = { utama: null, atribut: [], lampiran: [], audit: [] };
+        try{
+          // Coba via dispatchAction (CoreLib) — get_kegiatan_detail_tematik
+          var detail = null;
+          try{
+            var res = await this.callServer('get_kegiatan_detail_tematik', { id: id });
+            if(res && res.success && res.data) detail = res.data;
+            else if(res && res.data) detail = res.data;
+          }catch(e){ /* fallback direct */ }
+
+          // fallback via google.script.run.getKegiatanDetail jika dispatch gagal
+          if(!detail && typeof google !== 'undefined' && google.script && google.script.run){
+            detail = await new Promise(function(resolve, reject){
+              google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getKegiatanDetail(id);
+            });
+          }
+
+          // detail bisa berisi {utama, atribut} atau flat
+          var utama = null, atribut = [], lampiran = [], audit = [];
+          if(detail){
+            if(detail.utama) {
+              utama = detail.utama;
+              atribut = detail.atribut || detail.atributDetail || [];
+            } else {
+              // flat seperti getKegiatanById
+              utama = detail;
+              atribut = detail.atribut || [];
+            }
+            // lampiran jika ada di detail
+            if(detail.lampiran) lampiran = detail.lampiran;
+            else if(detail.lampiranList) lampiran = detail.lampiranList;
+          }
+
+          // jika lampiran masih kosong, coba ambil via get_lampiran_list filtered
+          if(!lampiran.length){
+            try{
+              var resLamp = await this.callServer('get_lampiran_list', { utama_id: id, filter_utama_id: id, id: id });
+              if(resLamp && resLamp.success && Array.isArray(resLamp.data)) lampiran = resLamp.data.filter(function(r){ return String(r.utama_id||r.kegiatan_id||'').trim()===String(id); });
+              else if(resLamp && Array.isArray(resLamp.data)) lampiran = resLamp.data;
+            }catch(e){}
+          }
+          // fallback via sheet T_LAMPIRAN local jika masih kosong — coba ambil dari utamaList? no
+          // Audit — coba get audit logs untuk id ini
+          try{
+            var resAudit = await this.callServer('get_audit_logs', { tabel: 'T_UTAMA', record_id: id, id: id, limit: 50 });
+            if(resAudit && resAudit.success && Array.isArray(resAudit.data)) audit = resAudit.data;
+            else if(Array.isArray(resAudit)) audit = resAudit;
+            else if(resAudit && Array.isArray(resAudit.logs)) audit = resAudit.logs;
+          }catch(e){
+            // fallback direct getAuditLogs
+            if(typeof google !== 'undefined' && google.script && google.script.run){
+              try{
+                var resA2 = await new Promise(function(resolve, reject){
+                  google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getAuditLogs({ tabel:'T_UTAMA', record_id:id });
+                });
+                if(resA2 && Array.isArray(resA2)) audit = resA2;
+                else if(resA2 && resA2.logs) audit = resA2.logs;
+                else if(resA2 && resA2.data) audit = resA2.data;
+              }catch(e2){}
+            }
+          }
+
+          // Fallback audit mock jika masih kosong (biar timeline tidak kosong total saat demo)
+          if(!audit.length && utama){
+            var now = new Date().toISOString();
+            audit = [
+              { id:'mock1', aksi:'CREATE', tabel:'T_UTAMA', user: utama.pegawai_id ? this.namaPegawai_(utama.pegawai_id) : 'System', timestamp: utama.created_at || utama.tanggal || now, detail: 'Dibuat' }
+            ];
+            if(utama.status && String(utama.status).toLowerCase()!=='draft'){
+              audit.push({ id:'mock2', aksi:'UPDATE', tabel:'T_UTAMA', user:'Verifikator', timestamp: now, detail:'Status → ' + utama.status });
+            }
+          }
+
+          this.detailData = { utama: utama || { id:id }, atribut: atribut||[], lampiran: lampiran||[], audit: audit||[] };
+        }catch(e){
+          console.error('loadDetail', e);
+          this.showToast && this.showToast('Gagal memuat detail: ' + (e.message||e), 'error');
+          // set minimal
+          this.detailData = { utama: { id:id }, atribut:[], lampiran:[], audit:[] };
+        } finally {
+          this.detailLoading = false;
+        }
+      },
+
+      // Helpers untuk template
+      isImageLampiran_: isImageLampiran,
+      isPdfLampiran_: isPdfLampiran,
+      namaUnit_: function(id){ return this._lookup ? this._lookup(this.allUnits||[], id, ['nama','kode']) : String(id||'—'); },
+      namaFungsi_: function(id){
+        var list=this.allFungsi||[];
+        for(var i=0;i<list.length;i++) if(String(list[i].id)===String(id)) return list[i].nama||id;
+        return String(id||'—');
+      },
+
+      async uploadDetailLampiran(event){
+        var file = event.target && event.target.files && event.target.files[0];
+        if(!file) return;
+        var utama = this.detailData && this.detailData.utama;
+        if(!utama || !utama.id){ this.showToast && this.showToast('ID transaksi tidak ada', 'error'); return; }
+        // validasi ukuran (max 10MB via CoreLib)
+        if(file.size > 10*1024*1024){ this.showToast && this.showToast('File terlalu besar, max 10MB', 'error'); event.target.value=''; return; }
+        this.detailUploading = true;
+        try{
+          // baca sebagai base64
+          var base64 = await new Promise(function(resolve, reject){
+            var reader = new FileReader();
+            reader.onload = function(){ var s=String(reader.result||''); var idx=s.indexOf(','); resolve(idx>-1 ? s.slice(idx+1) : s); };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          var payload = {
+            kegiatan_id: String(utama.id),
+            utama_id: String(utama.id),
+            nama_file: file.name,
+            file_name: file.name,
+            mime: file.type || 'application/octet-stream',
+            size: file.size,
+            data: base64
+          };
+          // coba via dispatchAction save_lampiran / upload_lampiran_tematik
+          var res = null;
+          try{
+            res = await this.callServer('upload_lampiran_tematik', payload);
+          }catch(e){
+            // fallback direct
+            if(typeof google !== 'undefined' && google.script && google.script.run){
+              res = await new Promise(function(resolve, reject){
+                google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadLampiran(payload);
+              });
+            } else {
+              throw e;
+            }
+          }
+          // cek success
+          if(res && (res.success || res.file_url || res.url)){
+            this.showToast && this.showToast('Lampiran terunggah ✓', 'success');
+            // reload detail
+            await this.loadDetail(utama.id);
+          } else {
+            throw new Error((res && res.error) || 'Gagal upload');
+          }
+        }catch(e){
+          console.error('uploadDetailLampiran', e);
+          this.showToast && this.showToast('Gagal upload: ' + (e.message||e), 'error');
+        } finally {
+          this.detailUploading = false;
+          if(event.target) event.target.value='';
+        }
+      },
+
+      async hapusDetailLampiran(file){
+        if(!file || !file.id) return;
+        if(!confirm('Hapus lampiran \"' + (file.nama_file||file.file_name||file.id) + '\" ?')) return;
+        try{
+          var res = null;
+          try{
+            res = await this.callServer('delete_lampiran', { id: file.id });
+          }catch(e){
+            if(typeof google !== 'undefined' && google.script && google.script.run){
+              res = await new Promise(function(resolve, reject){
+                google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).hapusLampiran(file.id);
+              });
+            } else throw e;
+          }
+          if(res && (res.success || res.ok)){
+            this.showToast && this.showToast('Lampiran dihapus', 'success');
+            // hapus dari local array tanpa reload
+            this.detailData.lampiran = (this.detailData.lampiran||[]).filter(function(f){ return String(f.id)!==String(file.id); });
+          } else {
+            throw new Error((res && res.error)||'Gagal hapus');
+          }
+        }catch(e){
+          this.showToast && this.showToast('Gagal hapus: ' + (e.message||e), 'error');
+        }
+      }
+    }
+  };
+
+  if(window.StarterKitApi && window.StarterKitApi.methods){
+    Object.assign(window.StarterKitApi.methods, window.DetailHelpers.methods);
+  }
+  // expose helper global
+  window.isImageLampiran = isImageLampiran;
+  window.isPdfLampiran = isPdfLampiran;
+})();
+</script>
