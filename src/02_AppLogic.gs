@@ -71,10 +71,6 @@ function include(filename) {
 
 function handleAction(payload) {
   try {
-    // Ping bypass — selalu hijau tanpa auth (untuk self-check)
-    if (payload && String(payload.action||'').toLowerCase() === 'ping') {
-      return { success: true, data: { pong: true, app: APP_CODE, time: new Date().toISOString(), version: 'v2.14.0-tematik' } };
-    }
     var cfg = getAppConfig_();
     cfg.localHandlers = buildLocalHandlers_();
     return CoreLib.dispatchAction(payload, cfg);
@@ -1846,7 +1842,8 @@ function testAppLogicSelfCheck() {
   });
   Logger.log((missingHandlers.length === 0 ? '✅' : '❌') + ' Semua actionLevels punya handler' + (missingHandlers.length ? ' — MISSING: ' + missingHandlers.join(', ') : ''));
   var ping = handleAction({ action: 'ping' });
-  Logger.log((ping && ping.success ? '✅' : '❌') + ' ping via dispatcher' + (ping && !ping.success ? ' → ' + JSON.stringify(ping).slice(0,300) : ''));
+  // ping tanpa token harus DITOLAK fail-closed (sesuai 99_TestSuite)
+  Logger.log((ping && !ping.success ? '✅' : '❌') + ' ping tanpa token DITOLAK fail-closed' + (ping && ping.success ? ' → ' + JSON.stringify(ping).slice(0,300) : ''));
   var aneh = handleAction({ action: 'aksi_aneh_xyz' });
   Logger.log((aneh && aneh.success === false ? '✅' : '❌') + ' aksi tak dikenal DITOLAK (code=' + (aneh && aneh.code) + ')');
   Logger.log('=== Selesai ===');
