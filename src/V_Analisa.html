@@ -1,97 +1,85 @@
-<!-- ============================ -->
-<!-- V_Analisa.html                -->
-<!-- PAGE: ANALISA (3 TAB)         -->
-<!-- ============================ -->
-<section id="page-analisa" class="page">
-  <div class="page-header">
-    <h2>📈 Analisa</h2>
+<!-- ============================================================
+     SI-DATA - V_Analisa.html (v2.11.1 — grid 1 halaman 8 analisa)
+     Tanpa 8 tab berderet — 1 halaman scroll: A1-A8 berurutan, 1 baris kosong antar analisa (space-y-6)
+     ============================================================ -->
+<section v-if="currentPage === 'analisa'" class="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-6">
+
+  <div>
+    <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
+      <i class="fa-solid fa-chart-line text-sky-600 dark:text-sky-400"></i> Analisa
+    </h2>
+    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">8 analisa — grid 1 halaman (2 kolom di desktop), tanpa tab</p>
   </div>
 
-  <!-- Tab Navigation -->
-  <div class="tabs-nav">
-    <button class="tab-btn active" data-tab="matrik" onclick="switchAnalisaTab('matrik')">
-      <span class="tab-icon">📊</span> Matrik
-    </button>
-    <button class="tab-btn" data-tab="tematik" onclick="switchAnalisaTab('tematik')">
-      <span class="tab-icon">🔬</span> Tematik
-    </button>
-    <button class="tab-btn" data-tab="perbandingan" onclick="switchAnalisaTab('perbandingan')">
-      <span class="tab-icon">📈</span> Perbandingan
-    </button>
+  <div class="flex items-end gap-2">
+    <div class="w-28"><label class="filter-label">Tahun</label><select class="input w-full" v-model="anaTahun"><option v-for="y in tahunOptions" :key="y" :value="y">{{ y }}</option></select></div>
+    <button class="btn btn-primary" @click="loadAnalisaGrid()" :disabled="anaLoading"><i class="fa-solid fa-rotate"></i> Tampilkan 8 Analisa</button>
+    <span v-if="anaLoading" class="text-xs text-slate-400">Memuat 8 analisa...</span>
+    <span v-else-if="anaGridLoaded" class="text-xs text-emerald-600">✓ 8 dimuat</span>
   </div>
+  <div class="text-xs text-slate-400">Filter tahun untuk A1-A5 (A6-A8 semua data)</div>
 
-  <!-- TAB: MATRIK -->
-  <div id="tab-matrik" class="tab-content active">
-    <div class="filter-bar">
-      <span class="filter-label">📌 Filter global berlaku otomatis</span>
-      <button class="btn btn-secondary" onclick="reloadMatrik()" style="margin-left:auto;">🔄 Refresh</button>
-      <button class="btn" onclick="exportCSV()">📥 Export CSV</button>
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
-    </div>
-    <div class="table-card" style="padding: 14px;">
-      <h3 id="crossTabTitle" style="margin-bottom: 16px;">📊 Rekap Cross-Tab</h3>
-      <div id="tabelCrossTab"><p class="loading">Memuat data...</p></div>
-    </div>
-  </div>
+  <div v-if="anaLoading && !anaGridLoaded" class="card"><app-skeleton type="table"></app-skeleton></div>
 
-  <!-- TAB: TEMATIK -->
-  <div id="tab-tematik" class="tab-content">
-    <div class="filter-bar">
-      <span class="filter-label">📌 Analisa tematik per dimensi</span>
-      <button class="btn btn-secondary" onclick="reloadTematik()" style="margin-left:auto;">🔄 Refresh</button>
-    </div>
-    <div id="tematikPanels" class="tematik-panels-container">
-      <p class="loading">Memuat data tematik...</p>
-    </div>
-  </div>
+  <div v-if="!anaLoading && anaGridLoaded" class="space-y-6">
 
-  <!-- TAB: PERBANDINGAN -->
-  <div id="tab-perbandingan" class="tab-content">
-    <div class="filter-bar">
-      <label class="filter-label">Bandingkan:</label>
-      <select id="anaPeriodeA" class="filter-control">
-        <option value="">— Periode Awal —</option>
-      </select>
-      <span class="vs-label">vs</span>
-      <select id="anaPeriodeB" class="filter-control">
-        <option value="">— Periode Akhir —</option>
-      </select>
-      <button class="btn" onclick="loadAnalisa()">🔍 Bandingkan</button>
-      <button class="btn btn-secondary" onclick="exportAnalisaCSV()">📥 Export</button>
-    </div>
-    <div id="analisaContent">
-      <div class="table-card">
-        <p class="loading" style="padding: 60px 0;">
-          🔍 Pilih 2 periode di atas, lalu klik <strong>Bandingkan</strong>.
-        </p>
+    <!-- Baris 1: A1 | A2 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div v-if="anaData['lokasi']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-location-dot text-sky-500"></i> A1 — Distribusi per Lokasi</h3>
+        <app-stat-card title="Total" :value="anaData['lokasi'].total" icon="fa-solid fa-location-dot" color="sky" :subtext="anaData['lokasi'].tahun"></app-stat-card>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Lokasi</th><th class="text-center py-2 px-2">Jumlah</th><th class="text-center py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['lokasi'].distribusi" :key="r.id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jumlah }}</td><td class="py-2 px-2 text-center text-slate-400">{{ r.pct }}%</td></tr></tbody></table></div>
+      </div>
+      <div v-if="anaData['jenis']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-tag text-sky-500"></i> A2 — Distribusi per Jenis</h3>
+        <app-stat-card title="Total" :value="anaData['jenis'].total" icon="fa-solid fa-tag" color="emerald" :subtext="anaData['jenis'].tahun"></app-stat-card>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Jenis</th><th class="text-center py-2 px-2">Jumlah</th><th class="text-center py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['jenis'].distribusi" :key="r.id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-center font-bold">{{ r.jumlah }}</td><td class="py-2 px-2 text-center text-slate-400">{{ r.pct }}%</td></tr></tbody></table></div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ============================ -->
-<!-- PAGE: EVALUASI               -->
-<!-- ============================ -->
-<section id="page-evaluasi" class="page">
-  <div class="page-header">
-    <h2>🎯 Evaluasi Target vs Realisasi</h2>
-    <div class="toolbar">
-      <button class="btn btn-secondary" onclick="openFormTarget()">⚙️ Kelola Target</button>
+    <!-- Baris 2: A3 | A4 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div v-if="anaData['top_pegawai']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-ranking-star text-sky-500"></i> A3 — Top Pegawai</h3>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">#</th><th class="text-left py-2 px-2">Pegawai</th><th class="text-center py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="(r, i) in anaData['top_pegawai'].top" :key="r.pegawai_id"><td class="py-2 px-2 font-bold">{{ i+1 }}</td><td class="py-2 px-2"><div>{{ r.nama }}</div><div class="font-mono text-[10px] text-slate-400">{{ r.pegawai_id }}</div></td><td class="py-2 px-2 text-center font-bold">{{ r.jumlah }}</td></tr></tbody></table></div>
+      </div>
+      <div v-if="anaData['beban_lokasi']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-weight-hanging text-sky-500"></i> A4 — Beban per Lokasi</h3>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Lokasi</th><th class="text-center py-2 px-2">Total</th><th class="text-center py-2 px-2">Selesai</th><th class="text-center py-2 px-2">Belum</th><th class="text-center py-2 px-2">%</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['beban_lokasi'].beban" :key="r.lokasi_id"><td class="py-2 px-2">{{ r.nama }}</td><td class="py-2 px-2 text-center">{{ r.total }}</td><td class="py-2 px-2 text-center text-emerald-600">{{ r.selesai }}</td><td class="py-2 px-2 text-center text-amber-600">{{ r.belum }}</td><td class="py-2 px-2 text-center">{{ r.total ? Math.round(r.selesai / r.total * 100) : 0 }}%</td></tr></tbody></table></div>
+      </div>
     </div>
-  </div>
-  <div class="filter-bar">
-    <label class="filter-label">Periode:</label>
-    <select id="evalPeriode" class="filter-control">
-      <option value="">— Semua Periode —</option>
-    </select>
-    <button class="btn" onclick="loadEvaluasi()">🔍 Tampilkan</button>
-    <button class="btn btn-secondary" onclick="exportEvaluasiCSV()">📥 Export</button>
-  </div>
-  <div id="evalContent">
-    <div class="table-card">
-      <p class="loading" style="padding: 60px 0;">
-        Pilih periode di atas, lalu klik <strong>Tampilkan</strong>.
-      </p>
+
+    <!-- Baris 3: A5 | A6 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div v-if="anaData['korelasi']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-table-cells-large text-sky-500"></i> A5 — Korelasi Jenis × Lokasi</h3>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Jenis ↓ / Lokasi →</th><th v-for="l in anaData['korelasi'].lokasi" :key="l.id" class="text-right py-2 px-2">{{ l.nama }}</th></tr></thead><tbody class="divide-y"><tr v-for="j in anaData['korelasi'].jenis" :key="j.id"><td class="py-2 px-2 font-semibold">{{ j.nama }}</td><td v-for="l in anaData['korelasi'].lokasi" :key="l.id" class="py-2 px-2 text-right" :class="korelasiCell_(j.id, l.id) ? 'font-bold' : 'text-slate-300'">{{ korelasiCell_(j.id, l.id) || '·' }}</td></tr></tbody></table></div>
+      </div>
+      <div v-if="anaData['tren']" class="card p-4">
+        <h3 class="font-bold text-sm mb-3"><i class="fa-solid fa-chart-area text-sky-500"></i> A6 — Tren 12 Bulan</h3>
+        <app-chart-bar :labels="chartAnalisaTrenLabels" :datasets="chartAnalisaTrenDatasets" :height="220" :colors="chartTrenAnalisaColors"></app-chart-bar>
+      </div>
     </div>
+
+    <!-- Baris 4: A7 | A8 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div v-if="anaData['umur']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-hourglass text-sky-500"></i> A7 — Umur Data</h3>
+        <app-stat-card title="Total" :value="anaData['umur'].total" icon="fa-solid fa-hourglass" color="sky"></app-stat-card>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Rentang</th><th class="text-center py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="b in anaData['umur'].buckets" :key="b.label"><td class="py-2 px-2">{{ b.label }}</td><td class="py-2 px-2 text-center font-bold">{{ b.jml }}</td></tr></tbody></table></div>
+      </div>
+      <div v-if="anaData['sla']" class="card space-y-3">
+        <h3 class="font-bold text-sm"><i class="fa-solid fa-stopwatch text-sky-500"></i> A8 — SLA Approval</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <app-stat-card title="Menunggu" :value="anaData['sla'].menunggu" icon="fa-solid fa-hourglass-half" color="amber"></app-stat-card>
+          <app-stat-card title="Rata-rata" :value="anaData['sla'].rata_rata_hari + ' hr'" icon="fa-solid fa-stopwatch" color="sky"></app-stat-card>
+        </div>
+        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Approval</th><th class="text-left py-2 px-2">Sejak</th><th class="text-right py-2 px-2">Umur</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['sla'].menanti_detail" :key="r.id"><td class="py-2 px-2 font-mono text-[11px]">{{ r.id }}</td><td class="py-2 px-2">{{ fmtTgl(r.dibuat) }}</td><td class="py-2 px-2 text-right">{{ r.umur_hari === '' ? '—' : r.umur_hari + ' hr' }}</td></tr></tbody></table></div>
+      </div>
+    </div>
+
   </div>
+
+  <app-empty-state v-if="!anaLoading && !anaGridLoaded" icon="fa-solid fa-chart-line" title="Belum dimuat" subtitle="Klik Tampilkan 8 Analisa untuk memuat semua."></app-empty-state>
+
 </section>
