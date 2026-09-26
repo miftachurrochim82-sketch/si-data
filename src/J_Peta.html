@@ -109,7 +109,13 @@
     v.petaLoading = true;
     v.petaError = '';
     var filter = {};
-    if(v.petaTahun) filter.tahun = String(v.petaTahun);
+    // Tahap 4 — sinkron dari filterGlobal jika ada
+    var fg = v.filterGlobal || {};
+    if(fg.tahun) filter.tahun = String(fg.tahun);
+    else if(v.petaTahun) filter.tahun = String(v.petaTahun);
+    if(fg.bidangId) filter.bidangId = String(fg.bidangId);
+    if(fg.seksiId) filter.seksiId = String(fg.seksiId);
+    if(fg.keyword) filter.keyword = String(fg.keyword);
     if(v.petaLevel) filter.level = v.petaLevel;
     // getPetaKegiatan tersedia di 09_BridgeFrontend.gs
     try{

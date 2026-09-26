@@ -115,6 +115,8 @@ var app = AppCore.create({
     try { if (window.AppCore && AppCore.getTheme) { var t = AppCore.getTheme(); if(t) AppCore.applyTheme(t); } } catch(e){}
     // Restore scope Saya/Semua
     try { vm.filterScope = (AppCore.getMyScope ? AppCore.getMyScope() : 'all'); } catch(e){ vm.filterScope='all'; }
+    // Tahap 4 — restore Filter Global sebelum load data
+    try { if (vm.initGlobalFilter) vm.initGlobalFilter(); } catch(e){}
     await vm.loadAll(true);
     vm.dataLoaded = true;
   },

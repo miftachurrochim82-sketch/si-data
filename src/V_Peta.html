@@ -79,7 +79,8 @@
       <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
         <i class="fa-solid fa-ranking-star text-amber-500"></i>
         <h3 class="font-bold text-sm">Ranking Wilayah</h3>
-        <span class="ml-auto text-[11px] text-slate-400">{{ petaSortedWilayah.length }} wilayah</span>
+        <span class="ml-auto text-[11px] text-slate-400 hidden sm:inline">{{ petaSortedWilayah.length }} wilayah</span>
+        <button class="btn btn-ghost btn-sm text-[11px] !px-2 !py-1 ml-2" @click="exportPetaCsv()" title="Export ranking ke CSV"><i class="fa-solid fa-file-csv text-emerald-600"></i> Export</button>
       </div>
       <div v-if="petaLoading && !petaSortedWilayah.length" class="p-6">
         <app-skeleton type="table"></app-skeleton>

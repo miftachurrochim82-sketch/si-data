@@ -128,6 +128,11 @@ window.StarterKitState = {
       petaMap: null,
       petaGeoJsonLayer: null,
 
+      // ==================== GLOBAL FILTER — Tahap 4 ====================
+      filterGlobal: { tahun: th, bidangId: '', seksiId: '', keyword: '' },
+      filterGlobalApplied: false,
+      filterGlobalCollapsed: false,
+
       // ==================== UI ====================
       rowMenuId: null,
 
@@ -223,6 +228,24 @@ window.StarterKitState = {
     petaSortedWilayah() {
       var w=(this.petaData && this.petaData.wilayah || []).slice();
       return w.sort(function(a,b){ return (b.jumlah||0)-(a.jumlah||0); });
+    },
+    // Tahap 4 — global filter
+    globalFilterActiveCount() {
+      var f=this.filterGlobal||{}; var c=0;
+      if(f.tahun) c++; if(f.bidangId) c++; if(f.seksiId) c++; if(f.keyword) c++;
+      return c;
+    },
+    globalFilterHasBidang() { return !!(this.filterGlobal && this.filterGlobal.bidangId); },
+    seksiListGlobal() {
+      var bid=this.filterGlobal && this.filterGlobal.bidangId;
+      if(!bid) return [];
+      return (this.allUnits||[]).filter(function(u){ return String(u.parent_id)===String(bid) && (u.jenis_unit==='SEKSI'||u.jenis_unit==='SUB_BIDANG'); });
+    },
+    bidangNamaGlobal() {
+      var id=this.filterGlobal && this.filterGlobal.bidangId;
+      if(!id) return '';
+      var u=(this.allUnits||[]).find(function(x){ return String(x.id)===String(id); });
+      return u ? u.nama : id;
     }
   }
 };

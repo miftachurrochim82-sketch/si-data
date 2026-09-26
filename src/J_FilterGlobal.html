@@ -1,0 +1,281 @@
+<script>
+// ============================================================
+// STARTER-KIT - J_FilterGlobal.html (Tahap 4 — Global Filter sinkron + Export)
+// Panduan: 1 filter untuk semua halaman, simpan di localStorage, sinkron ke
+//          lapTahun/anaTahun/evaTahun/petaTahun/utamaFilters + export CSV/Print
+// ============================================================
+(function(){
+  var STORAGE_KEY = 'sidata_global_filter_v4';
+
+  function readStored(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    // fallback dari kunci lama jika ada
+    try{ var v = localStorage.getItem('sidata_global_filter'); if(v) return JSON.parse(v); }catch(e){}
+    return null;
+  }
+  function writeStored(obj){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(obj)); }catch(e){}
+  }
+
+  // Normalisasi filter object agar selalu lengkap
+  function normalize(obj, fallbackTahun){
+    var th = fallbackTahun || String(new Date().getFullYear());
+    var o = obj || {};
+    return {
+      tahun: (o.tahun !== undefined && o.tahun !== null) ? String(o.tahun) : th,
+      bidangId: String(o.bidangId || ''),
+      seksiId: String(o.seksiId || ''),
+      keyword: String(o.keyword || '')
+    };
+  }
+
+  window.GlobalFilterHelpers = {
+    methods: {
+      // dipanggil dari J_App.initApp & saat mount
+      initGlobalFilter: function(){
+        var th = String(new Date().getFullYear());
+        var stored = readStored();
+        if(stored){
+          this.filterGlobal = normalize(stored, th);
+          this.filterGlobalApplied = !!stored._applied;
+        } else {
+          this.filterGlobal = normalize({ tahun: th }, th);
+          this.filterGlobalApplied = false;
+        }
+        // sinkron ke filter per-halaman biar UI tab lama ikut
+        this.syncGlobalToPageFilters();
+      },
+
+      syncGlobalToPageFilters: function(){
+        var g = this.filterGlobal || {};
+        var t = g.tahun || '';
+        // tahun per halaman (biarkan empty = semua)
+        if(this.lapTahun !== undefined) this.lapTahun = t;
+        if(this.anaTahun !== undefined) this.anaTahun = t;
+        if(this.evaTahun !== undefined) this.evaTahun = t;
+        if(this.petaTahun !== undefined) this.petaTahun = t;
+        if(this.rtlGenerateTahun !== undefined && !this.rtlFilters.tahun) this.rtlFilters.tahun = t;
+        // Transaksi — utamaFilters.tahun + bidang (unit_id) — jangan timpa search user jika sudah ada keyword global
+        if(this.utamaFilters){
+          this.utamaFilters.tahun = t;
+          // keyword global → search transaksi
+          if(g.keyword) this.utamaFilters.search = g.keyword;
+        }
+        // Tematik cascade — set bidang di form filter jika ada
+        if(g.bidangId && this.tematikBidangId !== undefined){
+          this.tematikBidangId = g.bidangId;
+        }
+      },
+
+      applyGlobalFilter: function(){
+        var g = normalize(this.filterGlobal, String(new Date().getFullYear()));
+        this.filterGlobal = g;
+        this.filterGlobalApplied = true;
+        // simpan dengan flag applied
+        var toSave = Object.assign({}, g, { _applied: true });
+        writeStored(toSave);
+        this.syncGlobalToPageFilters();
+        this.showToast && this.showToast('Filter diterapkan: ' + (g.tahun || 'Semua tahun') + (g.bidangId ? ' · ' + (this.bidangNamaGlobal || g.bidangId) : ''), 'success');
+        // reload halaman aktif + dashboard (biar kartu ikut)
+        this.reloadCurrentPageWithGlobal();
+      },
+
+      resetGlobalFilter: function(){
+        var th = String(new Date().getFullYear());
+        this.filterGlobal = normalize({ tahun: '', bidangId:'', seksiId:'', keyword:'' }, th);
+        this.filterGlobal.tahun = ''; // reset = semua
+        this.filterGlobalApplied = false;
+        try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+        this.syncGlobalToPageFilters();
+        this.showToast && this.showToast('Filter direset — menampilkan semua data', 'info');
+        this.reloadCurrentPageWithGlobal();
+      },
+
+      reloadCurrentPageWithGlobal: function(){
+        var page = this.currentPage || 'dashboard';
+        var g = this.filterGlobal || {};
+        var bidang = g.bidangId || '';
+        var seksi = g.seksiId || '';
+        var tahun = g.tahun || '';
+        // Dashboard — summary ikut tahun/bidang jika backend support filter
+        if(typeof this.loadDashboard === 'function'){
+          // loadDashboard tidak pakai filter param, tapi loadAll akan refresh. Kita trigger loadDashboard via loadAll? Untuk ringan, panggil loadAll jika page dashboard
+          if(page === 'dashboard' && typeof this.loadAll === 'function'){
+            // loadAnalitik juga ikut tahun? kita panggil ulang analitik dengan filter global via bridge jika ada
+            try{ this.loadAll(); }catch(e){}
+          }
+        }
+        // Transaksi
+        if(page === 'utama'){
+          if(this.utamaFilters) this.utamaFilters.tahun = tahun;
+          if(typeof this.loadUtama === 'function') this.loadUtama(1);
+        } else if(page === 'laporan'){
+          if(typeof this.loadLaporanGrup === 'function') this.loadLaporanGrup(this.laporanGrupTab || 'dimensi');
+        } else if(page === 'analisa'){
+          this.anaGridLoaded = false;
+          if(typeof this.loadAnalisaGrid === 'function') this.loadAnalisaGrid();
+        } else if(page === 'evaluasi'){
+          this.evaGridLoaded = false;
+          if(typeof this.loadEvaluasiGrid === 'function') this.loadEvaluasiGrid();
+        } else if(page === 'peta'){
+          if(typeof this.loadPeta === 'function') this.loadPeta();
+          else if(typeof window.loadPeta === 'function') window.loadPeta(this);
+          else if(typeof window.initPeta === 'function') window.initPeta(this);
+        } else if(page === 'rtl'){
+          if(this.rtlFilters) this.rtlFilters.tahun = tahun;
+          if(typeof this.loadRtl === 'function') this.loadRtl(1);
+        } else if(page === 'dashboard'){
+          // sudah di handle loadAll di atas
+        }
+        // Selalu refresh dashboard summary di background jika bukan dashboard (biar kartu tetap sinkron saat balik)
+        if(page !== 'dashboard' && typeof this.loadDashboard === 'function'){
+          try{ this.loadDashboard(true); }catch(e){}
+        }
+      },
+
+      // ---------- Export ----------
+      exportGlobalCsv: function(){
+        var page = this.currentPage || 'dashboard';
+        try{
+          if(page === 'utama') return this.exportUtamaCsv();
+          if(page === 'peta') return this.exportPetaCsv();
+          if(page === 'laporan') return this.exportLaporanCsv();
+          if(page === 'analisa') return this.exportAnalisaCsv();
+          if(page === 'rtl') return this.exportRtlCsv();
+          if(page === 'dashboard') return this.exportDashboardCsv();
+          // fallback: export transaksi
+          return this.exportUtamaCsv();
+        }catch(e){
+          this.showToast && this.showToast('Gagal export: ' + (e.message||e), 'error');
+        }
+      },
+      exportGlobalPrint: function(){
+        // cetak area main saja
+        try{
+          var el = document.querySelector('main');
+          if(!el){ window.print(); return; }
+          var w = window.open('', '_blank');
+          if(!w){ window.print(); return; }
+          var html = '<!doctype html><html><head><meta charset=\"utf-8\"><title>Cetak - ' + (this.currentPage||'') + '</title>'
+            + '<style>body{font-family:system-ui;padding:16px;color:#0f172a} table{width:100%;border-collapse:collapse;font-size:12px} th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left} th{background:#f8fafc} h1{font-size:18px;margin:0 0 8px} .muted{color:#64748b;font-size:11px}</style></head><body>'
+            + '<h1>SI-DATA — ' + (this.currentPage||'').toUpperCase() + '</h1>'
+            + '<div class=\"muted\">Filter: ' + escapeHtml(JSON.stringify(this.filterGlobal||{})) + ' · ' + new Date().toLocaleString('id-ID') + '</div><hr style=\"margin:10px 0\">'
+            + el.innerHTML
+            + '<script>window.onload=function(){window.print();}<\/script></body></html>';
+          w.document.write(html);
+          w.document.close();
+        }catch(e){ window.print(); }
+      },
+
+      // CSV helpers — pakai Blob + download
+      _downloadCsv: function(filename, rows, headers){
+        if(!rows || !rows.length){
+          this.showToast && this.showToast('Tidak ada data untuk diexport', 'info');
+          return;
+        }
+        var cols = headers || Object.keys(rows[0] || {});
+        var esc = function(v){
+          var s = String(v==null?'':v);
+          if(s.indexOf(',')>-1 || s.indexOf('\"')>-1 || s.indexOf('\n')>-1) return '\"' + s.replace(/\"/g,'\"\"') + '\"';
+          return s;
+        };
+        var csv = cols.map(esc).join(',') + '\n' + rows.map(function(r){ return cols.map(function(c){ return esc(r[c]); }).join(','); }).join('\n');
+        var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+        this.showToast && this.showToast('CSV terunduh: ' + filename, 'success');
+      },
+
+      exportUtamaCsv: function(){
+        var rows = (this.utamaList||[]).map(function(r){
+          return {
+            kode: r.kode||r.id||'',
+            uraian: r.uraian||r.judul||'',
+            tanggal: r.tanggal||'',
+            bidang: r.unit_nama||r.bidang||'',
+            fungsi: r.fungsi_nama||'',
+            kategori: r.kategori_nama||'',
+            jenis: r.jenis_nama||'',
+            lokasi: r.lokasi_nama||'',
+            jumlah: r.jumlah||0,
+            status: r.status||''
+          };
+        });
+        this._downloadCsv('si-data_transaksi_' + (this.filterGlobal.tahun||'semua') + '.csv', rows, ['kode','uraian','tanggal','bidang','fungsi','kategori','jenis','lokasi','jumlah','status']);
+      },
+      exportPetaCsv: function(){
+        var rows = (this.petaSortedWilayah||this.petaData.wilayah||[]).map(function(w, i){
+          return { rank: i+1, wilayah: w.nama, jumlah: w.jumlah, volume: w.volume||0, anggaran: w.anggaran||0, topFungsi: w.topFungsi||'' };
+        });
+        this._downloadCsv('si-data_peta-ranking_' + (this.filterGlobal.tahun||'semua') + '.csv', rows, ['rank','wilayah','jumlah','volume','anggaran','topFungsi']);
+      },
+      exportLaporanCsv: function(){
+        // gabung beberapa tab laporan yang sudah loaded
+        var all = [];
+        var tabs = ['kategori','jenis','lokasi','periode','pegawai','status','satuan','jenis_periode','jenis_lokasi'];
+        var self=this;
+        tabs.forEach(function(t){
+          var d = self.lapData && self.lapData[t];
+          if(!d) return;
+          // d shape bervariasi — coba handle {data:[]} atau {rows:[]} atau langsung array
+          var arr = Array.isArray(d) ? d : (d.data||d.rows||d.list||[]);
+          if(Array.isArray(arr)) arr.forEach(function(r){
+            var rec = Object.assign({ _tab: t }, r);
+            all.push(rec);
+          });
+        });
+        if(!all.length){
+          // fallback: pakai lapDataAktif
+          var cur = this.lapDataAktif;
+          if(cur){
+            var arr2 = Array.isArray(cur) ? cur : (cur.data||cur.rows||[]);
+            if(arr2.length) all = arr2.map(function(r){ return Object.assign({ _tab: this.laporanTab }, r); }.bind(this));
+          }
+        }
+        if(!all.length){ this.showToast && this.showToast('Data laporan belum dimuat — buka tab laporan dulu', 'info'); return; }
+        // headers dinamis dari keys pertama (batasi 12 kolom biar rapi)
+        var keys = Object.keys(all[0]||{}).slice(0,12);
+        this._downloadCsv('si-data_laporan_' + (this.filterGlobal.tahun||'semua') + '.csv', all, keys);
+      },
+      exportAnalisaCsv: function(){
+        var rows = [];
+        var ana = this.anaData||{};
+        Object.keys(ana).forEach(function(k){
+          var d = ana[k];
+          if(!d) return;
+          rows.push({ tab: k, data: JSON.stringify(d).slice(0,500) });
+        });
+        if(!rows.length){ this.showToast && this.showToast('Data analisa belum dimuat', 'info'); return; }
+        this._downloadCsv('si-data_analisa_' + (this.filterGlobal.tahun||'semua') + '.csv', rows, ['tab','data']);
+      },
+      exportRtlCsv: function(){
+        var rows = (this.rtlList||[]).map(function(r){
+          return { judul: r.judul||r.judul_rtl||'', sumber: r.sumber_evaluasi||r.sumber||'', status: r.status_rtl||r.status||'', progress: r.progress_pct||0, assigned: r.assigned_to||'', due: r.due_date||'' };
+        });
+        this._downloadCsv('si-data_rtl_' + (this.filterGlobal.tahun||'semua') + '.csv', rows, ['judul','sumber','status','progress','assigned','due']);
+      },
+      exportDashboardCsv: function(){
+        var s = this.dashboardData && this.dashboardData.summary || {};
+        var rows = [{ metric:'Total Transaksi', value: s.totalUtama||0 }, {metric:'Selesai', value: s.totalSelesai||0}, {metric:'Menunggu Verifikasi', value: s.approvalMenunggu||0}, {metric:'RTL Terbuka', value: s.rtlTerbuka||0}];
+        // tambah top pegawai jika ada
+        (this.dashboardData.topPegawai||[]).forEach(function(p, i){ rows.push({metric: 'Top '+(i+1)+' '+p.nama, value: p.jumlah}); });
+        this._downloadCsv('si-data_dashboard_' + (this.filterGlobal.tahun||'semua') + '.csv', rows, ['metric','value']);
+      }
+    }
+  };
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>\"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'})[c]; });
+  }
+
+  // Merge ke StarterKitApi agar tersedia via this.* di Vue
+  if(window.StarterKitApi && window.StarterKitApi.methods){
+    Object.assign(window.StarterKitApi.methods, window.GlobalFilterHelpers.methods);
+  }
+})();
+</script>
