@@ -1,0 +1,50 @@
+<!-- ============================ -->
+<!-- V_Peta.html                   -->
+<!-- PAGE: PETA INTERAKTIF         -->
+<!-- ============================ -->
+<section id="page-peta" class="page">
+  <div class="page-header">
+    <h2>🗺️ Peta Sebaran Kegiatan</h2>
+    <div class="toolbar">
+      <button class="btn btn-secondary" onclick="togglePetaFullscreen()" id="btnFullscreen">⛶ Fullscreen</button>
+      <button class="btn btn-secondary" onclick="reloadPeta()">🔄 Refresh</button>
+    </div>
+  </div>
+  <!-- Filter Peta -->
+  <div class="filter-bar">
+    <select id="petaLevel" class="filter-control">
+      <option value="kecamatan">🏘️ Level Kecamatan</option>
+      <option value="kabupaten">🏛️ Level Kabupaten</option>
+      <option value="desa">🏡 Level Desa</option>
+    </select>
+    <select id="petaWarna" class="filter-control">
+      <option value="jumlah">🎨 Warna: Jumlah Kegiatan</option>
+      <option value="anggaran">💰 Warna: Total Anggaran</option>
+      <option value="volume">📊 Warna: Total Volume</option>
+    </select>
+    <button class="btn-reset-filter" onclick="resetPetaFilter()" title="Reset">↺</button>
+  </div>
+  <!-- KPI Peta -->
+  <div class="kpi-grid" id="petaKPI">
+    <div class="kpi-card"><div class="kpi-icon">📍</div><div class="kpi-value" id="petaTotalWilayah">—</div><div class="kpi-label">Wilayah Aktif</div></div>
+    <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-value" id="petaTotalKegiatan">—</div><div class="kpi-label">Total Kegiatan</div></div>
+    <div class="kpi-card"><div class="kpi-icon">🏆</div><div class="kpi-value" id="petaTopWilayah">—</div><div class="kpi-label">Wilayah Teraktif</div></div>
+    <div class="kpi-card"><div class="kpi-icon">📉</div><div class="kpi-value" id="petaMinWilayah">—</div><div class="kpi-label">Wilayah Tersepi</div></div>
+  </div>
+  <!-- Peta -->
+  <div class="table-card peta-card">
+    <div id="mapContainer" class="map-container"></div>
+    <div class="peta-legend" id="petaLegend">
+      <div class="peta-legend-title">📊 Jumlah Kegiatan</div>
+      <div class="peta-legend-items" id="petaLegendItems"></div>
+    </div>
+  </div>
+  <!-- Tabel Ranking Wilayah -->
+  <div class="table-card">
+    <div class="chart-header">
+      <h3>🏅 Ranking Wilayah</h3>
+      <div class="toolbar"><button class="btn btn-secondary" onclick="exportPetaCSV()">📥 Export CSV</button></div>
+    </div>
+    <div class="table-wrapper" id="tabelPetaRanking"><p class="loading">Memuat data...</p></div>
+  </div>
+</section>

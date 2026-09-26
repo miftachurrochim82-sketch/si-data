@@ -1,0 +1,181 @@
+<script>
+// =============================================
+// J_Evaluasi.html — Evaluasi Target vs Realisasi
+// =============================================
+let evalChart = null;
+let editingTargetId = null;
+function initEvaluasi() {
+  google.script.run.withSuccessHandler(function(list) {
+    const sel = document.getElementById('evalPeriode');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Semua Periode —</option>';
+    list.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.label;
+      sel.appendChild(o);
+    });
+    if (list.length) sel.value = list[list.length - 1].id;
+  }).getPeriodeListSimple();
+}
+function loadEvaluasi() {
+  const periodeId = document.getElementById('evalPeriode').value;
+  const container = document.getElementById('evalContent');
+  container.innerHTML = '<div class="table-card"><p class="loading">Memuat data...</p></div>';
+  const filter = periodeId ? { periodeId: periodeId } : {};
+  google.script.run.withSuccessHandler(function(data) {
+    if (data.error) {
+      container.innerHTML = '<div class="table-card"><p class="loading">⚠️ ' + escapeHtml(data.error) + '</p></div>';
+      return;
+    }
+    renderEvaluasi(data);
+  }).withFailureHandler(function(e) {
+    container.innerHTML = '<div class="table-card"><p class="loading">❌ ' + e.message + '</p></div>';
+  }).getTargetEvaluasi(filter);
+}
+function renderEvaluasi(data) {
+  const container = document.getElementById('evalContent');
+  const r = data.ringkasan;
+  let html = '';
+  const colorCapaian = r.capaian >= 100 ? '#16a34a' : r.capaian >= 75 ? '#f59e0b' : '#dc2626';
+  html += '<div class="eval-summary-grid">';
+  html += '<div class="eval-card"><div class="eval-icon">🎯</div><div class="eval-value">' + r.totalTarget + '</div><div class="eval-label">Total Target</div></div>';
+  html += '<div class="eval-card"><div class="eval-icon">✅</div><div class="eval-value">' + r.totalRealisasi + '</div><div class="eval-label">Total Realisasi</div></div>';
+  html += '<div class="eval-card" style="border-left-color:' + colorCapaian + '"><div class="eval-icon">📊</div><div class="eval-value" style="color:' + colorCapaian + '">' + r.capaian + '%</div><div class="eval-label">Capaian</div></div>';
+  html += '<div class="eval-card"><div class="eval-icon">💰</div><div class="eval-value">' + formatRupiah(r.totalRealisasiAnggaran) + '</div><div class="eval-label">Realisasi Anggaran</div></div>';
+  html += '</div>';
+  html += '<div class="status-summary">';
+  html += '<div class="status-pill status-tercapai">✅ Tercapai: <strong>' + r.tercapai + '</strong></div>';
+  html += '<div class="status-pill status-sedang">⚠️ Sedang: <strong>' + r.sedang + '</strong></div>';
+  html += '<div class="status-pill status-kurang">❌ Kurang: <strong>' + r.kurang + '</strong></div>';
+  html += '</div>';
+  html += '<div class="table-card">';
+  html += '<div class="chart-header"><h3>📊 Target vs Realisasi per Fungsi</h3><span class="badge">BAR</span></div>';
+  html += '<div style="height: 400px;"><canvas id="chartEvaluasi"></canvas></div>';
+  html += '</div>';
+  html += '<div class="table-card">';
+  html += '<div class="chart-header"><h3>📋 Detail Evaluasi</h3></div>';
+  html += '<div class="table-wrapper"><table class="table-eval">';
+  html += '<thead><tr><th>Nama Target</th><th>Fungsi</th><th>Periode</th><th style="text-align:center;">Target</th><th style="text-align:center;">Realisasi</th><th style="text-align:center;">Capaian</th><th style="text-align:center;">Status</th></tr></thead><tbody>';
+  if (!data.items.length) {
+    html += '<tr><td colspan="7" style="text-align:center; padding: 30px;">Belum ada target untuk periode ini.</td></tr>';
+  } else {
+    data.items.forEach(d => {
+      const cls = d.status === 'tercapai' ? 'row-naik' : d.status === 'kurang' ? 'row-turun' : 'row-sedang';
+      const icon = d.status === 'tercapai' ? '✅' : d.status === 'kurang' ? '❌' : '⚠️';
+      const color = d.status === 'tercapai' ? '#16a34a' : d.status === 'kurang' ? '#dc2626' : '#f59e0b';
+      html += '<tr class="' + cls + '">';
+      html += '<td><strong>' + escapeHtml(d.nama_target) + '</strong></td>';
+      html += '<td>' + escapeHtml(d.fungsi_nama) + '</td>';
+      html += '<td>' + escapeHtml(d.periode) + '</td>';
+      html += '<td style="text-align:center;">' + d.target_kegiatan + '</td>';
+      html += '<td style="text-align:center;">' + d.realisasi_kegiatan + '</td>';
+      html += '<td style="text-align:center; color:' + color + ';"><strong>' + d.capaian_kegiatan + '%</strong></td>';
+      html += '<td style="text-align:center;">' + icon + '</td>';
+      html += '</tr>';
+    });
+  }
+  html += '</tbody></table></div></div>';
+  container.innerHTML = html;
+  setTimeout(() => renderEvalChart(data), 100);
+}
+function renderEvalChart(data) {
+  const ctx = document.getElementById('chartEvaluasi');
+  if (!ctx) return;
+  if (evalChart) evalChart.destroy();
+  const labels = data.items.map(d => d.fungsi_nama);
+  const targets = data.items.map(d => d.target_kegiatan);
+  const reals = data.items.map(d => d.realisasi_kegiatan);
+  evalChart = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Target', data: targets, backgroundColor: '#94a3b8', borderRadius: 4 },
+        { label: 'Realisasi', data: reals, backgroundColor: '#2d5a87', borderRadius: 4 }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+function openFormTarget() {
+  editingTargetId = null;
+  document.getElementById('modalTarget').classList.add('active');
+  document.getElementById('modalTargetTitle').textContent = '➕ Tambah Target';
+  document.getElementById('targetError').classList.remove('show');
+  document.getElementById('tNama').value = '';
+  document.getElementById('tKegiatan').value = 0;
+  document.getElementById('tAnggaran').value = 0;
+  document.getElementById('tVolume').value = 0;
+  document.getElementById('tKeterangan').value = '';
+  google.script.run.withSuccessHandler(function(opt) {
+    fillSelect('tFungsi', opt.fungsi, 'nama', '— Pilih Fungsi —');
+    fillSelect('tPeriode', opt.periode, 'label', '— Pilih Periode —');
+    fillSelect('tUnit', opt.unit, 'nama', '— Pilih Unit —');
+  }).getTargetFormOptions();
+}
+function closeFormTarget() {
+  document.getElementById('modalTarget').classList.remove('active');
+  editingTargetId = null;
+}
+function submitTarget() {
+  const payload = {
+    nama_target: document.getElementById('tNama').value.trim(),
+    fungsi_id: document.getElementById('tFungsi').value,
+    periode_id: document.getElementById('tPeriode').value,
+    unit_id: document.getElementById('tUnit').value,
+    target_kegiatan: document.getElementById('tKegiatan').value,
+    target_anggaran: document.getElementById('tAnggaran').value,
+    target_volume: document.getElementById('tVolume').value,
+    keterangan: document.getElementById('tKeterangan').value.trim()
+  };
+  const errEl = document.getElementById('targetError');
+  const kosong = Object.keys(payload).filter(k => !payload[k] && k !== 'keterangan' && k !== 'target_anggaran' && k !== 'target_volume');
+  if (kosong.length) {
+    errEl.textContent = 'Field wajib belum lengkap: ' + kosong.join(', ');
+    errEl.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('btnSimpanTarget');
+  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+  const isEdit = !!editingTargetId;
+  const handler = function(res) {
+    btn.disabled = false; btn.textContent = '💾 Simpan';
+    if (res.success) {
+      closeFormTarget();
+      showToast(isEdit ? '✅ Target diperbarui' : '✅ Target tersimpan');
+      loadEvaluasi();
+    } else {
+      errEl.textContent = res.error; errEl.classList.add('show');
+    }
+  };
+  if (isEdit) {
+    payload.id = editingTargetId;
+    google.script.run.withSuccessHandler(handler).updateTarget(payload);
+  } else {
+    google.script.run.withSuccessHandler(handler).simpanTarget(payload);
+  }
+}
+function exportEvaluasiCSV() {
+  const table = document.querySelector('.table-eval');
+  if (!table) { showToast('Belum ada data', true); return; }
+  let csv = 'Evaluasi Target vs Realisasi\n\n';
+  const rows = table.querySelectorAll('tr');
+  rows.forEach(tr => {
+    const cells = tr.querySelectorAll('th, td');
+    const row = [];
+    cells.forEach(c => row.push(c.textContent.trim().replace(/;/g, ',')));
+    csv += row.join(';') + '\n';
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Evaluasi_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>

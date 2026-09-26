@@ -1,191 +1,163 @@
-<!-- ============================================================
-     STARTER-KIT - V_Modals.html (v2.11.0 — modal v-if + @close + size)
-     Semua modal pakai v-if (pattern UIUX v2).
-     ============================================================ -->
+<!-- ============================ -->
+<!-- V_Modals.html                 -->
+<!-- SEMUA MODAL                   -->
+<!-- ============================ -->
 
-<!-- Modal Form T_UTAMA — size 2xl -->
-<app-modal v-if="showUtamaForm" @close="showUtamaForm=false" :title="utamaForm.id ? 'Ubah Transaksi' : 'Transaksi Baru'" subtitle="Kode auto · 5 FK ke master" icon="fa-solid fa-database" size="2xl" :loading="utamaSaving" confirm-text="Simpan" cancel-text="Batal" @confirm="simpanUtama()">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="md:col-span-2">
-      <label class="form-label">Judul *</label>
-      <input class="input w-full" v-model.trim="utamaForm.judul" placeholder="Judul transaksi">
+<!-- 1. MODAL: FORM KEGIATAN -->
+<div id="modalKegiatan" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>➕ Tambah Kegiatan Baru</h3>
+      <button class="modal-close" onclick="closeFormKegiatan()">✕</button>
     </div>
-    <div>
-      <label class="form-label">Tanggal</label>
-      <input type="date" class="input w-full" v-model="utamaForm.tanggal">
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Tanggal *</label><input type="date" id="fTanggal"></div>
+        <div class="form-group"><label>Periode *</label><select id="fPeriode"></select></div>
+        <!-- CASCADE: Bidang → Seksi → Fungsi -->
+        <div class="form-group"><label>Bidang *</label><select id="fBidang"><option value="">— Pilih Bidang —</option></select></div>
+        <div class="form-group"><label>Seksi *</label><select id="fSeksi" disabled><option value="">— Pilih Bidang dulu —</option></select></div>
+        <div class="form-group full-width"><label>Fungsi *</label><select id="fFungsi" disabled><option value="">— Pilih Seksi dulu —</option></select></div>
+        <div class="form-group"><label>Kategori *</label><select id="fKategori"></select></div>
+        <div class="form-group"><label>Jenis *</label><select id="fJenis"></select></div>
+        <div class="form-group"><label>Lokasi *</label><select id="fLokasi"></select></div>
+        <div class="form-group"><label>Satuan *</label><select id="fSatuan"></select></div>
+        <div class="form-group full-width"><label>Uraian Kegiatan *</label><input type="text" id="fUraian" placeholder="Contoh: Patroli rutin wilayah kota"></div>
+        <div class="form-group"><label>Jumlah / Volume *</label><input type="number" id="fJumlah" min="0" value="0"></div>
+        <div class="form-group"><label>Anggaran (Rp)</label><input type="number" id="fAnggaran" min="0" value="0"></div>
+        <div class="form-group full-width"><label>Status</label><select id="fStatus"><option value="DRAFT">DRAFT</option><option value="PROSES">PROSES</option><option value="SELESAI" selected>SELESAI</option></select></div>
+        <div class="form-group full-width"><label>Keterangan</label><textarea id="fKeterangan" rows="2" placeholder="Opsional"></textarea></div>
+      </div>
+      <!-- SECTION TEMATIK (dinamis, muncul sesuai fungsi) -->
+      <div id="formTematikSection" class="form-tematik-section" style="display:none;">
+        <div class="form-tematik-header">
+          <span class="form-tematik-icon">📋</span>
+          <span class="form-tematik-title">Data Tematik</span>
+          <span class="form-tematik-badge">Opsional</span>
+        </div>
+        <div id="formTematikBody" class="form-tematik-body"></div>
+      </div>
+      <div id="formError" class="form-error"></div>
     </div>
-    <div>
-      <label class="form-label">Status</label>
-      <select class="input w-full" v-model="utamaForm.status">
-        <option value="draft">Draft</option>
-        <option value="baru">Baru</option>
-        <option value="diproses">Diproses</option>
-        <option value="selesai">Selesai</option>
-        <option value="batal">Batal</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Jenis</label>
-      <select class="input w-full" v-model="utamaForm.jenis_id">
-        <option value="">— pilih —</option>
-        <option v-for="j in jenisList" :key="j.id" :value="j.id">{{ j.nama || j.kode }}</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Kategori</label>
-      <select class="input w-full" v-model="utamaForm.kategori_id">
-        <option value="">— pilih —</option>
-        <option v-for="k in kategoriList" :key="k.id" :value="k.id">{{ k.nama || k.kode }}</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Lokasi</label>
-      <select class="input w-full" v-model="utamaForm.lokasi_id">
-        <option value="">— pilih —</option>
-        <option v-for="l in lokasiList" :key="l.id" :value="l.id">{{ l.nama || l.kode }}</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Periode</label>
-      <select class="input w-full" v-model="utamaForm.periode_id">
-        <option value="">— pilih —</option>
-        <option v-for="p in periodeList" :key="p.id" :value="p.id">{{ p.label || p.kode }}</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Penanggung Jawab</label>
-      <select class="input w-full" v-model="utamaForm.pegawai_id">
-        <option value="">— pilih —</option>
-        <option v-for="p in pegawaiList" :key="p.pegawai_id" :value="p.pegawai_id">{{ p.nama }}</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Satuan</label>
-      <select class="input w-full" v-model="utamaForm.satuan_id">
-        <option value="">— pilih —</option>
-        <option v-for="s in satuanList" :key="s.id" :value="s.id">{{ s.nama || s.kode }}</option>
-      </select>
-    </div>
-    <div>
-      <label class="form-label">Jumlah</label>
-      <input type="number" step="any" class="input w-full" v-model.number="utamaForm.jumlah">
-    </div>
-    <div>
-      <label class="form-label">Nilai</label>
-      <input type="number" step="any" class="input w-full" v-model.number="utamaForm.nilai">
-    </div>
-    <div class="md:col-span-2">
-      <label class="form-label">Deskripsi</label>
-      <textarea class="input w-full" rows="3" v-model.trim="utamaForm.deskripsi"></textarea>
-    </div>
-    <div class="md:col-span-2">
-      <label class="form-label">Catatan</label>
-      <textarea class="input w-full" rows="2" v-model.trim="utamaForm.catatan"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormKegiatan()">Batal</button>
+      <button class="btn" id="btnSimpan" onclick="submitKegiatan()">💾 Simpan</button>
     </div>
   </div>
-</app-modal>
+</div>
 
-<!-- Modal Form Master (5 tab — field dinamis per tab) — size lg -->
-<app-modal v-if="showMasterForm" @close="showMasterForm=false" :title="(masterForm.id ? 'Ubah ' : 'Tambah ') + masterTab" :subtitle="'Master ' + masterTab" icon="fa-solid fa-book" size="lg" :loading="masterSaving" confirm-text="Simpan" cancel-text="Batal" @confirm="simpanMaster()">
-
-  <!-- M_KATEGORI -->
-  <div v-if="masterTab==='kategori'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div><label class="form-label">Kode *</label><input class="input w-full" v-model.trim="masterForm.kode" placeholder="KAT-05"></div>
-    <div><label class="form-label">Nama *</label><input class="input w-full" v-model.trim="masterForm.nama" placeholder="Nama kategori"></div>
-    <div>
-      <label class="form-label">Parent</label>
-      <select class="input w-full" v-model="masterForm.parent_id">
-        <option value="">— (root) —</option>
-        <option v-for="k in kategoriList.filter(function(x){ return x.id !== masterForm.id; })" :key="k.id" :value="k.id">{{ k.nama || k.kode }}</option>
-      </select>
+<!-- 2. MODAL: DETAIL KEGIATAN -->
+<div id="modalDetail" class="modal-overlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="detailTitle">📄 Detail Kegiatan</h3>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
     </div>
-    <div><label class="form-label">Urutan</label><input type="number" class="input w-full" v-model.number="masterForm.urutan"></div>
-    <div class="md:col-span-2"><label class="form-label">Deskripsi</label><input class="input w-full" v-model.trim="masterForm.deskripsi"></div>
-    <div>
-      <label class="form-label">Status</label>
-      <select class="input w-full" v-model="masterForm.status_aktif">
-        <option value="true">Aktif</option>
-        <option value="false">Nonaktif</option>
-      </select>
+    <div class="modal-body" id="detailBody"><p class="loading">Memuat...</p></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDetail()">Tutup</button>
+      <button class="btn" id="btnEditFromDetail" onclick="editFromDetail()" style="display:none;">✏️ Edit Kegiatan</button>
     </div>
   </div>
+</div>
 
-  <!-- M_JENIS -->
-  <div v-if="masterTab==='jenis'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div><label class="form-label">Kode *</label><input class="input w-full" v-model.trim="masterForm.kode" placeholder="JEN-06"></div>
-    <div><label class="form-label">Nama *</label><input class="input w-full" v-model.trim="masterForm.nama" placeholder="Nama jenis"></div>
-    <div>
-      <label class="form-label">Kategori</label>
-      <select class="input w-full" v-model="masterForm.kategori_id">
-        <option value="">— (tanpa) —</option>
-        <option v-for="k in kategoriList" :key="k.id" :value="k.id">{{ k.nama || k.kode }}</option>
-      </select>
+<!-- 3. MODAL: FORM LOGBOOK -->
+<div id="modalLogbook" class="modal-overlay">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3>➕ Tambah Logbook</h3><button class="modal-close" onclick="closeFormLogbook()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Tanggal *</label><input type="date" id="lbTanggal"></div>
+        <div class="form-group"><label>Pegawai *</label><select id="lbPegawai"><option value="">— Pilih Pegawai —</option></select></div>
+        <div class="form-group full-width"><label>Kegiatan (opsional)</label><select id="lbKegiatan"><option value="">— Tidak terikat kegiatan —</option></select></div>
+        <div class="form-group full-width"><label>Uraian *</label><textarea id="lbUraian" rows="3" placeholder="Contoh: Patroli malam dari pukul 22.00-02.00"></textarea></div>
+      </div>
+      <div id="lbError" class="form-error"></div>
     </div>
-    <div>
-      <label class="form-label">Sifat Periode</label>
-      <select class="input w-full" v-model="masterForm.periode">
-        <option value="Tahunan">Tahunan</option>
-        <option value="Bulanan">Bulanan</option>
-        <option value="Periodik">Periodik</option>
-        <option value="Fleksibel">Fleksibel</option>
-      </select>
-    </div>
-    <div><label class="form-label">Urutan</label><input type="number" class="input w-full" v-model.number="masterForm.urutan"></div>
-    <div>
-      <label class="form-label">Status</label>
-      <select class="input w-full" v-model="masterForm.status_aktif">
-        <option value="true">Aktif</option>
-        <option value="false">Nonaktif</option>
-      </select>
-    </div>
-    <div class="md:col-span-2"><label class="form-label">Deskripsi</label><input class="input w-full" v-model.trim="masterForm.deskripsi"></div>
-  </div>
-
-  <!-- M_PERIODE -->
-  <div v-if="masterTab==='periode'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div><label class="form-label">Tahun * (4 digit)</label><input type="number" min="1900" max="2100" class="input w-full" v-model.trim="masterForm.tahun" placeholder="2026"></div>
-    <div><label class="form-label">Bulan (1–12, kosong = level tahun)</label><input type="number" min="1" max="12" class="input w-full" v-model.trim="masterForm.bulan" placeholder="kosong"></div>
-    <div class="md:col-span-2 text-[11px] text-slate-400">Kode & label otomatis: <b>2026</b> (tahun) atau <b>2026-05</b> (bulan). Label: "Tahun 2026" / "Bulan 5/2026".</div>
-    <div>
-      <label class="form-label">Status</label>
-      <select class="input w-full" v-model="masterForm.status_aktif">
-        <option value="true">Aktif</option>
-        <option value="false">Nonaktif</option>
-      </select>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormLogbook()">Batal</button>
+      <button class="btn" id="btnSimpanLogbook" onclick="submitLogbook()">💾 Simpan</button>
     </div>
   </div>
+</div>
 
-  <!-- M_SATUAN -->
-  <div v-if="masterTab==='satuan'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div><label class="form-label">Kode *</label><input class="input w-full" v-model.trim="masterForm.kode" placeholder="SAT-04"></div>
-    <div><label class="form-label">Nama *</label><input class="input w-full" v-model.trim="masterForm.nama" placeholder="Lembar"></div>
-    <div><label class="form-label">Simbol</label><input class="input w-full" v-model.trim="masterForm.simbol" placeholder="lem"></div>
-    <div>
-      <label class="form-label">Status</label>
-      <select class="input w-full" v-model="masterForm.status_aktif">
-        <option value="true">Aktif</option>
-        <option value="false">Nonaktif</option>
-      </select>
+<!-- 4. MODAL: FORM PESERTA -->
+<div id="modalPeserta" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header"><h3>➕ Tambah Peserta Kegiatan</h3><button class="modal-close" onclick="closeFormPeserta()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group full-width mb-14"><label>Kegiatan *</label><select id="psKegiatan"><option value="">— Pilih Kegiatan —</option></select></div>
+      <div class="form-group full-width"><label>Tambah Pegawai</label>
+        <div class="inline-flex-gap">
+          <select id="psPegawai" class="flex-1"><option value="">— Pilih Pegawai —</option></select>
+          <select id="psPeran" style="width: 140px;">
+            <option value="Koordinator">Koordinator</option>
+            <option value="Anggota" selected>Anggota</option>
+            <option value="Pengawas">Pengawas</option>
+            <option value="Pendamping">Pendamping</option>
+          </select>
+          <button class="btn" onclick="addPesertaToList()">➕</button>
+        </div>
+      </div>
+      <div id="psList" class="peserta-temp-list"><p class="loading">Belum ada peserta ditambahkan.</p></div>
+      <div id="psError" class="form-error"></div>
     </div>
-    <div class="md:col-span-2"><label class="form-label">Keterangan</label><input class="input w-full" v-model.trim="masterForm.keterangan"></div>
-  </div>
-
-  <!-- M_LOKASI -->
-  <div v-if="masterTab==='lokasi'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div><label class="form-label">Kode *</label><input class="input w-full" v-model.trim="masterForm.kode" placeholder="LOK-04"></div>
-    <div><label class="form-label">Nama *</label><input class="input w-full" v-model.trim="masterForm.nama" placeholder="Cabang 3"></div>
-    <div class="md:col-span-2"><label class="form-label">Alamat</label><input class="input w-full" v-model.trim="masterForm.alamat"></div>
-    <div class="md:col-span-2"><label class="form-label">Keterangan</label><input class="input w-full" v-model.trim="masterForm.keterangan"></div>
-    <div>
-      <label class="form-label">Status</label>
-      <select class="input w-full" v-model="masterForm.status_aktif">
-        <option value="true">Aktif</option>
-        <option value="false">Nonaktif</option>
-      </select>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormPeserta()">Batal</button>
+      <button class="btn" id="btnSimpanPeserta" onclick="submitPeserta()">💾 Simpan</button>
     </div>
   </div>
+</div>
 
-</app-modal>
+<!-- 5. MODAL: FORM TARGET -->
+<div id="modalTarget" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modalTargetTitle">➕ Tambah Target</h3><button class="modal-close" onclick="closeFormTarget()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full-width"><label>Nama Target *</label><input type="text" id="tNama" placeholder="Contoh: Target Patroli Januari 2026"></div>
+        <div class="form-group"><label>Fungsi *</label><select id="tFungsi"></select></div>
+        <div class="form-group"><label>Periode *</label><select id="tPeriode"></select></div>
+        <div class="form-group"><label>Unit Kerja *</label><select id="tUnit"></select></div>
+        <div class="form-group"><label>Target Kegiatan *</label><input type="number" id="tKegiatan" min="0" value="0"></div>
+        <div class="form-group"><label>Target Anggaran (Rp)</label><input type="number" id="tAnggaran" min="0" value="0"></div>
+        <div class="form-group"><label>Target Volume</label><input type="number" id="tVolume" min="0" value="0"></div>
+        <div class="form-group full-width"><label>Keterangan</label><textarea id="tKeterangan" rows="2"></textarea></div>
+      </div>
+      <div id="targetError" class="form-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormTarget()">Batal</button>
+      <button class="btn" id="btnSimpanTarget" onclick="submitTarget()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
 
-<!-- Overlay penutup row menu -->
-<div v-if="rowMenuId" class="fixed inset-0 z-20" @click="closeMenu()"></div>
+<!-- 6. MODAL: UPLOAD LAMPIRAN -->
+<div id="modalUpload" class="modal-overlay">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3>📎 Upload Lampiran</h3><button class="modal-close" onclick="closeFormUpload()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group full-width mb-14"><label>Kegiatan *</label><select id="upKegiatan"><option value="">— Pilih Kegiatan —</option></select></div>
+      <div class="form-group full-width mb-14">
+        <label>File * <small class="text-muted">(maks 5 MB)</small></label>
+        <div class="file-drop-zone" id="upDropZone">
+          <input type="file" id="upFile" style="display:none;" onchange="onFileSelected(this)">
+          <div class="file-drop-content" onclick="document.getElementById('upFile').click()">
+            <div class="file-drop-icon">📁</div>
+            <div class="file-drop-text"><strong>Klik untuk pilih file</strong><br><small>PDF, Word, Excel, Gambar, dll</small></div>
+          </div>
+          <div id="upFileInfo" class="file-info" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="form-group full-width mb-14"><label>Nama Dokumen</label><input type="text" id="upNama" placeholder="Otomatis dari nama file"></div>
+      <div class="form-group full-width"><label>Deskripsi</label><textarea id="upDeskripsi" rows="2" placeholder="Opsional — catatan tentang file ini"></textarea></div>
+      <div class="upload-progress" id="upProgress" style="display:none;"><div class="upload-progress-bar" id="upProgressBar"></div></div>
+      <div id="upError" class="form-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeFormUpload()">Batal</button>
+      <button class="btn" id="btnUpload" onclick="submitUpload()">📤 Upload</button>
+    </div>
+  </div>
+</div>

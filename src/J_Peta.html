@@ -1,0 +1,178 @@
+<script>
+// =============================================
+// J_Peta.html — Peta Interaktif (Leaflet)
+// =============================================
+let petaMap = null;
+let petaLayers = {};
+let petaData = null;
+let petaGeoJSON = {};
+let petaIsFullscreen = false;
+const PETA_CENTER = [-8.05, 111.71];
+const PETA_ZOOM = 10;
+function getPetaColor(value, min, max) {
+  if (max === min) return '#cbd5e1';
+  const ratio = (value - min) / (max - min);
+  if (ratio < 0.2) return '#d1fae5';
+  if (ratio < 0.4) return '#a7f3d0';
+  if (ratio < 0.6) return '#fde68a';
+  if (ratio < 0.8) return '#fb923c';
+  return '#dc2626';
+}
+function getNamaWilayah(feature) {
+  const p = feature.properties || {};
+  return p.NAME_2 || p.NAME_3 || p.nama || p.name || p.KECAMATAN || p.DESA || 'Wilayah';
+}
+function initPeta() {
+  if (petaMap) { petaMap.invalidateSize(); return; }
+  const container = document.getElementById('mapContainer');
+  if (!container) return;
+  petaMap = L.map('mapContainer', { center: PETA_CENTER, zoom: PETA_ZOOM, zoomControl: true, scrollWheelZoom: true });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(petaMap);
+  loadPetaBatas();
+  loadPetaData();
+}
+function loadPetaBatas() {
+  const level = document.getElementById('petaLevel')?.value || 'kecamatan';
+  if (petaGeoJSON[level]) { renderPetaBatas(level, petaGeoJSON[level]); return; }
+  const fileMap = { 'kabupaten': 'batas_kabupaten.geojson.json', 'kecamatan': 'batas_kecamatan.geojson.json', 'desa': 'batas_desa.geojson.json' };
+  const fileName = fileMap[level];
+  if (!fileName) return;
+  showToast('Memuat batas wilayah...');
+  google.script.run.withSuccessHandler(function(res) {
+      if (!res.success) { showToast('Gagal load batas: ' + res.error, true); return; }
+      try { const geojson = JSON.parse(res.data); petaGeoJSON[level] = geojson; renderPetaBatas(level, geojson); } catch (e) { showToast('GeoJSON tidak valid: ' + e.message, true); }
+    }).withFailureHandler(function(e) { showToast('Error: ' + e.message, true); }).getGeoJSONContent(fileName);
+}
+function renderPetaBatas(level, geojson) {
+  if (petaLayers.batas) petaMap.removeLayer(petaLayers.batas);
+  const defaultStyle = { color: '#1e3a5f', weight: 2, opacity: 0.6, fillColor: '#2d5a87', fillOpacity: 0.1 };
+  petaLayers.batas = L.geoJSON(geojson, {
+    style: defaultStyle,
+    onEachFeature: function(feature, layer) {
+      const nama = getNamaWilayah(feature);
+      layer.bindTooltip(nama, { permanent: false, direction: 'center', className: 'peta-tooltip' });
+      layer.on('click', function() { petaOnWilayahClick(nama, layer); });
+    }
+  }).addTo(petaMap);
+  if (petaLayers.batas.getBounds().isValid()) petaMap.fitBounds(petaLayers.batas.getBounds(), { padding: [20, 20] });
+  if (petaData) updatePetaWarna();
+}
+function loadPetaData() {
+  google.script.run.withSuccessHandler(function(data) {
+      petaData = data;
+      renderPetaKPI(data);
+      renderPetaRanking(data);
+      renderPetaLegend(data);
+      updatePetaWarna();
+    }).withFailureHandler(function(e) { showToast('Error load data: ' + e.message, true); }).getPetaKegiatan(filterState);
+}
+function updatePetaWarna() {
+  if (!petaLayers.batas || !petaData) return;
+  const warnaBy = document.getElementById('petaWarna')?.value || 'jumlah';
+  const nilaiPerWilayah = {};
+  petaData.wilayah.forEach(w => { nilaiPerWilayah[w.nama.toUpperCase()] = w[warnaBy] || 0; });
+  const values = Object.values(nilaiPerWilayah);
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 1);
+  petaLayers.batas.eachLayer(function(layer) {
+    const nama = getNamaWilayah(layer.feature).toUpperCase();
+    let val = nilaiPerWilayah[nama];
+    if (val === undefined) { for (const key in nilaiPerWilayah) { if (key.includes(nama) || nama.includes(key)) { val = nilaiPerWilayah[key]; break; } } }
+    val = val || 0;
+    const color = getPetaColor(val, min, max);
+    layer.setStyle({ fillColor: color, fillOpacity: 0.7, color: '#1e3a5f', weight: 1.5, opacity: 0.8 });
+  });
+}
+function renderPetaKPI(data) {
+  const el = id => document.getElementById(id);
+  if (!data.wilayah || !data.wilayah.length) return;
+  el('petaTotalWilayah').textContent = data.wilayah.filter(w => w.jumlah > 0).length;
+  el('petaTotalKegiatan').textContent = formatNumber(data.totalKegiatan || 0);
+  const sorted = [...data.wilayah].sort((a, b) => b.jumlah - a.jumlah);
+  const top = sorted[0];
+  const min = sorted[sorted.length - 1];
+  if (top) el('petaTopWilayah').textContent = (top.nama || '').substring(0, 15);
+  if (min) el('petaMinWilayah').textContent = (min.nama || '').substring(0, 15);
+}
+function renderPetaLegend(data) {
+  const el = document.getElementById('petaLegendItems');
+  if (!el) return;
+  const warnaBy = document.getElementById('petaWarna')?.value || 'jumlah';
+  const labelMap = { 'jumlah': 'Jumlah Kegiatan', 'anggaran': 'Total Anggaran', 'volume': 'Total Volume' };
+  const values = data.wilayah.map(w => w[warnaBy] || 0);
+  const min = Math.min(...values, 0);
+  const max = Math.max(...values, 1);
+  const steps = [0, 0.2, 0.4, 0.6, 0.8, 1];
+  let html = '';
+  steps.forEach((s, i) => {
+    if (i === steps.length - 1) return;
+    const rangeMin = min + (max - min) * steps[i];
+    const rangeMax = min + (max - min) * steps[i + 1];
+    const color = getPetaColor(rangeMin, min, max);
+    const label = warnaBy === 'anggaran' ? formatRupiah(Math.round(rangeMin)) + ' - ' + formatRupiah(Math.round(rangeMax)) : Math.round(rangeMin) + ' - ' + Math.round(rangeMax);
+    html += '<div class="peta-legend-item"><div class="peta-legend-color" style="background:' + color + '"></div><span>' + label + '</span></div>';
+  });
+  el.innerHTML = html;
+  const titleEl = document.querySelector('.peta-legend-title');
+  if (titleEl) titleEl.textContent = '📊 ' + (labelMap[warnaBy] || 'Data');
+}
+function renderPetaRanking(data) {
+  const container = document.getElementById('tabelPetaRanking');
+  if (!data.wilayah || !data.wilayah.length) { container.innerHTML = '<p class="loading">Belum ada data.</p>'; return; }
+  const sorted = [...data.wilayah].sort((a, b) => b.jumlah - a.jumlah);
+  let html = '<table><thead><tr><th>#</th><th>Wilayah</th><th style="text-align:right;">Kegiatan</th><th style="text-align:right;">Volume</th><th style="text-align:right;">Anggaran</th><th style="text-align:center;">%</th></tr></thead><tbody>';
+  const total = sorted.reduce((s, x) => s + x.jumlah, 0) || 1;
+  sorted.forEach((w, i) => {
+    const pct = ((w.jumlah / total) * 100).toFixed(1);
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    html += '<tr><td>' + medal + '</td><td><strong>' + escapeHtml(w.nama) + '</strong></td><td style="text-align:right;">' + formatNumber(w.jumlah) + '</td><td style="text-align:right;">' + formatNumber(w.volume || 0) + '</td><td style="text-align:right;">' + formatRupiah(w.anggaran || 0) + '</td><td style="text-align:center;">' + pct + '%</td></tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+function petaOnWilayahClick(nama, layer) {
+  if (!petaData) return;
+  const w = petaData.wilayah.find(x => x.nama.toUpperCase() === nama.toUpperCase() || x.nama.toUpperCase().includes(nama.toUpperCase()) || nama.toUpperCase().includes(x.nama.toUpperCase()));
+  const data = w || { nama: nama, jumlah: 0, volume: 0, anggaran: 0 };
+  const popupHtml = `<div class="peta-popup-header">📍 ${escapeHtml(data.nama)}</div><div class="peta-popup-body"><div class="peta-popup-row"><span class="peta-popup-label">Jumlah Kegiatan</span><span class="peta-popup-value">${formatNumber(data.jumlah)}</span></div><div class="peta-popup-row"><span class="peta-popup-label">Total Volume</span><span class="peta-popup-value">${formatNumber(data.volume || 0)}</span></div><div class="peta-popup-row"><span class="peta-popup-label">Total Anggaran</span><span class="peta-popup-value">${formatRupiah(data.anggaran || 0)}</span></div><div class="peta-popup-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed #e5e7eb;"><span class="peta-popup-label">Fungsi Utama</span><span class="peta-popup-value">${escapeHtml(data.topFungsi || '-')}</span></div></div>`;
+  L.popup({ maxWidth: 300, className: 'peta-popup' }).setLatLng(layer.getBounds().getCenter()).setContent(popupHtml).openOn(petaMap);
+}
+function togglePetaFullscreen() {
+  const section = document.getElementById('page-peta');
+  const btn = document.getElementById('btnFullscreen');
+  if (!section) return;
+  petaIsFullscreen = !petaIsFullscreen;
+  section.classList.toggle('peta-fullscreen', petaIsFullscreen);
+  if (btn) btn.textContent = petaIsFullscreen ? '⛶ Exit' : '⛶ Fullscreen';
+  setTimeout(() => { if (petaMap) petaMap.invalidateSize(); }, 300);
+}
+function reloadPeta() { petaGeoJSON = {}; loadPetaBatas(); loadPetaData(); showToast('🔄 Peta di-refresh'); }
+function resetPetaFilter() {
+  const level = document.getElementById('petaLevel');
+  const warna = document.getElementById('petaWarna');
+  if (level) level.value = 'kecamatan';
+  if (warna) warna.value = 'jumlah';
+  petaGeoJSON = {};
+  loadPetaBatas();
+  renderPetaLegend(petaData || { wilayah: [] });
+  updatePetaWarna();
+}
+function exportPetaCSV() {
+  if (!petaData || !petaData.wilayah || !petaData.wilayah.length) { showToast('Belum ada data', true); return; }
+  let csv = 'Ranking Wilayah — Peta Sebaran Kegiatan\n';
+  csv += 'Diexport: ' + new Date().toLocaleString('id-ID') + '\n\n';
+  csv += 'No;Wilayah;Kegiatan;Volume;Anggaran\n';
+  const sorted = [...petaData.wilayah].sort((a, b) => b.jumlah - a.jumlah);
+  sorted.forEach((w, i) => { csv += (i + 1) + ';' + w.nama + ';' + (w.jumlah || 0) + ';' + (w.volume || 0) + ';' + (w.anggaran || 0) + '\n'; });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'PetaSebaran_' + new Date().toISOString().split('T')[0] + '.csv'; a.click(); URL.revokeObjectURL(url);
+}
+document.addEventListener('DOMContentLoaded', function() {
+  const selLevel = document.getElementById('petaLevel');
+  if (selLevel) selLevel.addEventListener('change', function() { loadPetaBatas(); });
+  const selWarna = document.getElementById('petaWarna');
+  if (selWarna) selWarna.addEventListener('change', function() { if (petaData) { renderPetaLegend(petaData); updatePetaWarna(); } });
+});
+window.addEventListener('resize', function() { if (petaMap && currentPage === 'peta') setTimeout(() => petaMap.invalidateSize(), 200); });
+</script>

@@ -1,0 +1,133 @@
+<!-- ============================ -->
+<!-- V_Main.html — 4 PAGE: DASHBOARD + KEGIATAN + PEGAWAI + LOGBOOK -->
+<!-- ============================ -->
+
+<!-- ============================ -->
+<!-- PAGE: DASHBOARD              -->
+<!-- ============================ -->
+<section id="page-dashboard" class="page active">
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-value" id="kpiKegiatan">—</div><div class="kpi-label">Total Kegiatan</div></div>
+    <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-value" id="kpiPersonel">—</div><div class="kpi-label">Personel Terlibat</div></div>
+    <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-value" id="kpiAnggaran">—</div><div class="kpi-label">Total Anggaran</div></div>
+    <div class="kpi-card"><div class="kpi-icon">⚙️</div><div class="kpi-value" id="kpiFungsi">—</div><div class="kpi-label">Fungsi Aktif</div></div>
+  </div>
+  <!-- Chart Row 1 -->
+  <div class="chart-grid-2-1">
+    <div class="chart-card">
+      <div class="chart-header"><h3>Trend Kegiatan Bulanan</h3><span class="badge">Line</span></div>
+      <canvas id="chartTrend"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Distribusi per Grup</h3><span class="badge">Doughnut</span></div>
+      <canvas id="chartGrup"></canvas>
+    </div>
+  </div>
+  <!-- Chart Row 2 -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><h3>Kegiatan per Unit</h3><span class="badge">Bar</span></div>
+      <canvas id="chartUnit"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Top 10 Lokasi</h3><span class="badge">Bar</span></div>
+      <canvas id="chartLokasi"></canvas>
+    </div>
+  </div>
+  <!-- Chart Row 3 -->
+  <div class="chart-grid">
+    <div class="chart-card full-width">
+      <div class="chart-header"><h3>Kegiatan per Fungsi</h3><span class="badge">Bar Horizontal</span></div>
+      <canvas id="chartFungsi"></canvas>
+    </div>
+  </div>
+  <!-- ANALITIK LANJUTAN -->
+  <div class="section-divider"><h3>🔬 Analitik Lanjutan</h3></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-header"><h3>🏆 Top 10 Pegawai Aktif</h3><span class="badge">Bar</span></div>
+      <canvas id="chartTopPegawai"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>🥇 Leaderboard Unit</h3><span class="badge">Ranking</span></div>
+      <div id="leaderboardUnit" class="leaderboard-container"><p class="loading">Memuat data...</p></div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card full-width">
+      <div class="chart-header"><h3>🌡️ Heatmap Kegiatan Bulan × Grup</h3><span class="badge">Heatmap</span></div>
+      <div id="heatmapBulanGrup" class="heatmap-container"><p class="loading">Memuat data...</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ -->
+<!-- PAGE: KEGIATAN               -->
+<!-- ============================ -->
+<section id="page-kegiatan" class="page">
+  <div class="page-header">
+    <h2>📋 Data Kegiatan</h2>
+    <div class="toolbar">
+      <button class="btn btn-secondary" onclick="openFormUpload()">📎 Upload</button>
+      <button class="btn btn-secondary" onclick="openFormPeserta()">👥 Peserta</button>
+      <button class="btn" onclick="openFormKegiatan()">➕ Tambah</button>
+    </div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="searchKegiatan" placeholder="🔍 Cari uraian / kode / fungsi..." class="filter-input">
+    <select id="fKegiatanUnit" class="filter-control"><option value="">🏛️ Semua Unit</option></select>
+    <select id="fKegiatanStatus" class="filter-control">
+      <option value="">📌 Semua Status</option>
+      <option value="SELESAI">SELESAI</option>
+      <option value="PROSES">PROSES</option>
+      <option value="DRAFT">DRAFT</option>
+    </select>
+    <button class="btn-reset-filter" onclick="resetFilterKegiatan()" title="Reset">↺</button>
+  </div>
+  <div class="table-card">
+    <div class="table-wrapper" id="tabelKegiatan"><p class="loading">Memuat data...</p></div>
+    <div class="pagination-bar" id="paginationKegiatan"></div>
+  </div>
+</section>
+
+<!-- ============================ -->
+<!-- PAGE: PEGAWAI                -->
+<!-- ============================ -->
+<section id="page-pegawai" class="page">
+  <div class="page-header"><h2>👥 Data Pegawai</h2></div>
+  <div class="filter-bar">
+    <input type="text" id="searchPegawai" placeholder="🔍 Cari nama / NIP..." class="filter-input">
+    <select id="fPegawaiUnit" class="filter-control"><option value="">🏛️ Semua Unit</option></select>
+    <select id="fPegawaiJK" class="filter-control">
+      <option value="">⚧ Semua JK</option>
+      <option value="L">Laki-laki</option>
+      <option value="P">Perempuan</option>
+    </select>
+    <button class="btn-reset-filter" onclick="resetFilterPegawai()" title="Reset">↺</button>
+  </div>
+  <div class="table-card">
+    <div class="table-wrapper" id="tabelPegawai"><p class="loading">Memuat data...</p></div>
+    <div class="pagination-bar" id="paginationPegawai"></div>
+  </div>
+</section>
+
+<!-- ============================ -->
+<!-- PAGE: LOGBOOK                -->
+<!-- ============================ -->
+<section id="page-logbook" class="page">
+  <div class="page-header">
+    <h2>📝 Logbook Harian</h2>
+    <div class="toolbar"><button class="btn" onclick="openFormLogbook()">➕ Tambah Logbook</button></div>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="searchLogbook" placeholder="🔍 Cari uraian / pegawai..." class="filter-input">
+    <select id="fLogbookPegawai" class="filter-control"><option value="">👤 Semua Pegawai</option></select>
+    <select id="fLogbookPeriode" class="filter-control"><option value="">📅 Semua Bulan</option></select>
+    <button class="btn-reset-filter" onclick="resetFilterLogbook()" title="Reset">↺</button>
+  </div>
+  <div class="table-card">
+    <div class="table-wrapper" id="tabelLogbook"><p class="loading">Memuat data...</p></div>
+    <div class="pagination-bar" id="paginationLogbook"></div>
+  </div>
+</section>

@@ -1,0 +1,230 @@
+<script>
+// =============================================
+// J_Audit.html — Audit Log
+// =============================================
+
+let auditData = [];
+let pageAudit = { page: 1, perPage: 25 };
+
+// =============================================
+// INIT
+// =============================================
+function initAudit() {
+  // Load filter options
+  google.script.run.withSuccessHandler(function(opt) {
+    const selUser = document.getElementById('auditUser');
+    const selAksi = document.getElementById('auditAksi');
+    const selTabel = document.getElementById('auditTabel');
+
+    if (selUser) {
+      selUser.innerHTML = '<option value="">👤 Semua User</option>';
+      opt.users.forEach(u => {
+        const o = document.createElement('option');
+        o.value = u; o.textContent = u;
+        selUser.appendChild(o);
+      });
+    }
+
+    if (selAksi) {
+      selAksi.innerHTML = '<option value="">⚡ Semua Aksi</option>';
+      opt.aksi.forEach(a => {
+        const o = document.createElement('option');
+        o.value = a; o.textContent = a;
+        selAksi.appendChild(o);
+      });
+    }
+
+    if (selTabel) {
+      selTabel.innerHTML = '<option value="">📋 Semua Tabel</option>';
+      opt.tabel.forEach(t => {
+        const o = document.createElement('option');
+        o.value = t; o.textContent = t;
+        selTabel.appendChild(o);
+      });
+    }
+  }).getAuditFilterOptions();
+
+  loadAudit();
+}
+
+// =============================================
+// LOAD & RENDER
+// =============================================
+function loadAudit() {
+  const container = document.getElementById('tabelAudit');
+  container.innerHTML = '<p class="loading">Memuat data...</p>';
+
+  const filter = getAuditFilter();
+
+  google.script.run.withSuccessHandler(function(res) {
+    auditData = res.items || [];
+    pageAudit.page = 1;
+    renderAuditTable();
+  }).withFailureHandler(function(e) {
+    container.innerHTML = '<p class="loading">❌ ' + e.message + '</p>';
+  }).getAuditLogs(filter);
+}
+
+function getAuditFilter() {
+  return {
+    user: (document.getElementById('auditUser') || {}).value || '',
+    aksi: (document.getElementById('auditAksi') || {}).value || '',
+    tabel: (document.getElementById('auditTabel') || {}).value || '',
+    dari: (document.getElementById('auditDari') || {}).value || '',
+    sampai: (document.getElementById('auditSampai') || {}).value || '',
+    search: (document.getElementById('auditSearch') || {}).value || ''
+  };
+}
+
+function renderAuditTable() {
+  const container = document.getElementById('tabelAudit');
+
+  // Update info bar
+  const infoEl = document.getElementById('auditTotalInfo');
+  if (infoEl) {
+    infoEl.textContent = auditData.length + ' log ditemukan';
+  }
+
+  if (!auditData.length) {
+    container.innerHTML = '<p class="loading">Belum ada log untuk filter ini.</p>';
+    renderPagination('paginationAudit', 0, 1, pageAudit.perPage, () => {});
+    return;
+  }
+
+  const paged = paginate(auditData, pageAudit.page, pageAudit.perPage);
+
+  let html = '<table><thead><tr>' +
+    '<th>Waktu</th><th>User</th><th>Aksi</th><th>Tabel</th>' +
+    '<th>Record ID</th><th>Keterangan</th><th>Status</th>' +
+    '</tr></thead><tbody>';
+
+  paged.forEach(r => {
+    const aksiClass = 'audit-aksi audit-' + (r.aksi || 'unknown').toLowerCase();
+    const statusClass = r.status === 'SUCCESS' ? 'status-SELESAI' : 'status-DRAFT';
+    const waktu = formatAuditTime(r.timestamp);
+    const userShort = r.user.length > 25 ? r.user.substring(0, 25) + '...' : r.user;
+
+    html += `<tr>
+      <td>${escapeHtml(waktu)}</td>
+      <td title="${escapeHtml(r.user)}">${escapeHtml(userShort)}</td>
+      <td><span class="${aksiClass}">${escapeHtml(r.aksi)}</span></td>
+      <td><code style="font-size:11px;background:#f1f5f9;padding:2px 6px;border-radius:4px;">${escapeHtml(r.tabel)}</code></td>
+      <td><small>${escapeHtml(r.record_id)}</small></td>
+      <td>${escapeHtml(r.keterangan)}</td>
+      <td><span class="status-badge ${statusClass}">${escapeHtml(r.status)}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  renderPagination('paginationAudit', auditData.length, pageAudit.page,
+    pageAudit.perPage, (newPage) => {
+      pageAudit.page = newPage;
+      renderAuditTable();
+    });
+}
+
+function formatAuditTime(iso) {
+  if (!iso) return '-';
+  try {
+    const d = new Date(iso);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    return dd + '/' + mm + '/' + yy + ' ' + hh + ':' + mi + ':' + ss;
+  } catch (e) {
+    return iso;
+  }
+}
+
+// =============================================
+// RESET FILTER
+// =============================================
+function resetFilterAudit() {
+  ['auditUser','auditAksi','auditTabel','auditDari','auditSampai','auditSearch'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  pageAudit.page = 1;
+  loadAudit();
+}
+
+// =============================================
+// BERSIHKAN LOG LAMA (> 90 hari)
+// =============================================
+function cleanAuditConfirm() {
+  if (!confirm('Hapus log audit yang lebih dari 90 hari?\n\nLog lama akan dihapus permanen.')) return;
+
+  showToast('⏳ Membersihkan log lama...');
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res.success) {
+        showToast('✅ ' + res.hapus + ' log lama dihapus');
+        loadAudit();
+      } else {
+        showToast('❌ ' + res.error, true);
+      }
+    })
+    .withFailureHandler(function(e) {
+      showToast('❌ ' + e.message, true);
+    })
+    .cleanAuditLogsOlderThan(90);
+}
+
+// =============================================
+// EXPORT CSV
+// =============================================
+function exportAuditCSV() {
+  if (!auditData.length) { showToast('Belum ada data', true); return; }
+
+  let csv = 'Audit Log - SI-DATA Satpol PP Trenggalek\n';
+  csv += 'Diexport: ' + new Date().toLocaleString('id-ID') + '\n\n';
+  csv += 'Waktu;User;Aksi;Tabel;Record ID;Keterangan;Status\n';
+
+  auditData.forEach(r => {
+    const row = [
+      formatAuditTime(r.timestamp),
+      r.user,
+      r.aksi,
+      r.tabel,
+      r.record_id,
+      (r.keterangan || '').replace(/;/g, ','),
+      r.status
+    ];
+    csv += row.join(';') + '\n';
+  });
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'AuditLog_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// =============================================
+// BIND FILTER LISTENERS
+// =============================================
+document.addEventListener('DOMContentLoaded', function() {
+  const ids = ['auditUser','auditAksi','auditTabel','auditDari','auditSampai'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => { pageAudit.page = 1; loadAudit(); });
+  });
+
+  const s = document.getElementById('auditSearch');
+  if (s) {
+    let tmr;
+    s.addEventListener('input', () => {
+      clearTimeout(tmr);
+      tmr = setTimeout(() => { pageAudit.page = 1; loadAudit(); }, 400);
+    });
+  }
+});
+</script>

@@ -1,0 +1,476 @@
+<script>
+// =============================================
+// J_Dashboard.html — Chart Renderers + Cross-Tab + Analitik
+// =============================================
+
+// =============================================
+// KPI
+// =============================================
+function renderKPI(data) {
+  if (!data) return;
+  document.getElementById('kpiKegiatan').textContent = formatNumber(data.totalKegiatan);
+  document.getElementById('kpiPersonel').textContent = formatNumber(data.totalPersonel);
+  document.getElementById('kpiAnggaran').textContent = formatRupiah(data.totalAnggaran);
+  document.getElementById('kpiFungsi').textContent = formatNumber(data.totalFungsi);
+}
+
+// =============================================
+// CHART: TREND BULANAN
+// =============================================
+function renderTrend(data) {
+  destroyChart('chartTrend');
+  if (!data || !data.length) return;
+  new Chart(document.getElementById('chartTrend').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.periode),
+      datasets: [{
+        label: 'Jumlah Kegiatan',
+        data: data.map(d => d.jumlah),
+        borderColor: '#2d5a87',
+        backgroundColor: 'rgba(45, 90, 135, 0.15)',
+        fill: true, tension: 0.3, pointRadius: 4,
+        pointBackgroundColor: '#1e3a5f'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+// =============================================
+// CHART: DISTRIBUSI GRUP
+// =============================================
+function renderGrup(data) {
+  destroyChart('chartGrup');
+  if (!data || !data.length) return;
+  const sorted = [...data].sort((a, b) => b.jumlah - a.jumlah);
+  const colors = sorted.map(d => GRUP_COLORS[d.grup] || '#95a5a6');
+  new Chart(document.getElementById('chartGrup').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: sorted.map(d => d.grup),
+      datasets: [{
+        data: sorted.map(d => d.jumlah),
+        backgroundColor: colors,
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct = ((ctx.parsed / total) * 100).toFixed(1);
+              return ctx.label + ': ' + ctx.parsed + ' (' + pct + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// =============================================
+// CHART: PER UNIT
+// =============================================
+function renderUnit(data) {
+  destroyChart('chartUnit');
+  if (!data || !data.length) return;
+  new Chart(document.getElementById('chartUnit').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.unit.length > 25 ? d.unit.substring(0, 25) + '…' : d.unit),
+      datasets: [{ label: 'Jumlah', data: data.map(d => d.jumlah), backgroundColor: '#27ae60', borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+// =============================================
+// CHART: TOP 10 LOKASI
+// =============================================
+function renderLokasi(data) {
+  destroyChart('chartLokasi');
+  if (!data || !data.length) return;
+  new Chart(document.getElementById('chartLokasi').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.lokasi.length > 20 ? d.lokasi.substring(0, 20) + '…' : d.lokasi),
+      datasets: [{ label: 'Jumlah', data: data.map(d => d.jumlah), backgroundColor: '#e67e22', borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+// =============================================
+// CHART: PER FUNGSI
+// =============================================
+function renderFungsi(data) {
+  destroyChart('chartFungsi');
+  if (!data || !data.length) return;
+  new Chart(document.getElementById('chartFungsi').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.nama),
+      datasets: [{ label: 'Jumlah Kegiatan', data: data.map(d => d.jumlah), backgroundColor: '#2d5a87', borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+}
+
+// =============================================
+// CHART: TOP 10 PEGAWAI AKTIF
+// =============================================
+function renderTopPegawai(data) {
+  destroyChart('chartTopPegawai');
+  const el = document.getElementById('chartTopPegawai');
+  if (!el) return;
+  if (!data || !data.length) {
+    el.parentElement.innerHTML = el.parentElement.innerHTML.replace(
+      /<canvas[^>]*><\/canvas>/,
+      '<p class="loading">Belum ada data.</p>'
+    );
+    return;
+  }
+  const labels = data.map(d => {
+    const nama = d.nama.length > 28 ? d.nama.substring(0, 28) + '…' : d.nama;
+    return nama;
+  });
+  const values = data.map(d => d.jumlah);
+  const colors = data.map((d, i) => {
+    const opacity = 1 - (i / data.length) * 0.5;
+    return 'rgba(45, 90, 135, ' + opacity + ')';
+  });
+  new Chart(el.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Jumlah Kegiatan', data: values, backgroundColor: colors, borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: function(ctx) { return data[ctx[0].dataIndex].nama; },
+            label: function(ctx) {
+              const d = data[ctx.dataIndex];
+              return [
+                'Kegiatan: ' + d.jumlah,
+                'Unit: ' + d.unit,
+                'Koordinator: ' + d.koordinator + 'x',
+                'Anggaran: ' + formatRupiah(d.anggaran)
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { stepSize: 1 } },
+        y: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// =============================================
+// LEADERBOARD UNIT (HTML)
+// =============================================
+function renderLeaderboardUnit(data) {
+  const container = document.getElementById('leaderboardUnit');
+  if (!container) return;
+  if (!data || !data.length) {
+    container.innerHTML = '<p class="loading">Belum ada data.</p>';
+    return;
+  }
+  let html = '<div class="leaderboard-list">';
+  data.forEach((d, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    const barWidth = data[0].jumlah > 0 ? (d.jumlah / data[0].jumlah) * 100 : 0;
+    const isTop3 = i < 3;
+    html += '<div class="leaderboard-item' + (isTop3 ? ' leaderboard-top' : '') + '">';
+    html += '<div class="leaderboard-rank">' + medal + '</div>';
+    html += '<div class="leaderboard-content">';
+    html += '<div class="leaderboard-name" title="' + escapeHtml(d.nama) + '">';
+    html += escapeHtml(d.nama.length > 30 ? d.nama.substring(0, 30) + '…' : d.nama);
+    html += '</div>';
+    html += '<div class="leaderboard-bar-wrapper">';
+    html += '<div class="leaderboard-bar" style="width:' + barWidth + '%"></div>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="leaderboard-stats">';
+    html += '<div class="leaderboard-value">' + d.jumlah + '</div>';
+    html += '<div class="leaderboard-pct">' + d.persen + '%</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// =============================================
+// HEATMAP BULAN × GRUP
+// =============================================
+function renderHeatmapBulanGrup(data) {
+  const container = document.getElementById('heatmapBulanGrup');
+  if (!container) return;
+  if (!data || !data.bulan || !data.bulan.length) {
+    container.innerHTML = '<p class="loading">Belum ada data.</p>';
+    return;
+  }
+  let html = '<div class="heatmap-wrapper"><table class="heatmap-table">';
+  html += '<thead><tr>';
+  html += '<th class="heatmap-corner">Grup \\ Bulan</th>';
+  data.bulan.forEach(b => {
+    html += '<th>' + escapeHtml(b.substring(0, 3)) + '</th>';
+  });
+  html += '<th class="heatmap-total">Total</th>';
+  html += '</tr></thead>';
+  html += '<tbody>';
+  data.grup.forEach(g => {
+    html += '<tr>';
+    html += '<td class="heatmap-label" title="' + escapeHtml(g) + '">' + escapeHtml(g) + '</td>';
+    let totalRow = 0;
+    data.bulan.forEach(b => {
+      const key = g + '|' + b;
+      const val = data.matrix[key] || 0;
+      totalRow += val;
+      const intensity = data.maxVal > 0 ? val / data.maxVal : 0;
+      const bg = getHeatmapColor(intensity);
+      const textColor = intensity > 0.5 ? 'white' : '#374151';
+      html += '<td class="heatmap-cell" style="background:' + bg + '; color:' + textColor +
+              ';" title="' + escapeHtml(g) + ' — ' + escapeHtml(b) + ': ' + val + '">';
+      html += val > 0 ? val : '-';
+      html += '</td>';
+    });
+    html += '<td class="heatmap-total">' + totalRow + '</td>';
+    html += '</tr>';
+  });
+  html += '<tr class="heatmap-total-row">';
+  html += '<td class="heatmap-label"><strong>TOTAL</strong></td>';
+  data.bulan.forEach(b => {
+    let totalCol = 0;
+    data.grup.forEach(g => { totalCol += data.matrix[g + '|' + b] || 0; });
+    html += '<td class="heatmap-total"><strong>' + totalCol + '</strong></td>';
+  });
+  const grandTotal = Object.values(data.matrix).reduce((s, x) => s + x, 0);
+  html += '<td class="heatmap-total heatmap-grand"><strong>' + grandTotal + '</strong></td>';
+  html += '</tr>';
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+function getHeatmapColor(intensity) {
+  if (intensity === 0) return '#f9fafb';
+  if (intensity < 0.2) return '#dbeafe';
+  if (intensity < 0.4) return '#93c5fd';
+  if (intensity < 0.6) return '#60a5fa';
+  if (intensity < 0.8) return '#3b82f6';
+  return '#1e40af';
+}
+
+// =============================================
+// CROSS-TAB — Per Grup (dipanggil dari J_Analisa tab Matrik)
+// =============================================
+function renderCrossTab(panels) {
+  crossTabData = panels;
+  const container = document.getElementById('tabelCrossTab');
+  const title = document.getElementById('crossTabTitle');
+  if (!panels || !panels.length) {
+    if (title) title.textContent = '📊 Rekap Cross-Tab';
+    container.innerHTML = '<p class="loading">Belum ada data untuk filter ini.</p>';
+    return;
+  }
+  if (title) title.textContent = '📊 Rekap Cross-Tab — ' + getBidangNama();
+  const isMulti = panels.length > 1;
+  let html = '';
+  if (isMulti) {
+    html += '<div class="cross-tab-grid-2col">';
+    panels.forEach(panel => {
+      html += '<div class="cross-tab-panel">';
+      html += '<h4 class="cross-tab-panel-title">📁 ' + escapeHtml(panel.grupNama) + '</h4>';
+      html += renderCrossTabTable(panel);
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += renderCrossTabTable(panels[0]);
+  }
+  if (isMulti && panels.every(p => !p.periode || !p.periode.length)) {
+    html = '<p class="loading">Belum ada data untuk bidang ini.</p>';
+  }
+  container.innerHTML = html;
+}
+function renderCrossTabTable(panel) {
+  if (!panel.periode || !panel.periode.length) {
+    return '<p class="loading" style="padding: 20px 0;">Belum ada data.</p>';
+  }
+  let html = '<table><thead><tr><th>Periode</th>';
+  panel.fungsi.forEach(f => { html += `<th>${escapeHtml(f)}</th>`; });
+  html += '<th style="background:#1e3a5f; color:white;"><strong>Jumlah</strong></th></tr></thead><tbody>';
+  panel.periode.forEach(p => {
+    html += `<tr><td><strong>${escapeHtml(p)}</strong></td>`;
+    panel.fungsi.forEach(f => {
+      const val = (panel.data[p] && panel.data[p][f]) || 0;
+      html += `<td>${val || '-'}</td>`;
+    });
+    html += `<td style="background:#eff6ff;"><strong>${panel.totalPerPeriode[p] || 0}</strong></td></tr>`;
+  });
+  html += '<tr style="background:#f8fafc; border-top:2px solid #1e3a5f;">';
+  html += '<td><strong>TOTAL</strong></td>';
+  panel.fungsi.forEach(f => {
+    html += `<td><strong>${panel.totalPerFungsi[f] || 0}</strong></td>`;
+  });
+  html += `<td style="background:#1e3a5f; color:white;"><strong>${panel.grandTotal || 0}</strong></td>`;
+  html += '</tr>';
+  html += '</tbody></table>';
+  return html;
+}
+function getBidangNama() {
+  if (!filterState.bidangId) return 'Semua Bidang';
+  const sel = document.getElementById('filterBidang');
+  if (!sel) return filterState.bidangId;
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === filterState.bidangId) {
+      return sel.options[i].textContent.trim();
+    }
+  }
+  return filterState.bidangId;
+}
+
+// =============================================
+// EXPORT CSV — CROSS-TAB (Fixed: grupNama)
+// =============================================
+function exportCSV() {
+  if (!crossTabData || !crossTabData.length) {
+    showToast('Tidak ada data untuk diexport.', true);
+    return;
+  }
+  let csv = '';
+  crossTabData.forEach((panel, i) => {
+    if (i > 0) csv += '\n\n';
+    csv += '=== ' + (panel.grupNama || panel.seksiNama || 'Panel') + ' ===\n';
+    csv += 'Periode;' + panel.fungsi.join(';') + ';Jumlah\n';
+    panel.periode.forEach(p => {
+      const row = [p];
+      panel.fungsi.forEach(f => {
+        row.push((panel.data[p] && panel.data[p][f]) || 0);
+      });
+      row.push(panel.totalPerPeriode[p] || 0);
+      csv += row.join(';') + '\n';
+    });
+    const totalRow = ['TOTAL'];
+    panel.fungsi.forEach(f => {
+      totalRow.push(panel.totalPerFungsi[f] || 0);
+    });
+    totalRow.push(panel.grandTotal || 0);
+    csv += totalRow.join(';') + '\n';
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const parts = [];
+  if (filterState.tahun) parts.push('Thn' + filterState.tahun);
+  if (filterState.bulan) parts.push('Bln' + filterState.bulan);
+  if (filterState.bidangId) parts.push(filterState.bidangId);
+  const suffix = parts.length ? '_' + parts.join('_') : '_semua';
+  a.download = 'CrossTab' + suffix + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// =============================================
+// ANALISA TEMATIK — Panel per Grup
+// =============================================
+function renderTematikPanels(panels) {
+  const container = document.getElementById('tematikPanels');
+  if (!container) return;
+  if (!panels || !panels.length) {
+    container.innerHTML = '<p class="loading">Belum ada dimensi tematik untuk filter ini.</p>';
+    return;
+  }
+  let html = '<div class="tematik-panels-grid">';
+  panels.forEach(panel => {
+    const selId = 'tematik-dim-' + panel.grupId;
+    html += '<div class="tematik-panel" data-grup-id="' + panel.grupId + '">';
+    html += '<div class="tematik-panel-header">';
+    html += '<div class="tematik-panel-title">📁 ' + escapeHtml(panel.grupNama) + '</div>';
+    html += '<select class="tematik-dim-select" id="' + selId + '" onchange="loadTematikForPanel(\'' + panel.grupId + '\', this.value)">';
+    panel.dimensiList.forEach((d, i) => {
+      html += '<option value="' + d.id + '"' + (i === 0 ? ' selected' : '') + '>' + escapeHtml(d.nama) + '</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="tematik-panel-body" id="tematik-body-' + panel.grupId + '">';
+    html += '<p class="loading-tematik">Memuat data...</p>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  panels.forEach(panel => {
+    if (panel.dimensiList && panel.dimensiList.length) {
+      loadTematikForPanel(panel.grupId, panel.dimensiList[0].id);
+    }
+  });
+}
+function loadTematikForPanel(grupId, dimensiId) {
+  const bodyId = 'tematik-body-' + grupId;
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  body.innerHTML = '<p class="loading-tematik">Memuat data...</p>';
+  google.script.run
+    .withSuccessHandler(function(data) { renderTematikPanelBody(grupId, data); })
+    .withFailureHandler(function(e) { body.innerHTML = '<p class="loading-tematik" style="color:#dc2626;">Gagal: ' + e.message + '</p>'; })
+    .getCrossTabTematik(filterState, dimensiId);
+}
+function renderTematikPanelBody(grupId, data) {
+  const body = document.getElementById('tematik-body-' + grupId);
+  if (!body) return;
+  if (data.error) { body.innerHTML = '<p class="loading-tematik" style="color:#dc2626;">⚠️ ' + escapeHtml(data.error) + '</p>'; return; }
+  if (!data.periode || !data.periode.length) { body.innerHTML = '<p class="loading-tematik">Belum ada data untuk dimensi ini.</p>'; return; }
+  let html = '<table class="tematik-table"><thead><tr>';
+  html += '<th class="tematik-th-periode">Periode</th>';
+  data.nilai.forEach(n => { html += '<th class="tematik-th-nilai">' + escapeHtml(n) + '</th>'; });
+  html += '<th class="tematik-th-total">Jumlah</th>';
+  html += '</tr></thead><tbody>';
+  data.periode.forEach(p => {
+    html += '<tr>';
+    html += '<td class="tematik-td-periode"><strong>' + escapeHtml(p) + '</strong></td>';
+    data.nilai.forEach(n => {
+      const val = (data.data[p] && data.data[p][n]) || 0;
+      html += '<td class="tematik-td-nilai">' + (val || '-') + '</td>';
+    });
+    html += '<td class="tematik-td-total"><strong>' + (data.totalPerPeriode[p] || 0) + '</strong></td>';
+    html += '</tr>';
+  });
+  html += '<tr class="tematik-row-total">';
+  html += '<td class="tematik-td-periode"><strong>TOTAL</strong></td>';
+  data.nilai.forEach(n => { html += '<td class="tematik-td-nilai"><strong>' + (data.totalPerNilai[n] || 0) + '</strong></td>'; });
+  html += '<td class="tematik-td-total tematik-grand"><strong>' + (data.grandTotal || 0) + '</strong></td>';
+  html += '</tr>';
+  html += '</tbody></table>';
+  body.innerHTML = html;
+}
+</script>
