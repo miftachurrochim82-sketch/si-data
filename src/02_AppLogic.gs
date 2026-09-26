@@ -71,6 +71,10 @@ function include(filename) {
 
 function handleAction(payload) {
   try {
+    // Ping bypass — selalu hijau tanpa auth (untuk self-check)
+    if (payload && String(payload.action||'').toLowerCase() === 'ping') {
+      return { success: true, data: { pong: true, app: APP_CODE, time: new Date().toISOString(), version: 'v2.14.0-tematik' } };
+    }
     var cfg = getAppConfig_();
     cfg.localHandlers = buildLocalHandlers_();
     return CoreLib.dispatchAction(payload, cfg);
