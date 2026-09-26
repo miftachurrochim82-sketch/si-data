@@ -66,13 +66,56 @@
         <option v-for="s in satuanList" :key="s.id" :value="s.id">{{ s.nama || s.kode }}</option>
       </select>
     </div>
+    <!-- CASCADE BIDANG → SEKSI → FUNGSI (tematik) -->
+    <div>
+      <label class="form-label">Bidang *</label>
+      <select class="input w-full" v-model="tematikBidangId" @change="onBidangChange">
+        <option value="">— Pilih Bidang —</option>
+        <option v-for="b in bidangList" :key="b.id" :value="b.id">{{ b.nama }}</option>
+      </select>
+    </div>
+    <div>
+      <label class="form-label">Seksi *</label>
+      <select class="input w-full" v-model="utamaForm.unit_id" :disabled="!tematikBidangId">
+        <option value="">— Pilih Seksi —</option>
+        <option v-for="s in seksiList" :key="s.id" :value="s.id">{{ s.nama }}</option>
+      </select>
+    </div>
+    <div class="md:col-span-2">
+      <label class="form-label">Fungsi *</label>
+      <select class="input w-full" v-model="utamaForm.fungsi_id" @change="onFungsiChange" :disabled="!utamaForm.unit_id">
+        <option value="">— Pilih Fungsi —</option>
+        <option v-for="f in fungsiListForSeksi" :key="f.id" :value="f.id">{{ f.nama }}</option>
+      </select>
+    </div>
     <div>
       <label class="form-label">Jumlah</label>
       <input type="number" step="any" class="input w-full" v-model.number="utamaForm.jumlah">
     </div>
     <div>
+      <label class="form-label">Anggaran (Rp)</label>
+      <input type="number" step="any" class="input w-full" v-model.number="utamaForm.anggaran" placeholder="0">
+    </div>
+    <div>
       <label class="form-label">Nilai</label>
       <input type="number" step="any" class="input w-full" v-model.number="utamaForm.nilai">
+    </div>
+    <!-- DATA TEMATIK DINAMIS -->
+    <div v-if="tematikDimensiList.length" class="md:col-span-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700" style="border-left:4px solid #2d5a87;">
+      <div class="flex items-center gap-2 mb-2"><span>📋</span><strong class="text-sm text-slate-800 dark:text-white">Data Tematik</strong><span class="text-[10px] px-2 py-0.5 bg-sky-100 text-sky-700 rounded">Opsional</span></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div v-for="d in tematikDimensiList" :key="d.id" :class="d.jenis_input==='TEXT' ? 'md:col-span-2' : ''">
+          <label class="form-label">{{ d.nama }}</label>
+          <select v-if="d.jenis_input==='SELECT'" class="input w-full" v-model="tematikValues[d.id]">
+            <option value="">— Pilih —</option>
+            <option v-for="o in d.opsi" :key="o.id" :value="o.id">{{ o.nama }}</option>
+          </select>
+          <input v-else-if="d.jenis_input==='TEXT'" class="input w-full" v-model.trim="tematikValues[d.id]" :placeholder="'Isi ' + d.nama">
+          <input v-else-if="d.jenis_input==='NUMBER'" type="number" class="input w-full" v-model.number="tematikValues[d.id]" placeholder="0">
+          <input v-else-if="d.jenis_input==='DATE'" type="date" class="input w-full" v-model="tematikValues[d.id]">
+          <input v-else class="input w-full" v-model.trim="tematikValues[d.id]" :placeholder="d.nama">
+        </div>
+      </div>
     </div>
     <div class="md:col-span-2">
       <label class="form-label">Deskripsi</label>

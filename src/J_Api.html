@@ -44,6 +44,7 @@ window.StarterKitApi = {
       await Promise.all([
         this.loadDashboard(s),
         this.loadMasterSatelit(s),
+        this.loadTematikMasters(),
         this.loadUtama(1, s),
         this.loadRtl(1, s)
       ]);
@@ -93,6 +94,37 @@ window.StarterKitApi = {
       } catch (e) {
         if (!isSilent) this.showToast('Error koneksi master.', 'error');
       } finally { this.masterLoading = false; }
+    },
+
+    // TEMATIK masters (allUnits/allFungsi untuk cascade) — v2.14 hybrid
+    async loadTematikMasters() {
+      try {
+        var res = await new Promise(function(resolve, reject){
+          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getMasterOptions();
+        });
+        if (res) {
+          this.allUnits = res.allUnits || [];
+          this.allFungsi = res.allFungsi || [];
+        }
+      } catch(e){ console.error('loadTematikMasters', e); }
+    },
+    onBidangChange() {
+      this.utamaForm.unit_id = '';
+      this.utamaForm.fungsi_id = '';
+      this.tematikDimensiList = [];
+      this.tematikValues = {};
+    },
+    async onFungsiChange() {
+      var fid=this.utamaForm.fungsi_id;
+      if(!fid){ this.tematikDimensiList=[]; this.tematikValues={}; return; }
+      try{
+        var list = await new Promise(function(resolve, reject){
+          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getDimensiForForm(fid);
+        });
+        this.tematikDimensiList = list || [];
+        var nv={}; (list||[]).forEach(function(d){ nv[d.id]=''; });
+        this.tematikValues = nv;
+      }catch(e){ console.error('onFungsiChange', e); }
     },
 
     // T_UTAMA (paginasi server-side) — + scope Saya/Semua (v2.12.0)

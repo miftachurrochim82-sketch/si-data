@@ -49,7 +49,7 @@ window.StarterKitState = {
         simbol: '', alamat: '', keterangan: '', urutan: 0, status_aktif: 'true'
       },
 
-      // ==================== T_UTAMA ====================
+      // ==================== T_UTAMA (tematik) ====================
       utamaList: [],
       utamaLoading: false,
       utamaFilters: { search: '', status: '', jenis_id: '', lokasi_id: '', tahun: '' },
@@ -61,8 +61,17 @@ window.StarterKitState = {
       utamaForm: {
         id: '', kode: '', judul: '', deskripsi: '', pegawai_id: '',
         kategori_id: '', jenis_id: '', lokasi_id: '', periode_id: '', satuan_id: '',
-        tanggal: '', jumlah: 0, nilai: 0, status: 'draft', catatan: ''
+        tanggal: '', jumlah: 0, nilai: 0, status: 'draft', catatan: '',
+        // tematik tambahan (hybrid v2.14)
+        unit_id: '', fungsi_id: '', uraian: '', anggaran: 0
       },
+      // TEMATIK — cascade Bidang→Seksi→Fungsi + dimensi dinamis
+      allUnits: [],
+      allFungsi: [],
+      tematikBidangId: '',
+      tematikSeksiId: '',
+      tematikDimensiList: [],
+      tematikValues: {},
 
       // ==================== LAPORAN (12) — 2 tab grid (dimensi | matriks) ====================
       laporanTab: 'kategori',
@@ -146,6 +155,24 @@ window.StarterKitState = {
     chartKategoriColors() { return ['#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd', '#0c4a6e', '#334155', '#64748b', '#94a3b8']; },
     chartLokasiColors() { return ['#0369a1']; },
     chartTrenAnalisaColors() { return ['#f59e0b']; },
+
+    // TEMATIK cascade
+    bidangList() { return (this.allUnits||[]).filter(function(u){ return u.jenis_unit==='BIDANG'; }); },
+    seksiList() {
+      var bid=this.tematikBidangId; if(!bid) return [];
+      return (this.allUnits||[]).filter(function(u){ return String(u.parent_id)===String(bid) && (u.jenis_unit==='SEKSI'||u.jenis_unit==='SUB_BIDANG'); });
+    },
+    fungsiListForSeksi() {
+      var seksi=this.utamaForm.unit_id; if(!seksi) return [];
+      var list=(this.allFungsi||[]).filter(function(f){ return String(f.unit_id)===String(seksi) && Number(f.level)===1; }).sort(function(a,b){return (a.urutan||0)-(b.urutan||0);});
+      var out=[];
+      list.forEach(function(g){
+        out.push(g);
+        var subs=(this.allFungsi||[]).filter(function(f){ return String(f.parent_id)===String(g.id) && Number(f.level)===2; }).sort(function(a,b){return (a.urutan||0)-(b.urutan||0);});
+        subs.forEach(function(s){ out.push({id:s.id, nama:'└─ '+s.nama, level:2}); });
+      }.bind(this));
+      return out;
+    },
 
     // ---------- data laporan/analisa/evaluasi per tab ----------
     lapDataAktif() { return this.lapData[this.laporanTab] || null; },

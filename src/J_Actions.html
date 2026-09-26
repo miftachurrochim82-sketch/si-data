@@ -10,8 +10,62 @@
 window.StarterKitActions = {
   methods: {
 
-    // ==================== T_UTAMA ====================
+    // ==================== T_UTAMA (hybrid tematik) ====================
     async simpanUtama() {
+      // Validasi dasar
+      if (!String(this.utamaForm.judul || '').trim() && !String(this.utamaForm.uraian || '').trim()) { this.showToast('Judul/Uraian wajib.', 'warning'); return; }
+      // Jika fungsi_id terisi → pakai jalur tematik (09_Bridge)
+      if (this.utamaForm.fungsi_id) {
+        if (!this.utamaForm.unit_id || !this.utamaForm.kategori_id || !this.utamaForm.jenis_id || !this.utamaForm.periode_id || !this.utamaForm.lokasi_id) { this.showToast('Lengkapi Bidang/Seksi/Fungsi + Kategori/Jenis/Periode/Lokasi.', 'warning'); return; }
+        this.utamaSaving = true;
+        try {
+          var atribut=[];
+          for(var k in this.tematikValues){
+            var v=this.tematikValues[k];
+            if(v===undefined||v===''||v===null) continue;
+            var dim=(this.tematikDimensiList||[]).find(function(d){return d.id===k;});
+            if(!dim) continue;
+            var atr={dimensi_id:k, nilai_id:'', nilai_text:'', nilai_number:0, nilai_date:'', keterangan:''};
+            if(dim.jenis_input==='SELECT') atr.nilai_id=String(v);
+            else if(dim.jenis_input==='TEXT') atr.nilai_text=String(v);
+            else if(dim.jenis_input==='NUMBER'){ var n=Number(v); if(!n) continue; atr.nilai_number=n; }
+            else if(dim.jenis_input==='DATE') atr.nilai_date=String(v);
+            else atr.nilai_text=String(v);
+            atribut.push(atr);
+          }
+          var payload={
+            tanggal: this.utamaForm.tanggal || new Date().toISOString().slice(0,10),
+            unit_id: this.utamaForm.unit_id,
+            fungsi_id: this.utamaForm.fungsi_id,
+            kategori_id: this.utamaForm.kategori_id,
+            jenis_id: this.utamaForm.jenis_id,
+            periode_id: this.utamaForm.periode_id,
+            lokasi_id: this.utamaForm.lokasi_id,
+            uraian: this.utamaForm.uraian || this.utamaForm.judul || this.utamaForm.deskripsi || '',
+            jumlah: Number(this.utamaForm.jumlah)||0,
+            satuan_id: this.utamaForm.satuan_id,
+            anggaran: Number(this.utamaForm.anggaran)|| Number(this.utamaForm.nilai)||0,
+            status: this.utamaForm.status || 'draft',
+            keterangan: this.utamaForm.catatan || this.utamaForm.deskripsi || '',
+            atribut: atribut
+          };
+          var fn = this.utamaForm.id ? 'updateKegiatan' : 'simpanKegiatan';
+          if(this.utamaForm.id) payload.id=this.utamaForm.id;
+          var res = await new Promise(function(resolve, reject){
+            google.script.run.withSuccessHandler(resolve).withFailureHandler(function(e){ reject(e); })[fn](payload);
+          });
+          if (res && res.success) {
+            this.showToast(this.utamaForm.id ? 'Kegiatan diperbarui.' : 'Kegiatan tersimpan: '+(res.kode||''), 'success');
+            this.showUtamaForm = false;
+            // reset tematik
+            this.tematikDimensiList=[]; this.tematikValues={}; this.tematikBidangId=''; 
+            this.loadUtama(this.utamaPagination.page);
+          } else this.showToast((res && res.error) || 'Gagal simpan tematik', 'error');
+        } catch (e) { this.showToast('Error simpan tematik: '+(e.message||e), 'error'); }
+        finally { this.utamaSaving = false; }
+        return;
+      }
+      // Fallback lama (tanpa tematik)
       if (!String(this.utamaForm.judul || '').trim()) { this.showToast('Judul wajib.', 'warning'); return; }
       this.utamaSaving = true;
       try {
