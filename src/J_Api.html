@@ -45,6 +45,7 @@ window.StarterKitApi = {
         this.loadDashboard(s),
         this.loadMasterSatelit(s),
         this.loadTematikMasters(),
+        this.loadAnalitikLanjutan(),
         this.loadUtama(1, s),
         this.loadRtl(1, s)
       ]);
@@ -107,6 +108,20 @@ window.StarterKitApi = {
           this.allFungsi = res.allFungsi || [];
         }
       } catch(e){ console.error('loadTematikMasters', e); }
+    },
+    async loadAnalitikLanjutan() {
+      try {
+        var top = await new Promise(function(r,j){ google.script.run.withSuccessHandler(r).withFailureHandler(j).getTopPegawai({}); });
+        this.dashboardData.topPegawai = top || [];
+      } catch(e){ console.error('topPegawai', e); }
+      try {
+        var lb = await new Promise(function(r,j){ google.script.run.withSuccessHandler(r).withFailureHandler(j).getLeaderboardUnit({}); });
+        this.dashboardData.leaderboardUnit = lb || [];
+      } catch(e){ console.error('leaderboard', e); }
+      try {
+        var hm = await new Promise(function(r,j){ google.script.run.withSuccessHandler(r).withFailureHandler(j).getHeatmapBulanGrup({}); });
+        this.dashboardData.heatmap = hm || {bulan:[], grup:[], matrix:{}, maxVal:0};
+      } catch(e){ console.error('heatmap', e); }
     },
     onBidangChange() {
       this.utamaForm.unit_id = '';

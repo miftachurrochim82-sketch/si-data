@@ -28,6 +28,10 @@ window.StarterKitState = {
         panelApproval: [],
         panelRtl: [],
         panelTidakLengkap: [],
+        // tahap 2 analitik lanjutan
+        topPegawai: [],
+        leaderboardUnit: [],
+        heatmap: { bulan: [], grup: [], matrix: {}, maxVal: 0 },
         role: 'viewer',
         nama: ''
       },
@@ -191,6 +195,15 @@ window.StarterKitState = {
     chartAnalisaTrenDatasets() {
       var d = this.anaData['tren'];
       return d && d.counts ? [{ label: 'Jumlah', data: d.counts }] : [];
+    },
+
+    // Tahap 2 — analitik
+    topPegawaiLabels() { return (this.dashboardData.topPegawai||[]).map(function(d){ return d.nama; }); },
+    topPegawaiDatasets() { return [{ label: 'Kegiatan', data: (this.dashboardData.topPegawai||[]).map(function(d){ return d.jumlah; }) }]; },
+    heatmapGrandTotal() {
+      var m=this.dashboardData.heatmap && this.dashboardData.heatmap.matrix || {};
+      var s=0; for(var k in m) s+=m[k];
+      return s;
     }
   }
 };

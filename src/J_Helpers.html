@@ -125,6 +125,28 @@ window.StarterKitHelpers = {
         if (String(c.jenis_id) === String(jenisId) && String(c.lokasi_id) === String(lokasiId)) return c.jml;
       }
       return 0;
+    },
+
+    // Tahap 2 — heatmap helpers
+    heatmapColor(val, maxVal) {
+      var v=Number(val)||0, m=Number(maxVal)||1;
+      if(v===0) return '#f9fafb';
+      var r=v/m;
+      if(r<0.2) return '#dbeafe';
+      if(r<0.4) return '#93c5fd';
+      if(r<0.6) return '#60a5fa';
+      if(r<0.8) return '#3b82f6';
+      return '#1e40af';
+    },
+    heatmapRowTotal(grup) {
+      var h=this.dashboardData.heatmap; if(!h||!h.matrix) return 0;
+      var s=0; (h.bulan||[]).forEach(function(b){ s+= (h.matrix[grup+'|'+b]||0); });
+      return s;
+    },
+    heatmapColTotal(bulan) {
+      var h=this.dashboardData.heatmap; if(!h||!h.matrix) return 0;
+      var s=0; (h.grup||[]).forEach(function(g){ s+= (h.matrix[g+'|'+bulan]||0); });
+      return s;
     }
   }
 };
