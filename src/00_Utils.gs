@@ -1,5 +1,5 @@
 // ============================================================
-// STARTER-KIT - 00_Utils.gs (v2.11.0 — 5M+5T + piramida 12/8/6/4 + CoreLib-First)
+// STARTER-KIT - 00_Utils.gs (v2.14.0-tematik — 7 file backend medium + 18 sheet + Drive 8 folder + Tematik M_DIMENSI)
 // ============================================================
 // Util domain-spesifik app. Wrapper tipis ke CoreLib + audit ke SI-PLATFORM.
 //
@@ -99,7 +99,7 @@ function audit_(actor, action, type, id, ok, msg) {
  * file ini terpasang & fungsi tersedia.
  */
 function testUtilsSelfCheck() {
-  Logger.log('=== 00_Utils.gs v2.11.0 self-check — 5M+5T + piramida 12/8/6/4 ===');
+  Logger.log('=== 00_Utils.gs v2.14.0-tematik self-check — 7 file medium + 18 sheet + Tematik ===');
 
   // 1. Fungsi tersedia
   Logger.log((typeof audit_           === 'function' ? '✅' : '❌') + ' audit_ tersedia');

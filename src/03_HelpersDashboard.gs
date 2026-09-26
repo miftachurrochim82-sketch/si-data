@@ -1,6 +1,6 @@
 
 // ============================================================
-// PATCH OTOMATIS 2026-09-26 — Adopsi Sumber Tematik + Dashboard + Drive
+// PATCH OTOMATIS 2026-09-26 — v2.14.0-tematik — 7 file medium — Adopsi Sumber Tematik + Dashboard + Drive
 // Sumber: 7 file (01_Dashboard,02_Crud,03_CrossTab,04_Target,05_Lampiran,06_Analisa,07_Audit,Code.gs)
 // Adaptasi: getActive() → getSheetData_ / SPREADSHEET_ID, Session → actor, Drive 8 folder
 // ============================================================

@@ -1,5 +1,5 @@
 // ============================================================
-// STARTER-KIT - 99_TestSuite.gs (v2.11.0 — 5M+5T + piramida 12/8/6/4 + dashboard 4+4+4)
+// STARTER-KIT - 99_TestSuite.gs (v2.14.0-tematik — 5M+5T + piramida 12/8/6/4 + dashboard 4+4+4)
 // ============================================================
 // Test suite — pola si-arsip v1.10 + starter-kit v2.10.1
 // 1) runLibraryTests → CoreLib.runCoreTests
@@ -8,7 +8,7 @@
 // 4) runDomainTestsStarterKit → master 5 + T_UTAMA + RTL + hook +
 //    schema 10 sheet + smoke piramida (12L/8A/6E) + dashboard
 //
-// v2.11.0: testDomainReferensi → testDomainMasters (guard hierarki,
+// v2.14.0-tematik: testDomainReferensi → testDomainMasters (guard hierarki,
 // FK jenis, kode periode auto, guard referensi). Tambah
 // testSmokePiramida + testDashboard444.
 
@@ -38,7 +38,7 @@ function _assert_(results, name, condition, detail) {
 // CoreLib regression
 function runLibraryTests() {
   Logger.log('==========================================================');
-  Logger.log('🧪 REGRESSION TESTS LIBRARY v2 (dari ' + APP_CODE + ' v2.11.0)');
+  Logger.log('🧪 REGRESSION TESTS LIBRARY v2 (dari ' + APP_CODE + ' v2.14.0-tematik)');
   Logger.log('==========================================================');
   var recap = CoreLib.runCoreTests(testCtx_());
   Logger.log('REKAP: PASS ' + recap.passed + ' / FAIL ' + recap.failed + ' / SKIP ' + recap.skipped);
@@ -50,7 +50,7 @@ function runLibraryTests() {
 
 function testAdopsiG18d() {
   Logger.log('==========================================================');
-  Logger.log('🔗 UJI ADOPSI CORELIB v2.3.0 (G18d) — ' + APP_CODE + ' v2.11.0');
+  Logger.log('🔗 UJI ADOPSI CORELIB v2.3.0 (G18d) — ' + APP_CODE + ' v2.14.0-tematik');
   Logger.log('==========================================================');
   var ok = 0, fail = 0;
   function verdict(cond, label) { if (cond) { ok++; Logger.log('✅ ' + label); } else { fail++; Logger.log('❌ ' + label); } }
@@ -68,7 +68,7 @@ function testAdopsiG18d() {
 
 function testDispatcherRouting() {
   Logger.log('==========================================================');
-  Logger.log('🚏 UJI ROUTING DISPATCHER — 86 handler + fail-closed — v2.11.0');
+  Logger.log('🚏 UJI ROUTING DISPATCHER — 86 handler + fail-closed — v2.14.0-tematik');
   Logger.log('==========================================================');
   var ok = 0, fail = 0;
   function verdict(cond, label) { if (cond) { ok++; Logger.log('✅ ' + label); } else { fail++; Logger.log('❌ ' + label); } }
@@ -95,7 +95,7 @@ function testDispatcherRouting() {
 
 function runDomainTestsStarterKit() {
   Logger.log('==========================================================');
-  Logger.log('🎯 TEST DOMAIN ' + APP_CODE + ' v2.11.0 — 5M+5T + piramida + dashboard');
+  Logger.log('🎯 TEST DOMAIN ' + APP_CODE + ' v2.14.0-tematik — 5M+5T + piramida + dashboard');
   Logger.log('==========================================================');
   var results = [];
   results = results.concat(testDomainMasters());
@@ -362,7 +362,7 @@ function testDashboard444() {
 
 function runAllDiagnostics() {
   Logger.log('==========================================================');
-  Logger.log('🔍 DIAGNOSTIK ' + APP_CODE + ' v2.11.0 — 5M+5T + 86 handler + piramida');
+  Logger.log('🔍 DIAGNOSTIK ' + APP_CODE + ' v2.14.0-tematik — 5M+5T + 86 handler + piramida');
   Logger.log('==========================================================');
   try { Logger.log('CoreLib: todayIsoLocal=' + (typeof CoreLib.todayIsoLocal === 'function' ? '✅' : '❌') + ' paginate=' + (typeof CoreLib.paginate === 'function' ? '✅' : '❌')); } catch (e) {}
   try { Logger.log('DB: ' + CoreLib.getDb(SPREADSHEET_ID).getName()); } catch (e) { Logger.log('DB GAGAL: ' + e.message); }
@@ -381,7 +381,7 @@ function runAllDiagnostics() {
 
 function runAllTestsStarterKit() {
   Logger.log('##########################################################');
-  Logger.log('##  TEST SUITE LENGKAP ' + APP_CODE + ' v2.11.0 — 5M+5T + 86 handler + piramida 12/8/6/4');
+  Logger.log('##  TEST SUITE LENGKAP ' + APP_CODE + ' v2.14.0-tematik — 5M+5T + 86 handler + piramida 12/8/6/4');
   Logger.log('##  Waktu: ' + new Date().toISOString());
   Logger.log('##########################################################');
   var libRecap = runLibraryTests(); Logger.log('');
@@ -396,6 +396,6 @@ function runAllTestsStarterKit() {
   Logger.log('##  Domain: PASS ' + domain.pass + ' / FAIL ' + domain.fail + ' / SKIP ' + domain.skip + ' (5M+5T + piramida + dashboard)');
   Logger.log('##########################################################');
   var allPass = (libRecap.failed === 0) && (adopsi.fail === 0) && (routing.fail === 0) && (domain.fail === 0);
-  Logger.log(allPass ? '🎉 SEMUA HIJAU v2.11.0.' : '⚠️ Ada GAGAL — cek log.');
+  Logger.log(allPass ? '🎉 SEMUA HIJAU v2.14.0-tematik.' : '⚠️ Ada GAGAL — cek log.');
   return { library: libRecap, adopsi: adopsi, routing: routing, domain: domain, allPass: allPass };
 }

@@ -1,8 +1,8 @@
 // ============================================================
-// STARTER-KIT - 01_ConfigAndBridge.gs (v2.12.0 — CDN v2.9.0 10 file (1 CSS+9 JS) + CoreLib v2.4.0 pin17)
+// STARTER-KIT - 01_ConfigAndBridge.gs (v2.14.0-tematik — CDN v2.9.2 STABIL 10 file (1 CSS+9 JS) + CoreLib v2.4.0 pin17)
 // ============================================================
 // Changelog:
-//   v2.12.0 — CDN v2.9.0 (10 file — 1 CSS + 9 JS & 31 opsi) + CoreLib v2.4.0 pin17 (2026-09-23):
+//   v2.14.0-tematik — CDN v2.9.2 STABIL (10 file — 1 CSS + 9 JS & 31 opsi) + CoreLib v2.4.0 pin17 (2026-09-23):
 //             • Tema Opsi B: getThemeCss() → CoreLib.getThemeCss() + <app-theme-picker>
 //               + THEME_JSON di ScriptProperties (6 preset: emerald/sky/amber/violet/rose/teal)
 //             • Menu "Saya": ownerField helper + AppCore.getMyScope() + scope toggle Saya/Semua
@@ -11,7 +11,7 @@
 //             • Periode: CoreLib.periodeBulan / dalamPeriode / hitungHariKerja (for piramida)
 //             • Unique: CoreLib.findUnique / upsertUnique (anti-duplikat kode)
 //             • Bump pin CoreLib 16→17, CDN @v2.9.0 10 file (1 CSS + 9 JS: layout/ui/forms/data/charts/workflow + bundle compat)
-//   v2.11.0 — REDESIGN SKEMA (keputusan user 2026-09-22):
+//   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             5 master = 5 dimensi laporan: M_KATEGORI (hierarki), M_JENIS,
 //             M_PERIODE, M_SATUAN, M_LOKASI.
 //             5 tabel inti: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL,
@@ -25,7 +25,7 @@
 //             Semua angka = BASELINE REKOMENDASI, bukan kewajiban —
 //             app bisnis bebas menambah/mengurangi sheet & handler.
 //   v2.10.1 — FIX K1: isRefSheet_ hanya untuk master SIMPEG (PEGAWAI/
-//             UNIT_KERJA/JABATAN). Pola tetap dipertahankan di v2.11.0.
+//             UNIT_KERJA/JABATAN). Pola tetap dipertahankan di v2.14.0-tematik.
 // Bridge tipis ke CoreLib v2.4.0 (pin 17 LIVE) + kontrak dispatcher v2 + CDN v2.9.0 10 file (1 CSS+9 JS).
 //
 // Bagian yang perlu Anda sesuaikan ditandai [SESUAIKAN].
@@ -40,7 +40,7 @@
 //   5. actionLevels (§7)          — 88 handler; kalau menambah/menghapus
 //      handler di 02, sinkronkan di sini — kalau tidak, fail-closed
 //
-// ⚡ SKEMA 10 SHEET (baseline v2.11.0 — FLEKSIBEL, bukan kewajiban):
+// ⚡ SKEMA 10 SHEET (baseline v2.14.0-tematik — FLEKSIBEL, bukan kewajiban):
 //   Master (5) — tiap sheet = 1 dimensi laporan ("per apa?"):
 //     M_KATEGORI   — hierarki (parent_id) → L1 rollup
 //     M_JENIS      — jenis + periode → L2/A2/A7
@@ -208,7 +208,7 @@ var PLATFORM_API_URL = CoreLib.getEnvProperty('PLATFORM_API_URL', appProps_())
 // ==================== §3 SKEMA SHEET ====================
 // [SESUAIKAN] Anda bebas ganti nama sheet bisnis (mis. T_UTAMA → T_ASET).
 // Yang penting: kolom audit (created_at..deleted_at) ada — dipakai CoreLib.
-// v2.11.0: 5 master + 5 tabel = 10 sheet bisnis (baseline, fleksibel).
+// v2.14.0: 8 master (M_FUNGSI/M_DIMENSI/M_NILAI_DIMENSI/M_TARGET + 5 lama) + 8 tabel (T_UTAMA/T_ATRIBUT/T_PESERTA/T_LOGBOOK + 4 lama) = 10 sheet bisnis (baseline, fleksibel).
 
 var LOCAL_SHEETS = {
   // Master starter-kit 5 dimensi (kompatibilitas + Satu Data lama)
@@ -553,7 +553,7 @@ function localPreSaveHook_(canonical, record, actor) {
 
 // ==================== §7 KONTRAK DISPATCHER v2 ====================
 // actionLevels fail-closed: aksi tak dikenal = 'viewer' (default dispatcher).
-// Total 88 handler (v2.11.0):
+// Total 110+ handler (v2.14.0-tematik):
 //   config 6 + self 2 + dashboard 2 + simpeg 4 + master 15 + utama 4 +
 //   item 4 + lampiran 3 + approval 4 + RTL 12 + laporan 12 +
 //   analisa 8 + evaluasi 6 + generic 2 + publik 3 + sistem 1

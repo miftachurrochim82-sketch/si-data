@@ -1,8 +1,8 @@
 // ============================================================
-// STARTER-KIT - 02_AppLogic.gs (v2.11.0 — 5M+5T + piramida 12L/8A/6E/4R + dashboard 4+4+4)
+// STARTER-KIT - 02_AppLogic.gs (v2.14.0-tematik — 7 file medium + 18 sheet + Tematik + dashboard 4+4+4)
 // ============================================================
 // Changelog:
-//   v2.11.0 — REDESIGN SKEMA (keputusan user 2026-09-22):
+//   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             - Master 5: M_KATEGORI, M_JENIS, M_PERIODE, M_SATUAN, M_LOKASI
 //             - Tabel 5: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL, T_TINDAK_LANJUT
 //             - Piramida output (baseline, tidak kaku):
@@ -85,7 +85,7 @@ function buildLocalHandlers_() {
 
   // Health & profil
   h['ping'] = function () {
-    return { success: true, data: { pong: true, app: APP_CODE, time: new Date().toISOString(), version: 'v2.11.0' } };
+    return { success: true, data: { pong: true, app: APP_CODE, time: new Date().toISOString(), version: 'v2.14.0-tematik' } };
   };
   h['get_my_profile'] = function (d, u) { return { success: true, data: u }; };
   h['save_my_profile'] = function (d, u) {
@@ -1680,7 +1680,7 @@ function daysBetween_(a, b) {
 function getConfigList_() {
   var defaults = [
     { key: 'app_title',   value: APP_TITLE, keterangan: 'Nama aplikasi' },
-    { key: 'app_version', value: 'v2.11.0', keterangan: 'Versi rilis' },
+    { key: 'app_version', value: 'v2.14.0-tematik', keterangan: 'Versi rilis' },
     { key: 'instansi',    value: 'Pemkab Trenggalek', keterangan: 'Instansi pengelola' }
   ];
   var stored = {};
@@ -1794,10 +1794,10 @@ function initDatabase(actor) {
 
 function setupApp(actor) {
   try {
-    Logger.log('🚀 Memulai Setup ' + APP_CODE + ' v2.11.0...');
+    Logger.log('🚀 Memulai Setup ' + APP_CODE + ' v2.14.0-tematik...');
     var defaultConfigs = [
       { key: 'app_title',   value: APP_TITLE, keterangan: 'Nama aplikasi' },
-      { key: 'app_version', value: 'v2.11.0', keterangan: 'Versi rilis' },
+      { key: 'app_version', value: 'v2.14.0-tematik', keterangan: 'Versi rilis' },
       { key: 'instansi',    value: 'Pemkab Trenggalek', keterangan: 'Instansi pengelola' }
     ];
     var result = CoreLib.executeAppSetup({
@@ -1825,7 +1825,7 @@ function setupApp(actor) {
 // ==================== §16 HEALTH CHECK ====================
 
 function testAppLogicSelfCheck() {
-  Logger.log('=== 02_AppLogic.gs v2.11.0 self-check (5M+5T, 86 handler, piramida 12/8/6/4) ===');
+  Logger.log('=== 02_AppLogic.gs v2.14.0-tematik self-check (5M+5T, 86 handler, piramida 12/8/6/4) ===');
   if (typeof CoreLib === 'undefined') { Logger.log('❌ CoreLib tidak terpasang!'); return; }
   Logger.log('✅ CoreLib terdeteksi.');
   var h = buildLocalHandlers_();
