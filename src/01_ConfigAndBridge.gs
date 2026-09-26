@@ -115,6 +115,28 @@ function getThemeCss() {
 }
 
 // Dipanggil oleh handler save_theme (admin) untuk simpan THEME_JSON
+var DRIVE_FOLDER_IDS = {
+  ROOT:      '1kTrUTLK5jJXfGk1766aJtUW3MEARDqfo',
+  CONFIG:    '1TaUHMxeAi3np9kbp53VZp4p813Q01-mB',
+  GEOJSON:   '14H5irW3GI_oqE_Fxst2chFQKfxXdOuFw',
+  TEMPLATE:  '1MHHuipe87WhMmvyQ-QDoDxTFD4MBrdQ6',
+  LAMPIRAN:  '1R18L5kwcN2GS8n19AlXAIIQZF13xqvG6',
+  BACKUP:    '1G-dGmtQrT-mlve8wyyXxdO8SnJQkAapD',
+  EXPORT:    '1J3Pfo6ZwAZMCwayoE-eMOHEBjXtLGFer',
+  ASSETS:    '1xQKmTTz_BCi1FIsaPEJwF7HOgZzm-HXr'
+};
+const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const GRUP_MAP = {
+  'fn_pencegahan': 'Pencegahan',
+  'fn_penanganan': 'Penanganan',
+  'fn_satlinmas':  'Satlinmas',
+  'fn_kerjasama':  'Kerjasama',
+  'fn_p3_gakda':   'P3 Gakda',
+  'fn_pp_gakda':   'Penyelidikan & Penindakan',
+  'fn_ppk_damkar': 'Pencegahan & Penanggulangan Kebakaran',
+  'fn_ps_damkar':  'Penyelamatan Kebakaran'
+};
+
 function saveThemeConfig_(obj) {
   if (!obj || !obj.primary) throw new Error('Tema tidak valid.');
   return CoreLib.buildThemeCss ? CoreLib.buildThemeCss(obj) : getThemeCss();
@@ -189,41 +211,56 @@ var PLATFORM_API_URL = CoreLib.getEnvProperty('PLATFORM_API_URL', appProps_())
 // v2.11.0: 5 master + 5 tabel = 10 sheet bisnis (baseline, fleksibel).
 
 var LOCAL_SHEETS = {
-  // Master starter-kit 5 dimensi (untuk kompatibilitas test + Satu Data)
-  M_KATEGORI:    'M_KATEGORI',
-  M_JENIS:       'M_JENIS',
-  M_PERIODE:     'M_PERIODE',
-  M_SATUAN:      'M_SATUAN',
-  M_LOKASI:      'M_LOKASI',
-  // Master tematik Satu Data (ekstensi)
-  M_KLASIFIKASI: 'M_KLASIFIKASI',
-  M_PEJABAT:     'M_PEJABAT',
-  M_TEMPLATE:    'M_TEMPLATE',
-  // Tabel (5) — inti Satu Data
+  // Master starter-kit 5 dimensi (kompatibilitas + Satu Data lama)
+  M_KATEGORI:      'M_KATEGORI',
+  M_JENIS:         'M_JENIS',
+  M_PERIODE:       'M_PERIODE',
+  M_SATUAN:        'M_SATUAN',
+  M_LOKASI:        'M_LOKASI',
+  // Master sumber baru — FUNGSI & TEMATIK
+  M_FUNGSI:        'M_FUNGSI',
+  M_DIMENSI:       'M_DIMENSI',
+  M_NILAI_DIMENSI: 'M_NILAI_DIMENSI',
+  M_TARGET:        'M_TARGET',
+  M_TEMPLATE:      'M_TEMPLATE',
+  // Master ekstensi lama (tetap untuk kompatibilitas)
+  M_KLASIFIKASI:   'M_KLASIFIKASI',
+  M_PEJABAT:       'M_PEJABAT',
+  // Tabel inti
   T_UTAMA:         'T_UTAMA',
-  T_ITEM:          'T_ITEM',
+  T_PESERTA:       'T_PESERTA',
+  T_ATRIBUT:       'T_ATRIBUT',
   T_LAMPIRAN:      'T_LAMPIRAN',
-  T_APPROVAL:     'T_APPROVAL',
+  T_LOGBOOK:       'T_LOGBOOK',
+  T_APPROVAL:      'T_APPROVAL',
   T_TINDAK_LANJUT: 'T_TINDAK_LANJUT',
-  T_LOGBOOK:       'T_LOGBOOK'
+  T_ITEM:          'T_ITEM', // legacy — tetap ada
+  AUDIT_LOGS:      'AUDIT_LOGS'
 };
 
 // Prefix ID per-sheet (dipakai localPreSaveHook_ P1)
 var LOCAL_ID_PREFIX_ = {
-  'M_KATEGORI':     'kat',
-  'M_JENIS':        'jen',
-  'M_PERIODE':      'per',
-  'M_SATUAN':       'sat',
-  'M_LOKASI':       'lok',
-  'M_KLASIFIKASI':  'kls',
-  'M_PEJABAT':      'pjb',
-  'M_TEMPLATE':     'tpl',
-  'T_UTAMA':        'utm',
-  'T_ITEM':         'itm',
-  'T_LAMPIRAN':     'lmp',
-  'T_APPROVAL':    'apr',
-  'T_TINDAK_LANJUT':'rtl',
-  'T_LOGBOOK':      'log'
+  'M_KATEGORI':      'kat',
+  'M_JENIS':         'jen',
+  'M_PERIODE':       'per',
+  'M_SATUAN':        'sat',
+  'M_LOKASI':        'lok',
+  'M_FUNGSI':        'fn',
+  'M_DIMENSI':       'dim',
+  'M_NILAI_DIMENSI': 'val',
+  'M_TARGET':        'tgt',
+  'M_KLASIFIKASI':   'kls',
+  'M_PEJABAT':       'pjb',
+  'M_TEMPLATE':      'tpl',
+  'T_UTAMA':         't',
+  'T_PESERTA':       'tp',
+  'T_ATRIBUT':       'atr',
+  'T_LAMPIRAN':      'tl',
+  'T_LOGBOOK':       'tlb',
+  'T_APPROVAL':      'apr',
+  'T_TINDAK_LANJUT': 'rtl',
+  'T_ITEM':          'itm',
+  'AUDIT_LOGS':      'log'
 };
 
 // Alias SIMPEG
@@ -235,21 +272,31 @@ var SIMPEG_SHEET_ALIAS_ = {
 };
 
 var ALL_SHEET_HEADERS = {
-  M_KATEGORI:    ['id', 'kode', 'nama', 'parent_id', 'urutan', 'status_aktif', 'deskripsi', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_JENIS:       ['id', 'kode', 'nama', 'kategori_id', 'periode', 'status_aktif', 'deskripsi', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_PERIODE:     ['id', 'tahun', 'bulan', 'kode', 'label', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_SATUAN:      ['id', 'kode', 'nama', 'simbol', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_LOKASI:      ['id', 'kode', 'nama', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_KLASIFIKASI: ['id', 'kode', 'nama_tematik', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_PEJABAT:     ['id', 'nama', 'nip', 'bidang', 'jabatan', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  M_TEMPLATE:    ['id', 'kode_tematik', 'nama_template', 'format', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_UTAMA:       ['id', 'pegawai_id', 'tanggal', 'judul', 'uraian', 'kode_tematik', 'klasifikasi_id', 'pejabat_id', 'kategori_id', 'jenis_id', 'lokasi_id', 'periode_id', 'nilai', 'jumlah', 'satuan_id', 'periode', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_ITEM:        ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_LAMPIRAN:    ['id', 'utama_id', 'file_url', 'nama_file', 'tipe', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_APPROVAL:    ['id', 'utama_id', 'approver_id', 'status', 'catatan', 'tanggal_approve', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_TINDAK_LANJUT:['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_LOGBOOK:     ['id', 'utama_id', 'aksi', 'actor', 'waktu', 'detail', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  ZZ_TEST_CRUD:['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru']
+  // Master lama (tetap — kompatibilitas)
+  M_KATEGORI:      ['id', 'kode', 'nama', 'parent_id', 'urutan', 'status_aktif', 'deskripsi', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_JENIS:         ['id', 'kode', 'nama', 'kategori_id', 'periode', 'status_aktif', 'deskripsi', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_PERIODE:       ['id', 'kode', 'label', 'tahun', 'bulan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_SATUAN:        ['id', 'kode', 'nama', 'simbol', 'keterangan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_LOKASI:        ['id', 'kode', 'nama', 'alamat', 'keterangan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  // Master baru — Fungsi & Tematik (dari sumber)
+  M_FUNGSI:        ['id', 'kode', 'nama', 'parent_id', 'unit_id', 'level', 'urutan', 'deskripsi', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_DIMENSI:       ['id', 'kode', 'nama', 'jenis_input', 'fungsi_id', 'urutan', 'deskripsi', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_NILAI_DIMENSI: ['id', 'dimensi_id', 'kode', 'nama', 'urutan', 'deskripsi', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_TARGET:        ['id', 'kode', 'nama_target', 'fungsi_id', 'periode_id', 'unit_id', 'target_kegiatan', 'target_anggaran', 'target_volume', 'keterangan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_KLASIFIKASI:   ['id', 'kode', 'nama_tematik', 'nama', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_PEJABAT:       ['id', 'nama', 'nip', 'bidang', 'jabatan', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  M_TEMPLATE:      ['id', 'kode_tematik', 'nama_template', 'format', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  // Transaksi — T_UTAMA disesuaikan ke sumber (kolom sumber: unit_id, fungsi_id, kategori_id, jenis_id, periode_id, lokasi_id, uraian, jumlah, satuan_id, anggaran, status)
+  T_UTAMA:         ['id', 'kode', 'tanggal', 'unit_id', 'fungsi_id', 'kategori_id', 'jenis_id', 'periode_id', 'lokasi_id', 'uraian', 'jumlah', 'satuan_id', 'anggaran', 'status', 'keterangan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_PESERTA:       ['id', 'kegiatan_id', 'pegawai_id', 'peran', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_ATRIBUT:       ['id', 'kegiatan_id', 'dimensi_id', 'nilai_id', 'nilai_text', 'nilai_number', 'nilai_date', 'keterangan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_LAMPIRAN:      ['id', 'kegiatan_id', 'nama_file', 'tipe', 'file_url', 'deskripsi', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_LOGBOOK:       ['id', 'tanggal', 'pegawai_id', 'kegiatan_id', 'uraian', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_APPROVAL:      ['id', 'utama_id', 'approver_id', 'status', 'catatan', 'tanggal_approve', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_TINDAK_LANJUT: ['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  T_ITEM:          ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
+  AUDIT_LOGS:      ['id', 'timestamp', 'user', 'aksi', 'tabel', 'record_id', 'data_lama', 'data_baru', 'keterangan', 'status'],
+  ZZ_TEST_CRUD:    ['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru']
 };
 
 // ==================== §3b SHEET REF CHECK (FIX K1) ====================
