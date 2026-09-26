@@ -118,6 +118,16 @@ window.StarterKitState = {
       rtlStatusProgress: 0,
       rtlStatusCatatan: '',
 
+      // ==================== PETA (Tahap 3 Leaflet) ====================
+      petaLoading: false,
+      petaError: '',
+      petaTahun: th,
+      petaLevel: 'lokasi',
+      petaWarna: 'jumlah',
+      petaData: { wilayah: [], totalKegiatan: 0 },
+      petaMap: null,
+      petaGeoJsonLayer: null,
+
       // ==================== UI ====================
       rowMenuId: null,
 
@@ -204,6 +214,15 @@ window.StarterKitState = {
       var m=this.dashboardData.heatmap && this.dashboardData.heatmap.matrix || {};
       var s=0; for(var k in m) s+=m[k];
       return s;
+    },
+    petaMaxJumlah() {
+      var w=this.petaData && this.petaData.wilayah || [];
+      if(!w.length) return 1;
+      return Math.max.apply(null, w.map(function(x){ return x.jumlah||0; })) || 1;
+    },
+    petaSortedWilayah() {
+      var w=(this.petaData && this.petaData.wilayah || []).slice();
+      return w.sort(function(a,b){ return (b.jumlah||0)-(a.jumlah||0); });
     }
   }
 };

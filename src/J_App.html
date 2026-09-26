@@ -77,7 +77,8 @@ var app = AppCore.create({
       { id: 'rtl', label: 'RTL', icon: 'fa-solid fa-list-check' }
     ]},
     { name: 'Data', items: [
-      { id: 'master', label: 'Master', icon: 'fa-solid fa-book' }
+      { id: 'master', label: 'Master', icon: 'fa-solid fa-book' },
+      { id: 'peta', label: 'Peta', icon: 'fa-solid fa-map-location-dot' }
     ]},
     { name: 'Sistem', items: [
       { id: 'pengaturan', label: 'Pengaturan', icon: 'fa-solid fa-palette' }
@@ -92,6 +93,7 @@ var app = AppCore.create({
     evaluasi:   'fa-solid fa-magnifying-glass-chart',
     rtl:        'fa-solid fa-list-check',
     master:     'fa-solid fa-book',
+    peta:       'fa-solid fa-map-location-dot',
     pengaturan: 'fa-solid fa-palette'
   },
 
@@ -103,6 +105,7 @@ var app = AppCore.create({
     if (page === 'evaluasi') { if (!vm.evaGridLoaded && !vm.evaLoading) vm.loadEvaluasiGrid(); }
     if (page === 'rtl') { if (!vm.rtlLoading) vm.loadRtl(1); }
     if (page === 'master') { if (!vm.kategoriList.length && !vm.masterLoading) vm.loadMasterSatelit(); }
+    if (page === 'peta') { if (typeof initPeta === 'function') setTimeout(function(){ initPeta(vm); }, 80); else if (vm.loadPeta) vm.loadPeta(); }
     if (page === 'pengaturan') { /* theme picker — no load */ }
   },
 

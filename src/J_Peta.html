@@ -1,0 +1,339 @@
+<script>
+// ============================================================
+// STARTER-KIT - J_Peta.html (Tahap 3 — Leaflet choropleth + ranking)
+// Hybrid Peta Sebaran: OSM tiles + getPetaKegiatan + GeoJSON fallback
+// ============================================================
+
+(function(){
+  // ---------- warna skala (jumlah) ----------
+  function petaColorScale(val, max){
+    var r = max ? val / max : 0;
+    if(val===0) return '#f1f5f9';
+    if(r < 0.15) return '#dbeafe';
+    if(r < 0.30) return '#93c5fd';
+    if(r < 0.50) return '#60a5fa';
+    if(r < 0.70) return '#2563eb';
+    if(r < 0.85) return '#1d4ed8';
+    return '#1e3a8a';
+  }
+  window.petaColorScale = petaColorScale;
+
+  // ---------- Leaflet helpers ----------
+  var _map = null;
+  var _layerGroup = null;
+  var _geoLayer = null;
+  var _currentVm = null;
+
+  function ensureLeaflet(){
+    return typeof L !== 'undefined' && L.map;
+  }
+
+  function getVm(){
+    if(_currentVm) return _currentVm;
+    // fallback coba ambil dari app global jika ada
+    try { if(window.app && window.app._instance) return window.app._instance.proxy || window.app; } catch(e){}
+    return null;
+  }
+
+  // Buat map sekali; dipanggil tiap navigasi ke peta
+  window.initPeta = function(vm){
+    _currentVm = vm || getVm() || vm;
+    var v = _currentVm || vm;
+    if(!v) { console.warn('initPeta: vm kosong'); return; }
+    // pastikan field peta ada (untuk hard refresh)
+    if(v.petaLoading === undefined) v.petaLoading = false;
+    if(!v.petaTahun) v.petaTahun = String(new Date().getFullYear());
+
+    // tunggu DOM #petaMap
+    var tries = 0;
+    function tryInit(){
+      var el = document.getElementById('petaMap');
+      if(!el){
+        if(tries++ < 20) { setTimeout(tryInit, 100); } else { console.warn('#petaMap tidak ketemu'); }
+        return;
+      }
+      if(!ensureLeaflet()){
+        v.petaError = 'Leaflet belum ter-load. Cek koneksi CDN unpkg.';
+        return;
+      }
+      // jika sudah ada map dan container masih valid, resize saja
+      if(_map && document.body.contains(_map.getContainer())){
+        try{ _map.invalidateSize(); }catch(e){}
+        loadPeta(v);
+        return;
+      }
+      // reset container jika leaflet sebelumnya attached
+      try{ if(_map){ _map.remove(); } }catch(e){}
+      el.innerHTML = '';
+      // tinggi sudah di CSS, tapi pastikan
+      el.style.minHeight = '480px';
+
+      // Center Indonesia; zoom 5 untuk nasional, 12 untuk kota Kediri jika data lokal
+      var center = [-7.848, 112.017]; // Kediri approx
+      var zoom = 10;
+      // jika ada banyak wilayah nasional, center Indonesia
+      var w = (v.petaData && v.petaData.wilayah || []);
+      if(w.length > 8) { center = [-2.5, 118]; zoom = 5; }
+
+      _map = L.map('petaMap', { zoomControl: true, scrollWheelZoom: true }).setView(center, zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 18
+      }).addTo(_map);
+      L.control.scale({ imperial:false }).addTo(_map);
+
+      // layer group untuk marker/choro
+      _layerGroup = L.layerGroup().addTo(_map);
+
+      // jika ada geojson layer sebelumnya, hapus
+      if(_geoLayer){ try{ _map.removeLayer(_geoLayer);}catch(e){} _geoLayer=null; }
+
+      // simpan ke vm untuk inspeksi
+      v.petaMap = _map;
+
+      // load data
+      loadPeta(v);
+
+      // resize fix setelah render
+      setTimeout(function(){ try{ _map.invalidateSize(); }catch(e){} }, 300);
+    }
+    // next tick biar v-if selesai render
+    setTimeout(tryInit, 60);
+  };
+
+  // ---------- Load data dari backend ----------
+  async function loadPeta(vm){
+    var v = vm || _currentVm || getVm();
+    if(!v) return;
+    _currentVm = v;
+    v.petaLoading = true;
+    v.petaError = '';
+    var filter = {};
+    if(v.petaTahun) filter.tahun = String(v.petaTahun);
+    if(v.petaLevel) filter.level = v.petaLevel;
+    // getPetaKegiatan tersedia di 09_BridgeFrontend.gs
+    try{
+      var data = await new Promise(function(resolve, reject){
+        if(typeof google !== 'undefined' && google.script && google.script.run){
+          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getPetaKegiatan(filter);
+        } else {
+          // Preview lokal (tanpa GAS) — fallback mock
+          setTimeout(function(){
+            resolve({
+              wilayah: [
+                {nama:'Kediri Kota', jumlah: 18, volume: 340, anggaran: 125000000, topFungsi:'Pembinaan'},
+                {nama:'Mojoroto', jumlah: 12, volume: 210, anggaran: 98000000, topFungsi:'Pengawasan'},
+                {nama:'Pesantren', jumlah: 9, volume: 170, anggaran: 76000000, topFungsi:'Pelayanan'},
+                {nama:'Kota', jumlah: 7, volume: 120, anggaran: 54000000, topFungsi:'Pembinaan'},
+                {nama:'Wlingi', jumlah: 4, volume: 80, anggaran: 32000000, topFungsi:'Lainnya'}
+              ],
+              totalKegiatan: 50
+            });
+          }, 400);
+        }
+      });
+      // normalisasi: backend bisa return {wilayah:[]} atau array langsung
+      var wilayah = [];
+      var total = 0;
+      if(Array.isArray(data)) { wilayah = data; total = data.length; }
+      else if(data && Array.isArray(data.wilayah)){ wilayah = data.wilayah; total = data.totalKegiatan || wilayah.length; }
+      else if(data && data.success === false){ throw new Error(data.error || 'Gagal getPetaKegiatan'); }
+      else if(data){ wilayah = data.wilayah || data.data || []; total = data.totalKegiatan || wilayah.length; }
+
+      v.petaData = { wilayah: wilayah, totalKegiatan: total };
+      // simpan max untuk skala warna
+      v.petaError = '';
+      renderPeta(v);
+    }catch(e){
+      console.error('loadPeta', e);
+      v.petaError = e && e.message ? e.message : String(e);
+      // tetap render dengan data kosong / mock biar map tidak blank
+      if(!v.petaData || !v.petaData.wilayah.length){
+        v.petaData = {
+          wilayah: [
+            {nama:'Kediri Kota', jumlah: 12, volume: 180, anggaran: 90000000, topFungsi:'-'},
+            {nama:'Mojoroto', jumlah: 8, volume: 120, anggaran: 60000000, topFungsi:'-'},
+            {nama:'Pesantren', jumlah: 5, volume: 80, anggaran: 40000000, topFungsi:'-'}
+          ],
+          totalKegiatan: 25
+        };
+        renderPeta(v);
+      }
+    } finally {
+      v.petaLoading = false;
+      // Vue reactivity
+      try{ if(v.$forceUpdate) v.$forceUpdate(); }catch(e){}
+    }
+  }
+  window.loadPeta = loadPeta;
+
+  // ---------- Render marker / choropleth ----------
+  function renderPeta(vm){
+    var v = vm || _currentVm || getVm();
+    if(!v || !_map || !_layerGroup) return;
+    _layerGroup.clearLayers();
+    if(_geoLayer){ try{ _map.removeLayer(_geoLayer);}catch(e){} _geoLayer=null; }
+
+    var wilayah = (v.petaData && v.petaData.wilayah) || [];
+    if(!wilayah.length){
+      return;
+    }
+    var max = Math.max.apply(null, wilayah.map(function(w){ return Number(w.jumlah)||0; })) || 1;
+
+    // Coba load GeoJSON jika tersedia (opsional) — tidak wajib
+    // Jika fail, fallback ke circleMarker sintetis
+    var geoAttempted = false;
+    function fallbackMarkers(){
+      // Posisi sintetis: sebar di radius Kediri agar demo terlihat
+      var baseLat = -7.848, baseLng = 112.017;
+      var coords = [
+        [baseLat+0.04, baseLng+0.05],
+        [baseLat-0.03, baseLng+0.02],
+        [baseLat+0.01, baseLng-0.04],
+        [baseLat-0.05, baseLng-0.06],
+        [baseLat+0.06, baseLng-0.02],
+        [baseLat-0.01, baseLng+0.07],
+        [baseLat+0.02, baseLng+0.03],
+        [baseLat-0.04, baseLng+0.04],
+      ];
+      // fit bounds
+      var bounds = [];
+      wilayah.forEach(function(w, idx){
+        var latlng = coords[idx % coords.length];
+        // jitter kecil agar tidak tumpuk persis
+        var jitterLat = latlng[0] + (Math.sin(idx*1.7)*0.015);
+        var jitterLng = latlng[1] + (Math.cos(idx*1.3)*0.015);
+        var color = petaColorScale(Number(w.jumlah)||0, max);
+        var radius = 10 + (Number(w.jumlah)/max)*22; // 10..32
+        var marker = L.circleMarker([jitterLat, jitterLng], {
+          radius: radius,
+          fillColor: color,
+          color: '#ffffff',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.82
+        });
+        var anggaranTxt = '';
+        try{
+          anggaranTxt = (w.anggaran ? 'Rp ' + Number(w.anggaran).toLocaleString('id-ID') : '-');
+        }catch(e){ anggaranTxt = String(w.anggaran||'-'); }
+        var popup = '<div style="min-width:180px;font-family:system-ui;font-size:12px;line-height:1.4">'
+          + '<div style="font-weight:800;color:#0f172a;margin-bottom:4px">' + escapeHtml(w.nama) + '</div>'
+          + '<div><b>Jumlah:</b> ' + (w.jumlah||0) + '</div>'
+          + '<div><b>Volume:</b> ' + (w.volume||0) + '</div>'
+          + '<div><b>Anggaran:</b> ' + anggaranTxt + '</div>'
+          + '<div style="color:#64748b;margin-top:4px"><b>Top Fungsi:</b> ' + escapeHtml(w.topFungsi||'-') + '</div>'
+          + '</div>';
+        marker.bindPopup(popup);
+        marker.bindTooltip(w.nama + ' — ' + w.jumlah, { direction:'top', offset:[0,-10] });
+        marker.addTo(_layerGroup);
+        bounds.push([jitterLat, jitterLng]);
+      });
+      if(bounds.length){
+        try{
+          var b = L.latLngBounds(bounds);
+          _map.fitBounds(b.pad(0.35));
+        }catch(e){}
+      }
+      // legend
+      addLegend(max);
+    }
+
+    // Jika warna mode bukan jumlah, fallback tetap pakai jumlah
+    fallbackMarkers();
+
+    // Optional: coba GeoJSON jika folder Drive terkonfigurasi — jangan block UI
+    if(!geoAttempted && typeof google !== 'undefined' && google.script && google.script.run){
+      geoAttempted = true;
+      try{
+        // coba load file generic; jika tidak ada, backend return error & kita ignore
+        google.script.run.withSuccessHandler(function(res){
+          if(res && res.success && res.data){
+            try{
+              var gj = JSON.parse(res.data);
+              if(gj && gj.type){
+                _layerGroup.clearLayers();
+                _geoLayer = L.geoJSON(gj, {
+                  style: function(feat){
+                    var name = feat.properties && (feat.properties.nama || feat.properties.NAME || feat.properties.name || '');
+                    var rec = wilayah.find(function(w){ return String(w.nama).toLowerCase() === String(name).toLowerCase(); });
+                    var val = rec ? Number(rec.jumlah)||0 : 0;
+                    return { fillColor: petaColorScale(val, max), weight:1.2, color:'#ffffff', fillOpacity:0.78 };
+                  },
+                  onEachFeature: function(feat, layer){
+                    var name = feat.properties && (feat.properties.nama || feat.properties.NAME || feat.properties.name || 'Wilayah');
+                    var rec = wilayah.find(function(w){ return String(w.nama).toLowerCase() === String(name).toLowerCase(); });
+                    var html = '<div style="font-family:system-ui;font-size:12px"><b>' + escapeHtml(name) + '</b><br/>'
+                      + (rec ? ('Jumlah: <b>' + rec.jumlah + '</b><br/>Volume: ' + rec.volume + '<br/>Anggaran: Rp ' + Number(rec.anggaran||0).toLocaleString('id-ID')) : 'Tidak ada data')
+                      + '</div>';
+                    layer.bindPopup(html);
+                    layer.bindTooltip(name, {sticky:true});
+                  }
+                }).addTo(_map);
+                try{ _map.fitBounds(_geoLayer.getBounds().pad(0.15)); }catch(e){}
+                addLegend(max);
+              }
+            }catch(e){ /* ignore geo parse error */ }
+          }
+        }).withFailureHandler(function(){ /* ignore */ }).getGeoJSONContent('kediri.geojson');
+      }catch(e){}
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>\"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'})[c]; });
+  }
+
+  function addLegend(max){
+    if(!_map) return;
+    // hapus legend lama jika ada
+    try{
+      _map.eachControl(function(c){
+        if(c._petaLegend) _map.removeControl(c);
+      });
+    }catch(e){}
+    var Legend = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd: function(){
+        var div = L.DomUtil.create('div', 'info legend');
+        div._petaLegend = true;
+        div.style.background = 'rgba(255,255,255,0.96)';
+        div.style.padding = '8px 10px';
+        div.style.borderRadius = '10px';
+        div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+        div.style.fontSize = '11px';
+        div.style.lineHeight = '1.4';
+        div.style.fontFamily = 'system-ui';
+        var grades = [0, max*0.15, max*0.30, max*0.50, max*0.70, max*0.85];
+        var labels = [];
+        div.innerHTML = '<div style="font-weight:800;margin-bottom:6px;color:#0f172a">Jumlah kegiatan</div>';
+        for(var i=0;i<grades.length;i++){
+          var from = Math.round(grades[i]);
+          var to = grades[i+1] ? Math.round(grades[i+1]-1) : max;
+          var color = petaColorScale(from+1, max);
+          labels.push('<span style="display:inline-block;width:12px;height:12px;background:'+color+';border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid #e2e8f0"></span> ' + from + (to ? '&ndash;' + to : '+'));
+        }
+        div.innerHTML += labels.join('<br/>');
+        // cegah drag map ketika hover legend
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+        return div;
+      }
+    });
+    var leg = new Legend();
+    leg._petaLegend = true;
+    leg.addTo(_map);
+  }
+
+  // Ekspose ke Vue methods agar bisa dipanggil this.loadPeta()
+  if(window.StarterKitApi && window.StarterKitApi.methods){
+    window.StarterKitApi.methods.loadPeta = function(){ return loadPeta(this); };
+    window.StarterKitApi.methods.renderPeta = function(){ return renderPeta(this); };
+    window.StarterKitApi.methods.petaColor = petaColorScale;
+    window.StarterKitApi.methods.petaRefresh = function(){ return loadPeta(this); };
+  }
+  // fallback global untuk J_App
+  window.renderPeta = renderPeta;
+
+})();
+</script>

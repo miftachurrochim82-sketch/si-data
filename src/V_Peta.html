@@ -1,0 +1,162 @@
+<!-- ============================================================
+     STARTER-KIT - V_Peta.html (Tahap 3 — Leaflet Peta Sebaran)
+     Choropleth per lokasi + ranking — data dari getPetaKegiatan
+     ============================================================ -->
+<section v-if="currentPage === 'peta'" class="space-y-5 animate-fade-in">
+
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+    <div>
+      <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
+        <i class="fa-solid fa-map-location-dot text-emerald-600 dark:text-emerald-400"></i> Peta Sebaran
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+        Sebaran kegiatan per lokasi — lingkaran proporsional + tooltip &amp; popup. Data dari <span class="font-mono text-[11px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">getPetaKegiatan</span>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-[11px] text-slate-400 hidden sm:inline">OSM + Leaflet 1.9.4</span>
+      <button class="btn btn-ghost btn-sm" @click="petaRefresh()" :disabled="petaLoading"><i class="fa-solid fa-rotate" :class="{'fa-spin': petaLoading}"></i> Muat ulang</button>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="card p-3 flex flex-wrap items-end gap-3">
+    <div class="flex-1 min-w-[140px]">
+      <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Tahun</label>
+      <select v-model="petaTahun" @change="loadPeta()" class="select w-full mt-1">
+        <option value="">Semua tahun</option>
+        <option v-for="t in tahunOptions" :key="t" :value="t">{{ t }}</option>
+      </select>
+    </div>
+    <div class="min-w-[160px]">
+      <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Level</label>
+      <select v-model="petaLevel" @change="loadPeta()" class="select w-full mt-1">
+        <option value="lokasi">Lokasi (M_LOKASI)</option>
+        <option value="fungsi">Fungsi (M_FUNGSI)</option>
+      </select>
+    </div>
+    <div class="min-w-[160px]">
+      <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Warna by</label>
+      <select v-model="petaWarna" @change="renderPeta()" class="select w-full mt-1">
+        <option value="jumlah">Jumlah kegiatan</option>
+        <option value="volume">Volume</option>
+        <option value="anggaran">Anggaran</option>
+      </select>
+    </div>
+    <div class="ml-auto flex items-center gap-2 pt-5">
+      <span v-if="petaLoading" class="text-xs text-sky-600 flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Memuat peta…</span>
+      <span v-else-if="petaData && petaData.wilayah && petaData.wilayah.length" class="text-xs text-slate-500">
+        <b class="text-slate-800 dark:text-white">{{ petaData.wilayah.length }}</b> wilayah · <b class="text-slate-800 dark:text-white">{{ petaData.totalKegiatan }}</b> kegiatan
+      </span>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div v-if="petaError" class="card p-3 border-amber-200 bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200 text-xs flex gap-2">
+    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+    <div><b>Gagal memuat peta:</b> {{ petaError }} — menampilkan data fallback.</div>
+  </div>
+
+  <!-- Map -->
+  <div class="card overflow-hidden !p-0">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-earth-asia text-sky-500"></i> Peta Interaktif</h3>
+      <span class="text-[11px] text-slate-400">Klik lingkaran untuk detail · zoom &amp; drag untuk eksplor</span>
+    </div>
+    <div id="petaMap" class="w-full bg-slate-100 dark:bg-slate-800" style="height:520px; min-height:480px;"></div>
+    <div class="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+      <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-full" style="background:#1e3a8a"></span> Tinggi</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-full" style="background:#93c5fd"></span> Rendah</span>
+      <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded-full border border-slate-300" style="background:#f1f5f9"></span> Nol</span>
+      <span class="ml-auto">Sumber: T_UTAMA × M_LOKASI · Tiles © OpenStreetMap</span>
+    </div>
+  </div>
+
+  <!-- Ranking table -->
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div class="xl:col-span-2 card overflow-hidden !p-0">
+      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+        <i class="fa-solid fa-ranking-star text-amber-500"></i>
+        <h3 class="font-bold text-sm">Ranking Wilayah</h3>
+        <span class="ml-auto text-[11px] text-slate-400">{{ petaSortedWilayah.length }} wilayah</span>
+      </div>
+      <div v-if="petaLoading && !petaSortedWilayah.length" class="p-6">
+        <app-skeleton type="table"></app-skeleton>
+      </div>
+      <div v-else-if="!petaSortedWilayah.length" class="px-4 py-10 text-center text-xs text-slate-400">Belum ada data wilayah — isi T_UTAMA dulu.</div>
+      <div v-else class="table-scroll max-h-[420px] overflow-y-auto">
+        <table class="w-full text-xs">
+          <thead class="sticky top-0 border-b bg-slate-50 dark:bg-slate-800/80 backdrop-blur">
+            <tr>
+              <th class="text-center py-2 px-3 w-12">#</th>
+              <th class="text-left py-2 px-3 min-w-[160px]">Wilayah</th>
+              <th class="text-right py-2 px-3">Jumlah</th>
+              <th class="text-right py-2 px-3">Volume</th>
+              <th class="text-right py-2 px-3">Anggaran</th>
+              <th class="text-left py-2 px-3 min-w-[140px]">Top Fungsi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr v-for="(w,i) in petaSortedWilayah" :key="w.nama" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+              <td class="py-2.5 px-3 text-center">
+                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-black"
+                  :style="{ background: i<3 ? '#fef3c7' : '#f1f5f9', color: i<3 ? '#92400e' : '#475569', border: i<3 ? '1px solid #f59e0b' : '1px solid #e2e8f0' }">
+                  {{ i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : i+1 }}
+                </span>
+              </td>
+              <td class="py-2.5 px-3">
+                <div class="font-bold text-slate-800 dark:text-white truncate max-w-[180px]" :title="w.nama">{{ w.nama }}</div>
+                <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-700 rounded mt-1 overflow-hidden">
+                  <div class="h-full rounded" :style="{ width: ((w.jumlah/petaMaxJumlah)*100)+'%', background: 'linear-gradient(90deg,#0ea5e9,#0369a1)' }"></div>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 text-right font-black text-sky-700 dark:text-sky-300">{{ w.jumlah }}</td>
+              <td class="py-2.5 px-3 text-right">{{ w.volume || 0 }}</td>
+              <td class="py-2.5 px-3 text-right font-mono text-[11px]">{{ w.anggaran ? ('Rp ' + Number(w.anggaran).toLocaleString('id-ID')) : '—' }}</td>
+              <td class="py-2.5 px-3 text-slate-500 truncate max-w-[140px]" :title="w.topFungsi">{{ w.topFungsi || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Side stats + help -->
+    <div class="space-y-4">
+      <div class="card p-4">
+        <h4 class="font-bold text-sm flex items-center gap-2 mb-3"><i class="fa-solid fa-chart-simple text-emerald-500"></i> Ringkas</h4>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-sky-50 dark:bg-sky-900/20 p-3 border border-sky-100 dark:border-sky-800">
+            <div class="text-[11px] text-sky-600 dark:text-sky-300 font-bold uppercase tracking-wide">Total Kegiatan</div>
+            <div class="text-2xl font-black text-sky-700 dark:text-sky-200 mt-1">{{ petaData.totalKegiatan || 0 }}</div>
+          </div>
+          <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3 border border-emerald-100 dark:border-emerald-800">
+            <div class="text-[11px] text-emerald-600 dark:text-emerald-300 font-bold uppercase tracking-wide">Wilayah</div>
+            <div class="text-2xl font-black text-emerald-700 dark:text-emerald-200 mt-1">{{ petaData.wilayah ? petaData.wilayah.length : 0 }}</div>
+          </div>
+          <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3 border border-amber-100 dark:border-amber-800">
+            <div class="text-[11px] text-amber-600 dark:text-amber-300 font-bold uppercase tracking-wide">Tertinggi</div>
+            <div class="text-sm font-bold text-amber-800 dark:text-amber-200 mt-1 truncate" :title="petaSortedWilayah[0] ? petaSortedWilayah[0].nama : '-'">{{ petaSortedWilayah[0] ? petaSortedWilayah[0].nama : '—' }}</div>
+            <div class="text-xs text-amber-600 dark:text-amber-300">{{ petaSortedWilayah[0] ? petaSortedWilayah[0].jumlah + ' kegiatan' : '' }}</div>
+          </div>
+          <div class="rounded-xl bg-purple-50 dark:bg-purple-900/20 p-3 border border-purple-100 dark:border-purple-800">
+            <div class="text-[11px] text-purple-600 dark:text-purple-300 font-bold uppercase tracking-wide">Rata-rata</div>
+            <div class="text-2xl font-black text-purple-700 dark:text-purple-200 mt-1">{{ petaData.wilayah && petaData.wilayah.length ? (petaData.totalKegiatan / petaData.wilayah.length).toFixed(1) : '0' }}</div>
+            <div class="text-[10px] text-purple-500">kegiatan / wilayah</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4 bg-slate-50 dark:bg-slate-800/50 border-dashed">
+        <h4 class="font-bold text-xs flex items-center gap-2 mb-2"><i class="fa-solid fa-circle-info text-slate-400"></i> Cara pakai</h4>
+        <ul class="text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5 list-disc list-inside">
+          <li>Pilih <b>Tahun</b> untuk filter — peta &amp; ranking ikut ter-filter.</li>
+          <li>Lingkaran makin besar &amp; gelap = makin banyak kegiatan.</li>
+          <li>Klik lingkaran → popup rincian jumlah, volume, anggaran.</li>
+          <li>Jika file <span class="font-mono">kediri.geojson</span> ada di Drive folder GEOJSON, peta otomatis jadi choropleth polygon.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</section>
