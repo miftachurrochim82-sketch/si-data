@@ -57,16 +57,18 @@
         if(this.anaTahun !== undefined) this.anaTahun = t;
         if(this.evaTahun !== undefined) this.evaTahun = t;
         if(this.petaTahun !== undefined) this.petaTahun = t;
-        if(this.rtlGenerateTahun !== undefined && !this.rtlFilters.tahun) this.rtlFilters.tahun = t;
-        // Transaksi — utamaFilters.tahun + bidang (unit_id) — jangan timpa search user jika sudah ada keyword global
+        if(this.rtlGenerateTahun !== undefined) this.rtlFilters.tahun = t;
         if(this.utamaFilters){
           this.utamaFilters.tahun = t;
-          // keyword global → search transaksi
-          if(g.keyword) this.utamaFilters.search = g.keyword;
+          this.utamaFilters.search = g.keyword || '';
         }
-        // Tematik cascade — set bidang di form filter jika ada
-        if(g.bidangId && this.tematikBidangId !== undefined){
-          this.tematikBidangId = g.bidangId;
+        if(this.tematikBidangId !== undefined){
+          this.tematikBidangId = g.bidangId || '';
+        }
+        if(g.seksiId && this.tematikSeksiId !== undefined){
+          this.tematikSeksiId = g.seksiId || '';
+        } else if(this.tematikSeksiId !== undefined && !g.bidangId){
+          this.tematikSeksiId = '';
         }
       },
 
@@ -100,12 +102,9 @@
         var bidang = g.bidangId || '';
         var seksi = g.seksiId || '';
         var tahun = g.tahun || '';
-        // Dashboard — summary ikut tahun/bidang jika backend support filter
         if(typeof this.loadDashboard === 'function'){
-          // loadDashboard tidak pakai filter param, tapi loadAll akan refresh. Kita trigger loadDashboard via loadAll? Untuk ringan, panggil loadAll jika page dashboard
           if(page === 'dashboard' && typeof this.loadAll === 'function'){
-            // loadAnalitik juga ikut tahun? kita panggil ulang analitik dengan filter global via bridge jika ada
-            try{ this.loadAll(); }catch(e){}
+            try{ this.loadAll(true); }catch(e){}
           }
         }
         // Transaksi

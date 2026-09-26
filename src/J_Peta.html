@@ -109,13 +109,16 @@
     v.petaLoading = true;
     v.petaError = '';
     var filter = {};
-    // Tahap 4 — sinkron dari filterGlobal jika ada
-    var fg = v.filterGlobal || {};
-    if(fg.tahun) filter.tahun = String(fg.tahun);
-    else if(v.petaTahun) filter.tahun = String(v.petaTahun);
-    if(fg.bidangId) filter.bidangId = String(fg.bidangId);
-    if(fg.seksiId) filter.seksiId = String(fg.seksiId);
-    if(fg.keyword) filter.keyword = String(fg.keyword);
+    // Tahap 4 — sinkron dari filterGlobal jika ada (prioritas global, empty = semua)
+    var fg = v.filterGlobal;
+    if(fg !== undefined && fg !== null){
+      if(fg.tahun) filter.tahun = String(fg.tahun);
+      if(fg.bidangId) filter.bidangId = String(fg.bidangId);
+      if(fg.seksiId) filter.seksiId = String(fg.seksiId);
+      if(fg.keyword) filter.keyword = String(fg.keyword);
+    } else if(v.petaTahun){
+      filter.tahun = String(v.petaTahun);
+    }
     if(v.petaLevel) filter.level = v.petaLevel;
     // getPetaKegiatan tersedia di 09_BridgeFrontend.gs
     try{
