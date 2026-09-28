@@ -1,7 +1,7 @@
 // ============================================================
-// 09_BridgeFrontend.gs — Wrapper untuk frontend literatur plain
+// STARTER-KIT - 09_BridgeFrontend.gs (v2.14.0-tematik — Wrapper literatur + Bridge 7 file medium)
 // Menjembatani google.script.run.* (tanpa _) ke fungsi _ (underscore)
-// v2.14-tematik — frontend Literatur 15 file (plain HTML) + backend 7 file medium
+// Frontend 15 file HTML + backend 7 file medium — CDN v2.9.2 + CoreLib v2.4.0 pin17
 // ============================================================
 
 // ---------- Helpers dashboard ----------

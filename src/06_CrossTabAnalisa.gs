@@ -1,3 +1,6 @@
+// ============================================================
+// STARTER-KIT - 06_CrossTabAnalisa.gs (v2.14.0-tematik — backend 7 file medium — Tematik)
+// ============================================================
 function getCrossTabPerGrupTematik_(filter){
   filter=filter||{};
   var allUnits=getUnitList_();

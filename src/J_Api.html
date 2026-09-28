@@ -1,6 +1,6 @@
 <script>
 // ============================================================
-// STARTER-KIT - J_Api.html (v2.11.0 — loader 5M + 12L + 8A + 6E + dashboard 4+4+4)
+// STARTER-KIT - J_Api.html (v2.14.0-tematik — loader 5M + 12L + 8A + 6E + dashboard 4+4+4)
 // ============================================================
 // Loader data dari backend (CoreLib.dispatchAction).
 // Pola: satu loader per domain; data laporan/analisa/evaluasi disimpan
@@ -112,7 +112,7 @@ window.StarterKitApi = {
       } finally { this.masterLoading = false; }
     },
 
-    // TEMATIK masters (allUnits/allFungsi untuk cascade) — v2.14 hybrid
+    // TEMATIK masters (allUnits/allFungsi untuk cascade) — v2.14.0-tematik
     async loadTematikMasters() {
       try {
         var res = await new Promise(function(resolve, reject){
@@ -157,7 +157,7 @@ window.StarterKitApi = {
       }catch(e){ console.error('onFungsiChange', e); }
     },
 
-    // T_UTAMA (paginasi server-side) — + scope Saya/Semua (v2.12.0)
+    // T_UTAMA (paginasi server-side) — + scope Saya/Semua (v2.14.0-tematik)
     async loadUtama(page, silent) {
       var isSilent = silent === true;
       this.utamaLoading = true;

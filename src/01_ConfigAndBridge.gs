@@ -10,7 +10,7 @@
 //             • Workflow: STATUS_MAP + CoreLib.validateTransition / assertOwnership
 //             • Periode: CoreLib.periodeBulan / dalamPeriode / hitungHariKerja (for piramida)
 //             • Unique: CoreLib.findUnique / upsertUnique (anti-duplikat kode)
-//             • Bump pin CoreLib 16→17, CDN @v2.9.0 10 file (1 CSS + 9 JS: layout/ui/forms/data/charts/workflow + bundle compat)
+//             • Bump pin CoreLib 16→17, CDN @v2.9.2 10 file (1 CSS + 9 JS: layout/ui/forms/data/charts/workflow + bundle compat)
 //   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             5 master = 5 dimensi laporan: M_KATEGORI (hierarki), M_JENIS,
 //             M_PERIODE, M_SATUAN, M_LOKASI.
@@ -26,7 +26,7 @@
 //             app bisnis bebas menambah/mengurangi sheet & handler.
 //   v2.10.1 — FIX K1: isRefSheet_ hanya untuk master SIMPEG (PEGAWAI/
 //             UNIT_KERJA/JABATAN). Pola tetap dipertahankan di v2.14.0-tematik.
-// Bridge tipis ke CoreLib v2.4.0 (pin 17 LIVE) + kontrak dispatcher v2 + CDN v2.9.0 10 file (1 CSS+9 JS).
+// Bridge tipis ke CoreLib v2.4.0 (pin 17 LIVE) + kontrak dispatcher v2 + CDN v2.9.2 10 file (1 CSS+9 JS).
 //
 // Bagian yang perlu Anda sesuaikan ditandai [SESUAIKAN].
 //

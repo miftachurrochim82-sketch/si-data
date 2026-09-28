@@ -1,5 +1,5 @@
 <!-- ============================================================
-     STARTER-KIT - V_Detail.html (Tahap 5 — Drawer Detail Transaksi)
+     STARTER-KIT - V_Detail.html (v2.14.0-tematik — Tahap 5 — Drawer Detail Transaksi)
      3 tab: Informasi + Lampiran Galeri + Riwayat Audit
      ============================================================ -->
 <app-modal v-if="showDetailDrawer" @close="closeDetail()" title="Detail Transaksi" :subtitle="detailData.utama ? (detailData.utama.kode || detailData.utama.id) + ' · ' + (detailData.utama.judul || detailData.utama.uraian || '') : 'Memuat...'" icon="fa-solid fa-eye" size="2xl" :loading="detailLoading" confirm-text="Tutup" cancel-text="" @confirm="closeDetail()">

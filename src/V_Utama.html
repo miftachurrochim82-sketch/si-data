@@ -1,5 +1,5 @@
 <!-- ============================================================
-     STARTER-KIT - V_Utama.html (v2.11.0 — transaksi CRUD + 5 FK nama)
+     STARTER-KIT - V_Utama.html (v2.14.0-tematik — transaksi CRUD + 5 FK nama)
      Filter: cari + status + jenis + lokasi + tahun (select).
      Paginasi server-side. Tabel: nama, bukan ID (UIUX v2).
      ============================================================ -->
@@ -19,7 +19,7 @@
     </button>
   </div>
 
-  <!-- Scope Saya/Semua (CDN v2.9.0 AppCore.getMyScope) — badge kiri + toggle -->
+  <!-- Scope Saya/Semua (CDN v2.9.2 AppCore.getMyScope) — badge kiri + toggle -->
   <div class="flex items-center gap-2 text-xs">
     <span class="text-slate-500">Scope:</span>
     <button class="btn btn-xs" :class="getMyScope()==='mine' ? 'btn-primary' : 'btn-ghost'" @click="setMyScope('mine')"><i class="fa-solid fa-user"></i> Saya</button>
