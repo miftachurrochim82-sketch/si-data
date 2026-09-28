@@ -161,17 +161,53 @@
   <script src="https://cdn.jsdelivr.net/gh/miftachurrochim82-sketch/frontend-cdn@v2.9.2/frontend/app-workflow.min.js"></script>
   <script>
     // Guard Chart.js getContext null — cegah infinite loop saat chart di tab tersembunyi
+    // Patch requestAnimationFrame untuk menangkap error di dalam loop Chart.js
+    (function(){
+      var _raf = window.requestAnimationFrame;
+      if(_raf){
+        window.requestAnimationFrame = function(cb){
+          return _raf(function(t){
+            try { cb(t); } catch(e){
+              if(e && e.message && String(e.message).indexOf('getContext')>-1){
+                console.warn('[SI-DATA] RAF getContext suppressed');
+                return;
+              }
+              throw e;
+            }
+          });
+        };
+      }
+      var _raf2 = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
+    })();
     window.addEventListener('error', function(e){
       if(e && e.message && String(e.message).indexOf('getContext')>-1){
         console.warn('[SI-DATA] Chart getContext suppressed (dashboard belum visible)', e.message);
         e.preventDefault(); return true;
       }
-    });
+      // juga tahan error dari color.esm.js _update loop
+      if(e && e.message && String(e.message).indexOf('Map.forEach')>-1){
+        e.preventDefault(); return true;
+      }
+    }, true);
     window.addEventListener('unhandledrejection', function(e){
       if(e && e.reason && String(e.reason.message||e.reason).indexOf('getContext')>-1){
         console.warn('[SI-DATA] Chart promise suppressed');
         e.preventDefault();
       }
+    });
+    // Extra: jika canvas null, jangan biarkan Chart.js mencoba getContext
+    document.addEventListener('DOMContentLoaded', function(){
+      // patch HTMLCanvasElement.getContext agar tidak throw bila canvas detached
+      try {
+        var _getCtx = HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext = function(type, attrs){
+          if(!this || !this.parentNode){
+            // canvas belum nempel DOM — return null palsu tanpa throw
+            return null;
+          }
+          return _getCtx.call(this, type, attrs);
+        };
+      } catch(e){}
     });
   </script>
 

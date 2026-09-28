@@ -74,18 +74,20 @@ window.StarterKitApi = {
           // Tandai dashboard siap untuk render chart — cegah getContext null saat di tab lain
           var self=this;
           self.dashboardReady = false;
-          // tunda 120ms agar canvas mount dulu (initApp bisa panggil sebelum DOM siap)
+          // tunda 500ms + double nextTick agar canvas mount dulu (tablet lambat, initApp bisa panggil sebelum DOM siap)
           setTimeout(function(){
             self.$nextTick && self.$nextTick(function(){
-              if(self.currentPage === 'dashboard'){
-                self.dashboardReady = true;
-                self.$forceUpdate && self.$forceUpdate();
-                console.log('[SI-DATA] loadDashboard dashboardReady', true);
-              } else {
-                self.dashboardReady = false;
-              }
+              self.$nextTick && self.$nextTick(function(){
+                if(self.currentPage === 'dashboard'){
+                  self.dashboardReady = true;
+                  self.$forceUpdate && self.$forceUpdate();
+                  console.log('[SI-DATA] loadDashboard dashboardReady', true);
+                } else {
+                  self.dashboardReady = false;
+                }
+              });
             });
-          }, 120);
+          }, 500);
         } else if (!isSilent) this.showToast('Gagal memuat dashboard.', 'error');
       } catch (e) {
         console.error('loadDashboard', e);

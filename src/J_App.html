@@ -98,12 +98,26 @@ var app = AppCore.create({
   },
 
   onNavigate: function (vm, page) {
+    // Matikan chart segera saat tinggalkan dashboard — hentikan RAF loop sebelum canvas dihapus
+    if (page !== 'dashboard') {
+      vm.dashboardReady = false;
+    }
     if (page === 'dashboard') {
       // Aktifkan chart hanya saat di dashboard — cegah getContext null di tab lain
       vm.dashboardReady = false;
       vm.loadAll();
-      // beri waktu DOM mount sebelum chart render
-      setTimeout(function(){ vm.dashboardReady = true; vm.$forceUpdate && vm.$forceUpdate(); }, 120);
+      // beri waktu DOM mount sebelum chart render — 400ms + double nextTick agar canvas benar-benar ada (tablet lambat)
+      setTimeout(function(){
+        vm.$nextTick && vm.$nextTick(function(){
+          vm.$nextTick && vm.$nextTick(function(){
+            if(vm.currentPage === 'dashboard'){
+              vm.dashboardReady = true;
+              vm.$forceUpdate && vm.$forceUpdate();
+              console.log('[SI-DATA] onNavigate dashboardReady true');
+            }
+          });
+        });
+      }, 400);
     }
     if (page === 'utama') { if (!vm.utamaLoading) vm.loadUtama(1); }
     if (page === 'laporan') { if (!vm.lapLoading) vm.loadLaporanGrup(vm.laporanGrupTab || 'dimensi'); }
@@ -128,12 +142,16 @@ var app = AppCore.create({
     vm.dashboardReady = false;
     await vm.loadAll(true);
     vm.dataLoaded = true;
-    // Chart baru boleh render setelah Vue mount — tunda 200ms agar canvas ada
-    setTimeout(function(){ 
-      vm.dashboardReady = (vm.currentPage === 'dashboard');
-      vm.$forceUpdate && vm.$forceUpdate();
-      console.log('[SI-DATA] initApp dashboardReady', vm.dashboardReady, 'page', vm.currentPage);
-    }, 200);
+    // Chart baru boleh render setelah Vue mount — tunda 500ms + double nextTick agar canvas ada (tablet)
+    setTimeout(function(){
+      vm.$nextTick && vm.$nextTick(function(){
+        vm.$nextTick && vm.$nextTick(function(){
+          vm.dashboardReady = (vm.currentPage === 'dashboard');
+          vm.$forceUpdate && vm.$forceUpdate();
+          console.log('[SI-DATA] initApp dashboardReady', vm.dashboardReady, 'page', vm.currentPage);
+        });
+      });
+    }, 500);
   },
 
   mixins: [StarterKitMixin]
