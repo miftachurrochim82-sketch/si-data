@@ -27,22 +27,22 @@
     <app-stat-card title="RTL Terbuka" :value="dashboardData.summary.rtlTerbuka || 0" icon="fa-solid fa-list-check" color="purple" subtext="baru + diproses"></app-stat-card>
   </div>
 
-  <!-- 4 CHART — hanya render saat di dashboard agar tidak error getContext saat di tab lain -->
+  <!-- 4 CHART — hanya render saat di dashboard & dashboardReady agar tidak error getContext saat di tab lain -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <div class="card p-4">
-      <app-chart-bar v-if="currentPage==='dashboard' && dashTren.labels.length" :key="'tren-'+dashTren.labels.length" :labels="dashTren.labels" :datasets="[{ label: 'Jumlah', data: dashTren.counts }]" title="Tren 12 Bulan Terakhir" :height="220" :colors="chartTrenColors"></app-chart-bar>
+      <app-chart-bar v-if="dashboardReady && currentPage==='dashboard' && dashTren.labels.length" :key="'tren-'+dashTren.labels.length" :labels="dashTren.labels" :datasets="[{ label: 'Jumlah', data: dashTren.counts }]" title="Tren 12 Bulan Terakhir" :height="220" :colors="chartTrenColors"></app-chart-bar>
       <div v-else class="h-[220px] flex items-center justify-center text-xs text-slate-400">Memuat chart...</div>
     </div>
     <div class="card p-4">
-      <app-chart-bar v-if="currentPage==='dashboard' && dashJenis.labels.length" :key="'jenis-'+dashJenis.labels.length" :labels="dashJenis.labels" :datasets="[{ label: 'Jumlah', data: dashJenis.counts }]" title="Per Jenis" :height="220" :colors="chartJenisColors"></app-chart-bar>
+      <app-chart-bar v-if="dashboardReady && currentPage==='dashboard' && dashJenis.labels.length" :key="'jenis-'+dashJenis.labels.length" :labels="dashJenis.labels" :datasets="[{ label: 'Jumlah', data: dashJenis.counts }]" title="Per Jenis" :height="220" :colors="chartJenisColors"></app-chart-bar>
       <div v-else class="h-[220px] flex items-center justify-center text-xs text-slate-400">Memuat chart...</div>
     </div>
     <div class="card p-4">
-      <app-chart-doughnut v-if="currentPage==='dashboard' && dashKategori.labels.length" :key="'kat-'+dashKategori.labels.length" :labels="dashKategori.labels" :datasets="[{ label: 'Jumlah', data: dashKategori.counts }]" title="Per Kategori" :height="220" :colors="chartKategoriColors"></app-chart-doughnut>
+      <app-chart-doughnut v-if="dashboardReady && currentPage==='dashboard' && dashKategori.labels.length" :key="'kat-'+dashKategori.labels.length" :labels="dashKategori.labels" :datasets="[{ label: 'Jumlah', data: dashKategori.counts }]" title="Per Kategori" :height="220" :colors="chartKategoriColors"></app-chart-doughnut>
       <div v-else class="h-[220px] flex items-center justify-center text-xs text-slate-400">Memuat chart...</div>
     </div>
     <div class="card p-4">
-      <app-chart-bar v-if="currentPage==='dashboard' && dashLokasi.labels.length" :key="'lok-'+dashLokasi.labels.length" :labels="dashLokasi.labels" :datasets="[{ label: 'Jumlah', data: dashLokasi.counts }]" title="Per Lokasi" :height="220" :colors="chartLokasiColors"></app-chart-bar>
+      <app-chart-bar v-if="dashboardReady && currentPage==='dashboard' && dashLokasi.labels.length" :key="'lok-'+dashLokasi.labels.length" :labels="dashLokasi.labels" :datasets="[{ label: 'Jumlah', data: dashLokasi.counts }]" title="Per Lokasi" :height="220" :colors="chartLokasiColors"></app-chart-bar>
       <div v-else class="h-[220px] flex items-center justify-center text-xs text-slate-400">Memuat chart...</div>
     </div>
   </div>
@@ -175,8 +175,8 @@
     <div class="card p-4">
       <div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-trophy text-amber-500"></i><h4 class="font-bold text-sm">Top 10 Pegawai Aktif</h4></div>
       <div v-if="!dashboardData.topPegawai || !dashboardData.topPegawai.length" class="text-xs text-slate-400 text-center py-8">Belum ada data.</div>
-      <app-chart-bar v-else-if="currentPage==='dashboard'" :key="'top-'+topPegawaiLabels.length" :labels="topPegawaiLabels" :datasets="topPegawaiDatasets" :height="280" :colors="['#0369a1']"></app-chart-bar>
-      <div v-else class="h-[280px] flex items-center justify-center text-xs text-slate-400">Memuat...</div>
+      <app-chart-bar v-else-if="dashboardReady && currentPage==='dashboard'" :key="'top-'+topPegawaiLabels.length" :labels="topPegawaiLabels" :datasets="topPegawaiDatasets" :height="280" :colors="['#0369a1']"></app-chart-bar>
+      <div v-else class="h-[280px] flex items-center justify-center text-xs text-slate-400">Memuat chart...</div>
     </div>
     <!-- Leaderboard Unit -->
     <div class="card p-4">

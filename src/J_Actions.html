@@ -91,26 +91,47 @@ window.StarterKitActions = {
     // ==================== 5 MASTER (generik) ====================
     openMasterForm() {
       console.log('[SI-DATA] openMasterForm', this.masterTab);
-      this.masterForm = {
+      var vm = this;
+      vm.showMasterForm = false;
+      vm.masterForm = {
         id: '', kode: '', nama: '', parent_id: '', deskripsi: '',
         kategori_id: '', periode: 'Fleksibel', tahun: String(new Date().getFullYear()), bulan: '',
         simbol: '', alamat: '', keterangan: '', urutan: 0, status_aktif: 'true'
       };
-      this.showMasterForm = true;
-      this.$nextTick && this.$nextTick(function(){ console.log('[SI-DATA] showMasterForm', this.showMasterForm); }.bind(this));
-      // fallback toast biar user lihat form terbuka
-      try{ this.showToast && this.showToast('Form Tambah ' + this.masterTab + ' dibuka', 'info'); }catch(e){}
+      // pakai nextTick + timeout agar app-modal benar-benar remount (hindari v-if nyangkut)
+      if(vm.$nextTick){
+        vm.$nextTick(function(){
+          vm.showMasterForm = true;
+          console.log('[SI-DATA] showMasterForm after tick', vm.showMasterForm);
+          vm.$nextTick && vm.$nextTick(function(){
+            // force update kedua kali jika masih tertahan oleh chart error overlay
+            if(!document.querySelector('app-modal') && !document.querySelector('.modal')){
+              console.log('[SI-DATA] modal DOM belum ada, forceUpdate');
+              vm.$forceUpdate && vm.$forceUpdate();
+            }
+          });
+        });
+      } else {
+        vm.showMasterForm = true;
+      }
+      try{ vm.showToast && vm.showToast('Form Tambah ' + vm.masterTab + ' dibuka', 'info'); }catch(e){}
     },
 
     openMasterEdit(r) {
       console.log('[SI-DATA] openMasterEdit', r);
-      this.masterForm = Object.assign({
+      var vm = this;
+      vm.showMasterForm = false;
+      vm.masterForm = Object.assign({
         id: '', kode: '', nama: '', parent_id: '', deskripsi: '',
         kategori_id: '', periode: 'Fleksibel', tahun: String(new Date().getFullYear()), bulan: '',
         simbol: '', alamat: '', keterangan: '', urutan: 0, status_aktif: 'true'
       }, r);
-      this.showMasterForm = true;
-      try{ this.showToast && this.showToast('Form Ubah ' + this.masterTab + ' dibuka', 'info'); }catch(e){}
+      if(vm.$nextTick){
+        vm.$nextTick(function(){ vm.showMasterForm = true; console.log('[SI-DATA] showMasterForm edit', vm.showMasterForm); });
+      } else {
+        vm.showMasterForm = true;
+      }
+      try{ vm.showToast && vm.showToast('Form Ubah ' + vm.masterTab + ' dibuka', 'info'); }catch(e){}
     },
 
     async simpanMaster() {

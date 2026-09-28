@@ -159,6 +159,21 @@
   <script src="https://cdn.jsdelivr.net/gh/miftachurrochim82-sketch/frontend-cdn@v2.9.2/frontend/app-data.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/miftachurrochim82-sketch/frontend-cdn@v2.9.2/frontend/app-charts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/miftachurrochim82-sketch/frontend-cdn@v2.9.2/frontend/app-workflow.min.js"></script>
+  <script>
+    // Guard Chart.js getContext null — cegah infinite loop saat chart di tab tersembunyi
+    window.addEventListener('error', function(e){
+      if(e && e.message && String(e.message).indexOf('getContext')>-1){
+        console.warn('[SI-DATA] Chart getContext suppressed (dashboard belum visible)', e.message);
+        e.preventDefault(); return true;
+      }
+    });
+    window.addEventListener('unhandledrejection', function(e){
+      if(e && e.reason && String(e.reason.message||e.reason).indexOf('getContext')>-1){
+        console.warn('[SI-DATA] Chart promise suppressed');
+        e.preventDefault();
+      }
+    });
+  </script>
 
   <?!= include('J_State'); ?>
   <?!= include('J_Helpers'); ?>

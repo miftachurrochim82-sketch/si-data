@@ -71,6 +71,21 @@ window.StarterKitApi = {
             role: d.role || 'viewer',
             nama: d.nama || ''
           };
+          // Tandai dashboard siap untuk render chart — cegah getContext null saat di tab lain
+          var self=this;
+          self.dashboardReady = false;
+          // tunda 120ms agar canvas mount dulu (initApp bisa panggil sebelum DOM siap)
+          setTimeout(function(){
+            self.$nextTick && self.$nextTick(function(){
+              if(self.currentPage === 'dashboard'){
+                self.dashboardReady = true;
+                self.$forceUpdate && self.$forceUpdate();
+                console.log('[SI-DATA] loadDashboard dashboardReady', true);
+              } else {
+                self.dashboardReady = false;
+              }
+            });
+          }, 120);
         } else if (!isSilent) this.showToast('Gagal memuat dashboard.', 'error');
       } catch (e) {
         console.error('loadDashboard', e);

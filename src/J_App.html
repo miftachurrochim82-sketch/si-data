@@ -98,7 +98,13 @@ var app = AppCore.create({
   },
 
   onNavigate: function (vm, page) {
-    if (page === 'dashboard') vm.loadAll();
+    if (page === 'dashboard') {
+      // Aktifkan chart hanya saat di dashboard — cegah getContext null di tab lain
+      vm.dashboardReady = false;
+      vm.loadAll();
+      // beri waktu DOM mount sebelum chart render
+      setTimeout(function(){ vm.dashboardReady = true; vm.$forceUpdate && vm.$forceUpdate(); }, 120);
+    }
     if (page === 'utama') { if (!vm.utamaLoading) vm.loadUtama(1); }
     if (page === 'laporan') { if (!vm.lapLoading) vm.loadLaporanGrup(vm.laporanGrupTab || 'dimensi'); }
     if (page === 'analisa') { if (!vm.anaGridLoaded && !vm.anaLoading) vm.loadAnalisaGrid(); }
@@ -107,6 +113,8 @@ var app = AppCore.create({
     if (page === 'master') { if (!vm.kategoriList.length && !vm.masterLoading) vm.loadMasterSatelit(); }
     if (page === 'peta') { if (typeof initPeta === 'function') setTimeout(function(){ initPeta(vm); }, 80); else if (vm.loadPeta) vm.loadPeta(); }
     if (page === 'pengaturan') { /* theme picker — no load */ }
+    // tutup modal master jika pindah halaman agar tidak nyangkut
+    if (page !== 'master') vm.showMasterForm = false;
   },
 
   initApp: async function (vm) {
@@ -117,8 +125,15 @@ var app = AppCore.create({
     try { vm.filterScope = (AppCore.getMyScope ? AppCore.getMyScope() : 'all'); } catch(e){ vm.filterScope='all'; }
     // Tahap 4 — restore Filter Global sebelum load data
     try { if (vm.initGlobalFilter) vm.initGlobalFilter(); } catch(e){}
+    vm.dashboardReady = false;
     await vm.loadAll(true);
     vm.dataLoaded = true;
+    // Chart baru boleh render setelah Vue mount — tunda 200ms agar canvas ada
+    setTimeout(function(){ 
+      vm.dashboardReady = (vm.currentPage === 'dashboard');
+      vm.$forceUpdate && vm.$forceUpdate();
+      console.log('[SI-DATA] initApp dashboardReady', vm.dashboardReady, 'page', vm.currentPage);
+    }, 200);
   },
 
   mixins: [StarterKitMixin]
