@@ -48,12 +48,12 @@
         </thead>
         <tbody class="divide-y">
           <tr v-for="r in kategoriList" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-            <td class="py-2 px-3 font-mono font-bold">{{ r.kode }}</td>
-            <td class="py-2 px-3">{{ r.nama }}</td>
-            <td class="py-2 px-3 text-slate-400">{{ r.parent_id ? namaKategori_(r.parent_id) : '—' }}</td>
-            <td class="py-2 px-3 text-slate-400 truncate max-w-[180px]">{{ r.deskripsi || '—' }}</td>
+            <td class="py-2 px-3 font-mono font-bold text-left">{{ r.kode }}</td>
+            <td class="py-2 px-3 text-left">{{ r.nama }}</td>
+            <td class="py-2 px-3 text-slate-400 text-left">{{ r.parent_id ? namaKategori_(r.parent_id) : '—' }}</td>
+            <td class="py-2 px-3 text-slate-400 text-left truncate max-w-[180px]">{{ r.deskripsi || '—' }}</td>
             <td class="py-2 px-3 text-right">{{ r.urutan }}</td>
-            <td class="py-2 px-3"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
+            <td class="py-2 px-3 text-left"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
             <td class="py-2 px-3 text-right">
               <div class="flex gap-1 justify-end">
                 <button v-can="'viewer'" class="btn-icon" @click="openMasterEdit(r)" title="Edit"><i class="fa-solid fa-pen"></i></button>
@@ -86,12 +86,12 @@
         </thead>
         <tbody class="divide-y">
           <tr v-for="r in jenisList" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-            <td class="py-2 px-3 font-mono font-bold">{{ r.kode }}</td>
-            <td class="py-2 px-3">{{ r.nama }}</td>
-            <td class="py-2 px-3 text-slate-400">{{ r.kategori_id ? namaKategori_(r.kategori_id) : '—' }}</td>
-            <td class="py-2 px-3">{{ r.periode }}</td>
+            <td class="py-2 px-3 font-mono font-bold text-left">{{ r.kode }}</td>
+            <td class="py-2 px-3 text-left">{{ r.nama }}</td>
+            <td class="py-2 px-3 text-slate-400 text-left">{{ r.kategori_id ? namaKategori_(r.kategori_id) : '—' }}</td>
+            <td class="py-2 px-3 text-left">{{ r.periode || '—' }}</td>
             <td class="py-2 px-3 text-right">{{ r.urutan }}</td>
-            <td class="py-2 px-3"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
+            <td class="py-2 px-3 text-left"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
             <td class="py-2 px-3 text-right">
               <div class="flex gap-1 justify-end">
                 <button v-can="'viewer'" class="btn-icon" @click="openMasterEdit(r)" title="Edit"><i class="fa-solid fa-pen"></i></button>
@@ -123,11 +123,11 @@
         </thead>
         <tbody class="divide-y">
           <tr v-for="r in periodeList" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-            <td class="py-2 px-3 font-mono font-bold">{{ r.kode }}</td>
-            <td class="py-2 px-3">{{ r.label }}</td>
-            <td class="py-2 px-3">{{ r.tahun }}</td>
-            <td class="py-2 px-3">{{ r.bulan || '—' }}</td>
-            <td class="py-2 px-3"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
+            <td class="py-2 px-3 font-mono font-bold text-left">{{ r.kode }}</td>
+            <td class="py-2 px-3 text-left">{{ r.label }}</td>
+            <td class="py-2 px-3 text-left">{{ r.tahun }}</td>
+            <td class="py-2 px-3 text-left">{{ r.bulan || '—' }}</td>
+            <td class="py-2 px-3 text-left"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
             <td class="py-2 px-3 text-right">
               <div class="flex gap-1 justify-end">
                 <button v-can="'viewer'" class="btn-icon" @click="openMasterEdit(r)" title="Edit"><i class="fa-solid fa-pen"></i></button>
@@ -159,11 +159,11 @@
         </thead>
         <tbody class="divide-y">
           <tr v-for="r in satuanList" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-            <td class="py-2 px-3 font-mono font-bold">{{ r.kode }}</td>
-            <td class="py-2 px-3">{{ r.nama }}</td>
-            <td class="py-2 px-3">{{ r.simbol }}</td>
-            <td class="py-2 px-3 text-slate-400 truncate max-w-[180px]">{{ r.keterangan || '—' }}</td>
-            <td class="py-2 px-3"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
+            <td class="py-2 px-3 font-mono font-bold text-left">{{ r.kode }}</td>
+            <td class="py-2 px-3 text-left">{{ r.nama }}</td>
+            <td class="py-2 px-3 text-left">{{ r.simbol }}</td>
+            <td class="py-2 px-3 text-slate-400 text-left truncate max-w-[180px]">{{ r.keterangan || '—' }}</td>
+            <td class="py-2 px-3 text-left"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
             <td class="py-2 px-3 text-right">
               <div class="flex gap-1 justify-end">
                 <button v-can="'viewer'" class="btn-icon" @click="openMasterEdit(r)" title="Edit"><i class="fa-solid fa-pen"></i></button>
@@ -194,10 +194,10 @@
         </thead>
         <tbody class="divide-y">
           <tr v-for="r in lokasiList" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-            <td class="py-2 px-3 font-mono font-bold">{{ r.kode }}</td>
-            <td class="py-2 px-3">{{ r.nama }}</td>
-            <td class="py-2 px-3 text-slate-400 truncate max-w-[220px]">{{ r.alamat || '—' }}</td>
-            <td class="py-2 px-3"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
+            <td class="py-2 px-3 font-mono font-bold text-left">{{ r.kode }}</td>
+            <td class="py-2 px-3 text-left">{{ r.nama }}</td>
+            <td class="py-2 px-3 text-slate-400 text-left truncate max-w-[220px]">{{ r.alamat || '—' }}</td>
+            <td class="py-2 px-3 text-left"><app-badge size="sm" :status="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'" :label="String(r.status_aktif)==='false' ? 'nonaktif' : 'aktif'"></app-badge></td>
             <td class="py-2 px-3 text-right">
               <div class="flex gap-1 justify-end">
                 <button v-can="'viewer'" class="btn-icon" @click="openMasterEdit(r)" title="Edit"><i class="fa-solid fa-pen"></i></button>
