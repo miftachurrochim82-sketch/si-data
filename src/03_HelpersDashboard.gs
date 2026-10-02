@@ -108,16 +108,6 @@ function isUnitInBidang_(unitId, bidangId, allUnits){
 }
 function getTahunFromPeriode_(periodeId){ if(!periodeId) return ''; var m=String(periodeId).match(/^prd_(\d{4})/); return m?m[1]:''; }
 function getBulanFromPeriode_(periodeId){ if(!periodeId) return ''; var m=String(periodeId).match(/^prd_\d{4}_(\d{2})/); return m?m[1]:''; }
-function getFilterOptions_(){
-  var tahunSet=new Set();
-  getSheetData_('M_PERIODE').forEach(function(r){
-    if(r.id){ var t=getTahunFromPeriode_(String(r.id)); if(t) tahunSet.add(t); }
-  });
-  var tahun=Array.from(tahunSet).sort().reverse();
-  var bulan=[{id:'01',nama:'Januari'},{id:'02',nama:'Februari'},{id:'03',nama:'Maret'},{id:'04',nama:'April'},{id:'05',nama:'Mei'},{id:'06',nama:'Juni'},{id:'07',nama:'Juli'},{id:'08',nama:'Agustus'},{id:'09',nama:'September'},{id:'10',nama:'Oktober'},{id:'11',nama:'November'},{id:'12',nama:'Desember'}];
-  var bidang=getSheetData_('REF_UNIT').filter(function(r){return r.jenis_unit==='BIDANG';}).map(function(r){return {id:String(r.id).trim(), nama:String(r.nama).trim()};});
-  return {tahun:tahun, bulan:bulan, bidang:bidang};
-}
 function getRowsUtama_(filter){
   filter=filter||{};
   var rows=getSheetData_('T_UTAMA');
@@ -159,12 +149,6 @@ function getNilaiDimensiMap_(){
   Object.keys(map).forEach(function(k){ map[k].sort(function(a,b){return a.urutan-b.urutan;}); });
   return map;
 }
-function getAtributKegiatan_(kegiatanId){
-  var rows=getSheetData_('T_ATRIBUT');
-  return rows.filter(function(r){return r.id && isActive_(r.status_aktif) && String(r.kegiatan_id||'').trim()===String(kegiatanId);})
-    .map(function(r){return {id:String(r.id).trim(), kegiatan_id:String(r.kegiatan_id).trim(), dimensi_id:String(r.dimensi_id||'').trim(), nilai_id:String(r.nilai_id||'').trim(), nilai_text:String(r.nilai_text||'').trim(), nilai_number:Number(r.nilai_number)||0, nilai_date:String(r.nilai_date||'').trim(), keterangan:String(r.keterangan||'').trim()};});
-}
-
 // Drive helpers sumber (8 folder)
 function getFolderByKey_(key){
   var id=DRIVE_FOLDER_IDS[key];
@@ -181,81 +165,6 @@ function getLampiranFolder_(kodeKegiatan){
   return it.hasNext()?it.next():lapRoot.createFolder(sanitized);
 }
 
-// ================= DASHBOARD KPI (dari 01_Dashboard.gs) =================
-function getRingkasan_(filter){
-  var rows=getRowsUtama_(filter);
-  var totalAnggaran=0, totalVolume=0;
-  rows.forEach(function(r){ totalAnggaran+=Number(r.anggaran)||0; totalVolume+=Number(r.jumlah)||0; });
-  var kegIds=new Set(rows.map(function(r){return String(r.id);}));
-  var peserta=getSheetData_('T_PESERTA');
-  var pegawaiUnik=new Set();
-  peserta.forEach(function(r){
-    if(isActive_(r.status_aktif) && r.pegawai_id && kegIds.has(String(r.kegiatan_id))) pegawaiUnik.add(String(r.pegawai_id));
-  });
-  var fungsiUnik=new Set(rows.map(function(r){return r.fungsi_id;}).filter(Boolean));
-  return {totalKegiatan:rows.length, totalAnggaran:totalAnggaran, totalVolume:totalVolume, totalPersonel:pegawaiUnik.size, totalFungsi:fungsiUnik.size};
-}
-function getTrendBulanan_(filter){
-  var rows=getRowsUtama_(filter);
-  var maps=getPeriodeMaps_();
-  var counter={};
-  rows.forEach(function(r){
-    var label=toPeriodeLabel_(r.periode_id, maps);
-    if(label) counter[label]=(counter[label]||0)+1;
-  });
-  var keys=Object.keys(counter).sort(function(a,b){
-    var partsA=a.split(' '), partsB=b.split(' ');
-    var tA=partsA[1], tB=partsB[1];
-    var diff=(Number(tA)||0)-(Number(tB)||0);
-    if(diff!==0) return diff;
-    return NAMA_BULAN.indexOf(partsA[0])-NAMA_BULAN.indexOf(partsB[0]);
-  });
-  return keys.map(function(k){return {periode:k, jumlah:counter[k]};});
-}
-function getDataPerFungsi_(filter){
-  var rows=getRowsUtama_(filter);
-  var fungsiMap=getFungsiMap_();
-  var counter={};
-  rows.forEach(function(r){ var fid=r.fungsi_id; if(fid) counter[fid]=(counter[fid]||0)+1; });
-  return Object.keys(counter).map(function(fid){
-    return {id:fid, nama:(fungsiMap[fid]&&fungsiMap[fid].nama)||fid, jumlah:counter[fid]};
-  }).sort(function(a,b){return b.jumlah-a.jumlah;});
-}
-function getDataPerGrup_(filter){
-  var rows=getRowsUtama_(filter);
-  var fungsiMap=getFungsiMap_();
-  var counter={};
-  rows.forEach(function(r){
-    var fid=r.fungsi_id; if(!fid) return;
-    var info=fungsiMap[fid];
-    var parent=info?info.parent:null;
-    var grup=(parent&&GRUP_MAP[parent])||'Lainnya';
-    counter[grup]=(counter[grup]||0)+1;
-  });
-  return Object.keys(counter).map(function(g){return {grup:g, jumlah:counter[g]};});
-}
-function getDataPerUnit_(filter){
-  var rows=getRowsUtama_(filter);
-  var unitMap=getUnitMap_();
-  var counter={};
-  rows.forEach(function(r){
-    var uid=r.unit_id; if(!uid) return;
-    var nama=unitMap[uid]||uid;
-    counter[nama]=(counter[nama]||0)+1;
-  });
-  return Object.keys(counter).map(function(u){return {unit:u, jumlah:counter[u]};}).sort(function(a,b){return b.jumlah-a.jumlah;});
-}
-function getDataPerLokasi_(filter){
-  var rows=getRowsUtama_(filter);
-  var lokasiMap=getLokasiMap_();
-  var counter={};
-  rows.forEach(function(r){
-    var lid=r.lokasi_id; if(!lid) return;
-    var nama=lokasiMap[lid]||lid;
-    counter[nama]=(counter[nama]||0)+1;
-  });
-  return Object.keys(counter).map(function(l){return {lokasi:l, jumlah:counter[l]};}).sort(function(a,b){return b.jumlah-a.jumlah;}).slice(0,10);
-}
 function getTopPegawai_(filter, limit){
   limit=limit||10;
   var rows=getRowsUtama_(filter);

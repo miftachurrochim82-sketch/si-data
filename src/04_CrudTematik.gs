@@ -13,25 +13,6 @@ function getMasterOptions_(){
   opt.lokasi=getSheetData_('M_LOKASI').filter(function(r){return r.id;}).map(function(r){return {id:r.id, nama:r.nama};});
   return opt;
 }
-function getKegiatanListTematik_(filter){
-  var rows=getRowsUtama_(filter);
-  var maps=getPeriodeMaps_();
-  var fungsiMap=getFungsiMap_();
-  var unitMap=getUnitMap_();
-  var lokasiMap=getLokasiMap_();
-  var satuanMap={}; getSheetData_('M_SATUAN').forEach(function(r){ if(r.id) satuanMap[String(r.id)]=r.simbol||r.nama; });
-  return rows.map(function(r){
-    return {
-      id:r.id, kode:r.kode, tanggal:formatDate_(r.tanggal),
-      unit_id:r.unit_id, unit_nama:unitMap[r.unit_id]||r.unit_id,
-      fungsi_id:r.fungsi_id, fungsi_nama:(fungsiMap[r.fungsi_id]&&fungsiMap[r.fungsi_id].nama)||r.fungsi_id,
-      periode:toPeriodeLabel_(r.periode_id, maps),
-      lokasi_nama:lokasiMap[r.lokasi_id]||r.lokasi_id,
-      uraian:r.uraian, jumlah:r.jumlah, satuan:satuanMap[r.satuan_id]||r.satuan_id,
-      anggaran:r.anggaran, status:r.status
-    };
-  }).reverse();
-}
 function generateIdKegiatan_(periodeId){
   var data=getSheetData_('T_UTAMA');
   var prefix='t_'+String(periodeId).replace('prd_','');

@@ -87,13 +87,9 @@ function buildLocalHandlers_() {
     return { success: true, data: { pong: true, app: APP_CODE, time: new Date().toISOString(), version: 'v2.14.0-tematik' } };
   };
   h['get_my_profile'] = function (d, u) { return { success: true, data: u }; };
-  h['save_my_profile'] = function (d, u) {
-    return CoreLib.saveMyProfile(SPREADSHEET_ID, d, u, ALL_SHEET_HEADERS, MASTER_SPREADSHEET_ID);
-  };
 
   // Dashboard (4 kartu + 4 chart + 4 panel — server-side)
   h['get_dashboard'] = function (d, u) { return getDashboard_(u); };
-  h['dashboard']     = function (d, u) { return getDashboard_(u); };
 
   // SIMPEG
   h['get_pegawai_list']   = function () { return getPegawaiList_(); };
@@ -102,16 +98,9 @@ function buildLocalHandlers_() {
   h['get_master_satelit'] = function () { return getMasterSatelit_(); };
 
   // Tema (Satu Data)
-  h['get_theme']  = function (d, u) { return { success: true, data: getThemeConfig_() }; };
   h['save_theme'] = function (d, u) { try { var css = saveThemeConfig_(d); appProps_().setProperty('THEME_JSON', JSON.stringify(d)); return { success: true, data: getThemeConfig_(), css: css }; } catch(e) { return { success:false, error: e.message }; } };
 
   // Config
-  h['get_config']         = function () { return getConfigList_(); };
-  h['get_config_list']    = function () { return getConfigList_(); };
-  h['save_config_item']   = function (d, u) { return saveConfigItem_(d, u); };
-  h['save_config']        = function (d, u) { return saveConfigItem_(d, u); };
-  h['delete_config_item'] = function (d, u) { return deleteConfigItem_(d, u); };
-  h['delete_config']      = function (d, u) { return deleteConfigItem_(d, u); };
 
   // Generic routing
   h['save'] = function (d, u) {
@@ -126,45 +115,34 @@ function buildLocalHandlers_() {
   };
 
   // M_KATEGORI (dengan guard hierarki & referensi)
-  h['get_kategori_list'] = function (d) { return getKategoriList_(d || {}); };
   h['save_kategori']     = function (d, u) { return saveKategori_(d || {}, u); };
   h['delete_kategori']   = function (d, u) { return deleteKategori_(d || {}, u); };
 
   // M_JENIS
-  h['get_jenis_list'] = function (d) { return getGenericList_('M_JENIS', d || {}); };
   h['save_jenis']     = function (d, u) { return saveJenis_(d || {}, u); };
   h['delete_jenis']   = function (d, u) { return deleteGuarded_('M_JENIS', 'jenis_id', d || {}, u); };
 
   // M_PERIODE
-  h['get_periode_list'] = function (d) { return getGenericList_('M_PERIODE', d || {}); };
   h['save_periode']     = function (d, u) { return savePeriode_(d || {}, u); };
   h['delete_periode']   = function (d, u) { return deleteGuarded_('M_PERIODE', 'periode_id', d || {}, u); };
 
   // M_SATUAN
-  h['get_satuan_list'] = function (d) { return getGenericList_('M_SATUAN', d || {}); };
   h['save_satuan']     = function (d, u) { return saveMasterKode_(d || {}, u, 'M_SATUAN'); };
   h['delete_satuan']   = function (d, u) { return deleteGuarded_('M_SATUAN', 'satuan_id', d || {}, u); };
 
   // M_LOKASI
-  h['get_lokasi_list'] = function (d) { return getGenericList_('M_LOKASI', d || {}); };
   h['save_lokasi']     = function (d, u) { return saveMasterKode_(d || {}, u, 'M_LOKASI'); };
   h['delete_lokasi']   = function (d, u) { return deleteGuarded_('M_LOKASI', 'lokasi_id', d || {}, u); };
 
   // T_UTAMA
   h['get_utama_list']   = function (d) { return getUtamaList_(d || {}); };
-  h['get_utama_detail'] = function (d) { return getUtamaDetail_(d || {}); };
   h['save_utama']       = function (d, u) { return saveUtama_(d || {}, u); };
   h['delete_utama']     = function (d, u) { return deleteUtama_(d || {}, u); };
 
   // T_ITEM
-  h['get_item_list']   = function (d) { return getGenericList_('T_ITEM', d || {}); };
-  h['get_item_detail'] = function (d) { return getGenericDetail_('T_ITEM', d || {}); };
-  h['save_item']       = function (d, u) { return saveGeneric_('T_ITEM', d || {}, u); };
-  h['delete_item']     = function (d, u) { return deleteGeneric_('T_ITEM', d || {}, u); };
 
   // T_LAMPIRAN
   h['get_lampiran_list'] = function (d) { return getGenericList_('T_LAMPIRAN', d || {}); };
-  h['save_lampiran']     = function (d, u) { return saveGeneric_('T_LAMPIRAN', d || {}, u); };
   h['delete_lampiran']   = function (d, u) { return deleteGeneric_('T_LAMPIRAN', d || {}, u); };
 
 
@@ -200,33 +178,17 @@ function buildLocalHandlers_() {
   h['init_database'] = function (d, u) { return initDatabase(u); };
 
   // ===== Tematik baru (adopsi sumber 7 file) =====
-  h['get_ringkasan'] = function(d,u){ return {success:true, data:getRingkasan_(d||{})}; };
-  h['get_trend_bulanan'] = function(d,u){ return {success:true, data:getTrendBulanan_(d||{})}; };
-  h['get_per_fungsi'] = function(d,u){ return {success:true, data:getDataPerFungsi_(d||{})}; };
-  h['get_per_grup'] = function(d,u){ return {success:true, data:getDataPerGrup_(d||{})}; };
-  h['get_per_unit'] = function(d,u){ return {success:true, data:getDataPerUnit_(d||{})}; };
-  h['get_per_lokasi'] = function(d,u){ return {success:true, data:getDataPerLokasi_(d||{})}; };
   h['get_top_pegawai'] = function(d,u){ return {success:true, data:getTopPegawai_(d||{}, (d&&d.limit)||10)}; };
   h['get_leaderboard_unit'] = function(d,u){ return {success:true, data:getLeaderboardUnit_(d||{})}; };
-  h['get_heatmap'] = function(d,u){ return {success:true, data:getHeatmapBulanGrup_(d||{})}; };
   h['get_heatmap_bulan_grup'] = function(d,u){ return {success:true, data:getHeatmapBulanGrup_(d||{})}; };
   h['get_master_options'] = function(d,u){ return {success:true, data:getMasterOptions_()}; };
-  h['get_kegiatan_list'] = function(d,u){ return {success:true, data:getKegiatanListTematik_(d||{})}; };
   h['get_dimensi_for_form'] = function(d,u){ return {success:true, data:getDimensiForForm_(d&&d.fungsi_id)}; };
   h['simpan_kegiatan_tematik'] = function(d,u){ return simpanKegiatanTematik_(d||{}, u); };
   h['update_kegiatan_tematik'] = function(d,u){ return updateKegiatanTematik_(d||{}, u); };
   h['get_kegiatan_detail_tematik'] = function(d,u){ var v=getKegiatanDetailTematik_(d&&d.id); return v?{success:true, data:v}:{success:false, error:'Tidak ditemukan'}; };
-  h['get_atribut_detail'] = function(d,u){ return {success:true, data:getAtributDetail_(d&&d.id)}; };
-  h['get_cross_tab_per_grup'] = function(d,u){ return {success:true, data:getCrossTabPerGrupTematik_(d||{})}; };
-  h['get_cross_tab_tematik'] = function(d,u){ return {success:true, data:getCrossTabPerGrupTematik_(d||{})}; };
-  h['get_perbandingan'] = function(d,u){ var r=getPerbandinganTematik_(d||{}); return r.error?{success:false, error:r.error}:{success:true, data:r}; };
-  h['get_target_evaluasi'] = function(d,u){ return {success:true, data:getTargetEvaluasi_(d||{})}; };
-  h['get_target_list'] = function(d,u){ return {success:true, data:getSheetData_('M_TARGET')}; };
   h['upload_lampiran_tematik'] = function(d,u){ return uploadLampiranTematik_(d||{}, u); };
   h['get_audit_logs'] = function(d,u){ return {success:true, data:getAuditLogsTematik_(d||{})}; };
   h['audit_master'] = function(d,u){ return {success:true, data:auditMasterTematik_()}; };
-  h['get_filter_options'] = function(d,u){ return {success:true, data:getFilterOptions_()}; };
-  h['get_periode_list_simple'] = function(d,u){ var rows=getSheetData_('M_PERIODE'); return {success:true, data:rows.map(function(r){return {id:r.id, label:r.label||r.id}})}; };
 
   return h;
 }
@@ -434,29 +396,6 @@ function getGenericList_(sheetName, params) {
   }
 }
 
-function getGenericDetail_(sheetName, params) {
-  try {
-    if (!params || !params.id) return { success: false, code: 'BAD_REQUEST', error: 'ID wajib.' };
-    var row = findRecordById_(sheetName, params.id);
-    if (!row) return { success: false, code: 'NOT_FOUND', error: 'Tidak ditemukan.' };
-    return { success: true, data: row };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-function saveGeneric_(sheetName, data, user) {
-  try {
-    var record = data.record || data;
-    if (!record || typeof record !== 'object') return { success: false, code: 'BAD_REQUEST', error: 'Record tidak valid.' };
-    normalizeEntityIdFields_(record);
-    var saved = saveRecord_(sheetName, record, user);
-    return { success: true, data: saved };
-  } catch (err) {
-    return { success: false, code: 'BAD_REQUEST', error: err.message };
-  }
-}
-
 function deleteGeneric_(sheetName, data, user) {
   try {
     if (!data || !data.id) return { success: false, code: 'BAD_REQUEST', error: 'ID tidak valid.' };
@@ -518,21 +457,6 @@ function deleteGuarded_(sheetName, refField, data, user) {
 }
 
 // ==================== §6 DOMAIN: 5 MASTER ====================
-
-// M_KATEGORI — hierarki (parent_id) + guard anak & referensi
-function getKategoriList_(params) {
-  try {
-    var list = getSheetData_('M_KATEGORI');
-    if (params.only_active) list = list.filter(function (r) { return CoreLib.normStr(r.status_aktif) !== 'false'; });
-    if (params.parent_id) list = list.filter(function (r) { return CoreLib.normStr(r.parent_id) === CoreLib.normStr(params.parent_id); });
-    if (params.search) {
-      var q = CoreLib.normStr(params.search);
-      list = list.filter(function (r) { return CoreLib.matchSearch(r, q, ['kode', 'nama', 'deskripsi']); });
-    }
-    list = list.slice().sort(function (a, b) { return (Number(a.urutan) || 99) - (Number(b.urutan) || 99); });
-    return { success: true, data: list, total: list.length };
-  } catch (err) { return { success: false, error: err.message }; }
-}
 
 function saveKategori_(data, user) {
   try {
@@ -1238,22 +1162,6 @@ function daysBetween_(a, b) {
 }
 
 // ==================== §14 CONFIG ====================
-
-function getConfigList_() {
-  var defaults = [
-    { key: 'app_title',   value: APP_TITLE, keterangan: 'Nama aplikasi' },
-    { key: 'app_version', value: 'v2.14.0-tematik', keterangan: 'Versi rilis' },
-    { key: 'instansi',    value: 'Pemkab Trenggalek', keterangan: 'Instansi pengelola' }
-  ];
-  var stored = {};
-  try { stored = appProps_().getProperties() || {}; } catch (e) { stored = {}; }
-  var list = defaults.map(function (d) { if (stored[d.key] !== undefined) d.value = stored[d.key]; return d; });
-  Object.keys(stored).forEach(function (k) {
-    if (!CoreLib.isAllowedConfigKey(k, ['ADMIN_EMAILS', 'VERIFIKATOR_EMAILS'])) return;
-    if (!list.find(function (i) { return i.key === k; })) list.push({ key: k, value: stored[k], keterangan: 'Parameter Kustom' });
-  });
-  return { success: true, data: list };
-}
 
 function saveConfigItem_(payload, actor) {
   try {

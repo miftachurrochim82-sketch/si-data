@@ -145,13 +145,6 @@ function saveThemeConfig_(obj) {
 // resources declaratif untuk dispatcher: auto-RLS bila set ownerField
 var SCOPE_OWNER_FIELD = 'pegawai_id'; // kolom pemilik di T_UTAMA/T_ITEM
 
-function filterByScope_(rows, scope, session) {
-  if (scope === 'mine' && session && session.pegawai_id) {
-    return rows.filter(function(r){ return String(r[SCOPE_OWNER_FIELD]||'') === String(session.pegawai_id); });
-  }
-  return rows;
-}
-
 // ==================== §1d WORKFLOW & PERIODE (CoreLib v2.4.0 A+B) ====================
 // STATUS_MAP untuk validateTransition (C4) — transisi legal per resource
 var STATUS_MAP = {
@@ -168,8 +161,6 @@ var STATUS_MAP = {
 
 // Wrapper tipis — biar app bisa panggil tanpa import CoreLib langsung
 function periodeBulan_(tanggalStr){ try{ return CoreLib.periodeBulan(tanggalStr); }catch(e){ return ''; } }
-function dalamPeriode_(tgl, start, end){ try{ return CoreLib.dalamPeriode(tgl, start, end); }catch(e){ return false; } }
-function hitungHariKerja_(start, end){ try{ return CoreLib.hitungHariKerja(start, end); }catch(e){ return 0; } }
 function findUnique_(sheet, field, value){ return CoreLib.findUnique(SPREADSHEET_ID, sheet, field, value, ALL_SHEET_HEADERS); }
 function makeId_(prefix){ try{ return CoreLib.makeId(prefix); } catch(e){ return (String(prefix||'id')+'_'+Date.now()+'_'+Math.random().toString(36).substr(2,6)); } }
 function systemActor_(){ try{ return CoreLib.systemActor ? CoreLib.systemActor() : { id:'system', email:'system@trenggalek.go.id', role:'super' }; } catch(e){ return { id:'system', email:'system@trenggalek.go.id', role:'super' }; } }
@@ -537,20 +528,12 @@ function getAppConfig_() {
     // ---- Level aksi (fail-closed: default 'viewer' via CoreLib.dispatchAction) ----
     actionLevels: {
       // Config (admin) — 6
-      'get_config':           'viewer',
-      'get_config_list':      'viewer',
-      'save_config_item':     'admin',
-      'save_config':          'admin',
-      'delete_config_item':   'admin',
-      'delete_config':        'admin',
 
       // Self-service — 2
       'get_my_profile':       'viewer',
-      'save_my_profile':      'viewer',
 
       // Dashboard — 2
       'get_dashboard':        'viewer',
-      'dashboard':            'viewer',
 
       // SIMPEG read-only — 4
       'get_pegawai_list':     'viewer',
@@ -559,45 +542,34 @@ function getAppConfig_() {
       'get_master_satelit':   'viewer',
 
       // M_KATEGORI — 3
-      'get_kategori_list':    'viewer',
       'save_kategori':        'verifikator',
       'delete_kategori':      'verifikator',
 
       // M_JENIS — 3
-      'get_jenis_list':       'viewer',
       'save_jenis':           'verifikator',
       'delete_jenis':         'verifikator',
 
       // M_PERIODE — 3
-      'get_periode_list':     'viewer',
       'save_periode':         'verifikator',
       'delete_periode':       'verifikator',
 
       // M_SATUAN — 3
-      'get_satuan_list':      'viewer',
       'save_satuan':          'verifikator',
       'delete_satuan':        'verifikator',
 
       // M_LOKASI — 3
-      'get_lokasi_list':      'viewer',
       'save_lokasi':          'verifikator',
       'delete_lokasi':        'verifikator',
 
       // T_UTAMA — 4
       'get_utama_list':       'viewer',
-      'get_utama_detail':     'viewer',
       'save_utama':           'user',
       'delete_utama':         'user',
 
       // T_ITEM — 4
-      'get_item_list':        'viewer',
-      'get_item_detail':      'viewer',
-      'save_item':            'user',
-      'delete_item':          'user',
 
       // T_LAMPIRAN — 3
       'get_lampiran_list':    'viewer',
-      'save_lampiran':        'user',
       'delete_lampiran':      'user',
 
       // Laporan (12) — L1..L12
@@ -641,37 +613,20 @@ function getAppConfig_() {
       'init_database':        'super',
 
       // Tema per-app (admin) — 2
-      'get_theme':            'viewer',
       'save_theme':           'admin',
 
       // Tematik baru (adopsi sumber) — 20
-      'get_ringkasan':              'viewer',
-      'get_trend_bulanan':          'viewer',
-      'get_per_fungsi':             'viewer',
-      'get_per_grup':               'viewer',
-      'get_per_unit':               'viewer',
-      'get_per_lokasi':             'viewer',
       'get_top_pegawai':            'viewer',
       'get_leaderboard_unit':       'viewer',
-      'get_heatmap':                'viewer',
       'get_heatmap_bulan_grup':     'viewer',
       'get_master_options':         'viewer',
-      'get_kegiatan_list':          'viewer',
       'get_dimensi_for_form':       'viewer',
       'simpan_kegiatan_tematik':    'user',
       'update_kegiatan_tematik':    'user',
       'get_kegiatan_detail_tematik':'viewer',
-      'get_atribut_detail':         'viewer',
-      'get_cross_tab_per_grup':     'viewer',
-      'get_cross_tab_tematik':      'viewer',
-      'get_perbandingan':           'viewer',
-      'get_target_evaluasi':        'viewer',
-      'get_target_list':            'viewer',
       'upload_lampiran_tematik':    'user',
       'get_audit_logs':             'viewer',
       'audit_master':               'admin',
-      'get_filter_options':         'viewer',
-      'get_periode_list_simple':    'viewer'
     },
 
     // Resource RLS declarative (dipakai CoreLib.dispatchAction untuk filter ownerField)
@@ -703,5 +658,3 @@ function getAppConfig_() {
   };
 }
 
-// ==================== §8 SHIM KOMPATIBILITAS ====================
-function getSpreadsheetId_() { return SPREADSHEET_ID; }

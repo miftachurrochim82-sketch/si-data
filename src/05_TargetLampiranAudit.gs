@@ -1,52 +1,3 @@
-// ============================================================
-// STARTER-KIT - 05_TargetLampiranAudit.gs (v2.14.0-tematik — backend 7 file medium — Tematik)
-// ============================================================
-function getTargetEvaluasi_(filter){
-  filter=filter||{};
-  var targetRows=getSheetData_('M_TARGET');
-  var fungsiMap=getFungsiMap_();
-  var maps=getPeriodeMaps_();
-  var unitMap=getUnitMap_();
-  var realisasiMap={};
-  getSheetData_('T_UTAMA').forEach(function(r){
-    if(!r.id || !isActive_(r.status_aktif)) return;
-    var fid=String(r.fungsi_id||'').trim(), pid=String(r.periode_id||'').trim();
-    var key=fid+'|'+pid;
-    if(!realisasiMap[key]) realisasiMap[key]={jumlah:0, anggaran:0, volume:0};
-    realisasiMap[key].jumlah++;
-    realisasiMap[key].anggaran+=Number(r.anggaran)||0;
-    realisasiMap[key].volume+=Number(r.jumlah)||0;
-  });
-  var hasil=[];
-  targetRows.forEach(function(r){
-    if(!r.id || !isActive_(r.status_aktif)) return;
-    var fid=String(r.fungsi_id||'').trim(), pid=String(r.periode_id||'').trim(), uid=String(r.unit_id||'').trim();
-    if(filter.periodeId && pid!==filter.periodeId) return;
-    if(filter.fungsiId && fid!==filter.fungsiId) return;
-    if(filter.unitId && uid!==filter.unitId) return;
-    var key=fid+'|'+pid;
-    var real=realisasiMap[key]||{jumlah:0, anggaran:0, volume:0};
-    var targetKg=Number(r.target_kegiatan)||0, targetAng=Number(r.target_anggaran)||0, targetVol=Number(r.target_volume)||0;
-    var capaianKg=targetKg>0 ? (real.jumlah/targetKg)*100 : 0;
-    var status='tercapai'; if(capaianKg<50) status='kurang'; else if(capaianKg<100) status='sedang';
-    hasil.push({
-      id:String(r.id), kode:String(r.kode), nama_target:String(r.nama_target),
-      fungsi_id:fid, fungsi_nama:(fungsiMap[fid]&&fungsiMap[fid].nama)||fid,
-      periode_id:pid, periode:maps.byId[pid]||pid,
-      unit_id:uid, unit_nama:unitMap[uid]||uid,
-      target_kegiatan:targetKg, target_anggaran:targetAng, target_volume:targetVol,
-      realisasi_kegiatan:real.jumlah, realisasi_anggaran:real.anggaran, realisasi_volume:real.volume,
-      capaian_kegiatan:Math.round(capaianKg*10)/10,
-      capaian_anggaran: targetAng>0 ? Math.round((real.anggaran/targetAng)*1000)/10 : 0,
-      capaian_volume: targetVol>0 ? Math.round((real.volume/targetVol)*1000)/10 : 0,
-      status:status, keterangan:String(r.keterangan||'')
-    });
-  });
-  var totalTarget=hasil.reduce(function(s,x){return s+x.target_kegiatan;},0);
-  var totalRealisasi=hasil.reduce(function(s,x){return s+x.realisasi_kegiatan;},0);
-  return {items:hasil, ringkasan:{totalTarget:totalTarget, totalRealisasi:totalRealisasi, capaian: totalTarget>0?Math.round((totalRealisasi/totalTarget)*1000)/10:0, tercapai:hasil.filter(function(x){return x.status==='tercapai';}).length, sedang:hasil.filter(function(x){return x.status==='sedang';}).length, kurang:hasil.filter(function(x){return x.status==='kurang';}).length}};
-}
-
 // Lampiran upload (05_Lampiran adaptasi — pakai SPREADSHEET_ID)
 function uploadLampiranTematik_(payload, actor){
   try{
@@ -74,25 +25,6 @@ function uploadLampiranTematik_(payload, actor){
   }catch(e){ return {success:false, error:e.message}; }
 }
 
-// Audit (07_Audit adaptasi — pakai saveRecord_)
-function writeAuditLogTematik_(payload){
-  try{
-    var rec={
-      id:'log_'+String(Date.now()).slice(-6)+'_'+Math.random().toString(36).substr(2,3),
-      timestamp:new Date().toISOString(),
-      user: String(payload.user|| Session.getActiveUser().getEmail()||'unknown'),
-      aksi:payload.aksi||'UNKNOWN',
-      tabel:payload.tabel||'',
-      record_id:payload.record_id||'',
-      data_lama:String(payload.data_lama||'').substring(0,5000),
-      data_baru:String(payload.data_baru||'').substring(0,5000),
-      keterangan:String(payload.keterangan||'').substring(0,500),
-      status:payload.status||'SUCCESS'
-    };
-    saveRecord_('AUDIT_LOGS', rec, {email:rec.user, role:'super'});
-    return true;
-  }catch(e){ Logger.log('Audit log error: '+e.message); return false; }
-}
 function getAuditLogsTematik_(filter){
   filter=filter||{};
   var rows=getSheetData_('AUDIT_LOGS', {includeDeleted:true});
