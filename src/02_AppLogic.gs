@@ -222,6 +222,7 @@ function buildLocalHandlers_() {
   h['get_kegiatan_list'] = function(d,u){ return {success:true, data:getKegiatanListTematik_(d||{})}; };
   h['get_dimensi_for_form'] = function(d,u){ return {success:true, data:getDimensiForForm_(d&&d.fungsi_id)}; };
   h['simpan_kegiatan_tematik'] = function(d,u){ return simpanKegiatanTematik_(d||{}, u); };
+  h['update_kegiatan_tematik'] = function(d,u){ return updateKegiatanTematik_(d||{}, u); };
   h['get_kegiatan_detail_tematik'] = function(d,u){ var v=getKegiatanDetailTematik_(d&&d.id); return v?{success:true, data:v}:{success:false, error:'Tidak ditemukan'}; };
   h['get_atribut_detail'] = function(d,u){ return {success:true, data:getAtributDetail_(d&&d.id)}; };
   h['get_cross_tab_per_grup'] = function(d,u){ return {success:true, data:getCrossTabPerGrupTematik_(d||{})}; };
@@ -1533,6 +1534,7 @@ function setupApp(actor) {
 // ==================== §16 HEALTH CHECK ====================
 
 function testAppLogicSelfCheck() {
+  assertEditorOnly_();
   Logger.log('=== 02_AppLogic.gs v2.14.0-tematik self-check — 7 file medium + 115 handler (tematik) ===');
   if (typeof CoreLib === 'undefined') { Logger.log('❌ CoreLib tidak terpasang!'); return; }
   Logger.log('✅ CoreLib terdeteksi.');

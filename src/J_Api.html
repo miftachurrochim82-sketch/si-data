@@ -115,27 +115,25 @@ window.StarterKitApi = {
     // TEMATIK masters (allUnits/allFungsi untuk cascade) — v2.14.0-tematik
     async loadTematikMasters() {
       try {
-        var res = await new Promise(function(resolve, reject){
-          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getMasterOptions();
-        });
-        if (res) {
-          this.allUnits = res.allUnits || [];
-          this.allFungsi = res.allFungsi || [];
+        var res = await this.callServer('get_master_options');
+        if (res && res.success && res.data) {
+          this.allUnits = res.data.allUnits || [];
+          this.allFungsi = res.data.allFungsi || [];
         }
       } catch(e){ console.error('loadTematikMasters', e); }
     },
     async loadAnalitikLanjutan() {
       try {
-        var top = await new Promise(function(r,j){ google.script.run.withSuccessHandler(r).withFailureHandler(j).getTopPegawai({}); });
-        this.dashboardData.topPegawai = top || [];
+        var top = await this.callServer('get_top_pegawai', {});
+        this.dashboardData.topPegawai = (top && top.success && top.data) || [];
       } catch(e){ console.error('topPegawai', e); }
       try {
-        var lb = await new Promise(function(r,j){ google.script.run.withSuccessHandler(r).withFailureHandler(j).getLeaderboardUnit({}); });
-        this.dashboardData.leaderboardUnit = lb || [];
+        var lb = await this.callServer('get_leaderboard_unit', {});
+        this.dashboardData.leaderboardUnit = (lb && lb.success && lb.data) || [];
       } catch(e){ console.error('leaderboard', e); }
       try {
-        var hm = await new Promise(function(r,j){ google.script.run.withSuccessHandler(r).withFailureHandler(j).getHeatmapBulanGrup({}); });
-        this.dashboardData.heatmap = hm || {bulan:[], grup:[], matrix:{}, maxVal:0};
+        var hm = await this.callServer('get_heatmap_bulan_grup', {});
+        this.dashboardData.heatmap = (hm && hm.success && hm.data) || {bulan:[], grup:[], matrix:{}, maxVal:0};
       } catch(e){ console.error('heatmap', e); }
     },
     onBidangChange() {
@@ -148,11 +146,10 @@ window.StarterKitApi = {
       var fid=this.utamaForm.fungsi_id;
       if(!fid){ this.tematikDimensiList=[]; this.tematikValues={}; return; }
       try{
-        var list = await new Promise(function(resolve, reject){
-          google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getDimensiForForm(fid);
-        });
-        this.tematikDimensiList = list || [];
-        var nv={}; (list||[]).forEach(function(d){ nv[d.id]=''; });
+        var resD = await this.callServer('get_dimensi_for_form', { fungsi_id: fid });
+        var list = (resD && resD.success && resD.data) || [];
+        this.tematikDimensiList = list;
+        var nv={}; list.forEach(function(d){ nv[d.id]=''; });
         this.tematikValues = nv;
       }catch(e){ console.error('onFungsiChange', e); }
     },

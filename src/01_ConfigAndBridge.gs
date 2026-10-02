@@ -687,6 +687,7 @@ function getAppConfig_() {
       'get_kegiatan_list':          'viewer',
       'get_dimensi_for_form':       'viewer',
       'simpan_kegiatan_tematik':    'user',
+      'update_kegiatan_tematik':    'user',
       'get_kegiatan_detail_tematik':'viewer',
       'get_atribut_detail':         'viewer',
       'get_cross_tab_per_grup':     'viewer',

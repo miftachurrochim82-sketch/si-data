@@ -37,6 +37,7 @@ function _assert_(results, name, condition, detail) {
 
 // CoreLib regression
 function runLibraryTests() {
+  assertEditorOnly_();
   Logger.log('==========================================================');
   Logger.log('🧪 REGRESSION TESTS LIBRARY v2 (dari ' + APP_CODE + ' v2.14.0-tematik)');
   Logger.log('==========================================================');
@@ -49,6 +50,7 @@ function runLibraryTests() {
 }
 
 function testAdopsiG18d() {
+  assertEditorOnly_();
   Logger.log('==========================================================');
   Logger.log('🔗 UJI ADOPSI CORELIB v2.3.0 (G18d) — ' + APP_CODE + ' v2.14.0-tematik');
   Logger.log('==========================================================');
@@ -67,6 +69,7 @@ function testAdopsiG18d() {
 }
 
 function testDispatcherRouting() {
+  assertEditorOnly_();
   Logger.log('==========================================================');
   Logger.log('🚏 UJI ROUTING DISPATCHER — 86 handler + fail-closed — v2.14.0-tematik');
   Logger.log('==========================================================');
@@ -94,6 +97,7 @@ function testDispatcherRouting() {
 }
 
 function runDomainTestsStarterKit() {
+  assertEditorOnly_();
   Logger.log('==========================================================');
   Logger.log('🎯 TEST DOMAIN ' + APP_CODE + ' v2.14.0-tematik — 5M+5T + piramida + dashboard');
   Logger.log('==========================================================');
@@ -115,6 +119,7 @@ function runDomainTestsStarterKit() {
 
 // ---------- MASTER 5 (guard hierarki, FK, kode auto, referensi) ----------
 function testDomainMasters() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- 5 MASTER (M_KATEGORI/JENIS/PERIODE/SATUAN/LOKASI) ---');
   var results = [];
 
@@ -197,6 +202,7 @@ function testDomainMasters() {
 
 // ---------- T_UTAMA ----------
 function testDomainUtama() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- T_UTAMA (5 FK baru) ---');
   var results = [];
   var savedId = '';
@@ -222,6 +228,7 @@ function testDomainUtama() {
 
 // ---------- SIMPEG READ-ONLY ----------
 function testSimpegReadOnly() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- SIMPEG READ-ONLY ---');
   var results = [];
   ['PEGAWAI', 'UNIT_KERJA', 'JABATAN'].forEach(function (sheet) {
@@ -235,6 +242,7 @@ function testSimpegReadOnly() {
 
 // ---------- PRE-SAVE HOOK P1+P2 ----------
 function testLocalPreSaveHook() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- PRE-SAVE HOOK P1+P2 ---');
   var results = [];
   try { var r1 = localPreSaveHook_('M_JENIS', {}, TEST_USER_USER_); _assert_(results, 'P1.1 jen- prefix', r1 && r1.record && /^jen\-/.test(r1.record.id), ''); } catch (e) { _assert_(results, 'P1.1', false, e.message); }
@@ -245,6 +253,7 @@ function testLocalPreSaveHook() {
 
 // ---------- SKEMA SHEET BISNIS ----------
 function testInitDatabaseSchema() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- SKEMA SHEET BISNIS ---');
   var results = [];
   try {
@@ -260,6 +269,7 @@ function testInitDatabaseSchema() {
 
 // ---------- SMOKE PIRAMIDA (12L + 8A + 5E) ----------
 function testSmokePiramida() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- SMOKE PIRAMIDA 12L + 8A + 5E ---');
   var results = [];
   var tahun = String(new Date().getFullYear());
@@ -302,6 +312,7 @@ function testSmokePiramida() {
 
 // ---------- DASHBOARD 4+4+4 ----------
 function testDashboard444() {
+  assertEditorOnly_();
   Logger.log(''); Logger.log('--- DASHBOARD 4 KARTU + 4 CHART + 4 PANEL ---');
   var results = [];
   try {
@@ -325,6 +336,7 @@ function testDashboard444() {
 }
 
 function runAllDiagnostics() {
+  assertEditorOnly_();
   Logger.log('==========================================================');
   Logger.log('🔍 DIAGNOSTIK ' + APP_CODE + ' v2.14.0-tematik — 5M+5T + 86 handler + piramida');
   Logger.log('==========================================================');
@@ -344,6 +356,7 @@ function runAllDiagnostics() {
 }
 
 function runAllTestsStarterKit() {
+  assertEditorOnly_();
   Logger.log('##########################################################');
   Logger.log('##  TEST SUITE LENGKAP ' + APP_CODE + ' v2.14.0-tematik — 5M+5T + 86 handler + piramida 12/8/6/4');
   Logger.log('##  Waktu: ' + new Date().toISOString());

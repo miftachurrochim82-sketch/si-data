@@ -99,6 +99,7 @@ function audit_(actor, action, type, id, ok, msg) {
  * file ini terpasang & fungsi tersedia.
  */
 function testUtilsSelfCheck() {
+  assertEditorOnly_();
   Logger.log('=== 00_Utils.gs v2.14.0-tematik self-check — 7 file medium + 18 sheet + Tematik ===');
 
   // 1. Fungsi tersedia
@@ -121,4 +122,24 @@ function testUtilsSelfCheck() {
   }
 
   Logger.log('=== Selesai ===');
+}
+
+// ==================== PENJAGA KONTEKS EDITOR ====================
+// Di Apps Script, SETIAP fungsi global tanpa akhiran '_' bisa dipanggil
+// klien lewat google.script.run — termasuk anonim, bila web app memakai
+// access: ANYONE_ANONYMOUS + executeAs: USER_DEPLOYING.
+// Fungsi uji menulis data (saveRecord_/softDeleteRecord_), jadi harus
+// dipagari. Namanya tidak bisa diberi akhiran '_' karena fungsi privat
+// tidak muncul di dropdown "Pilih fungsi" editor Apps Script.
+//
+// Cara kerja: dijalankan dari editor oleh pemilik → activeUser == effectiveUser.
+// Dipanggil anonim via google.script.run → activeUser kosong → ditolak.
+function assertEditorOnly_() {
+  var aktif = '', efektif = '';
+  try { aktif = Session.getActiveUser().getEmail() || ''; } catch (e) {}
+  try { efektif = Session.getEffectiveUser().getEmail() || ''; } catch (e) {}
+  if (!aktif || aktif !== efektif) {
+    throw new Error('Fungsi ini hanya boleh dijalankan dari editor Apps Script oleh pemilik skrip.');
+  }
+  return true;
 }

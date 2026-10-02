@@ -110,6 +110,32 @@ function simpanKegiatanTematik_(payload, actor){
   if(payload.atribut && payload.atribut.length) atrResult=simpanAtributKegiatan_(id, payload.atribut);
   return {success:true, id:id, kode:kode, total_atribut:atrResult.total};
 }
+
+// Update kegiatan tematik — dipisah dari simpan karena simpanKegiatanTematik_
+// SELALU menerbitkan id+kode baru (generateIdKegiatan_). Memakainya untuk
+// update akan menduplikasi baris, bukan memperbarui.
+// Actor diteruskan dari dispatcher (sesi nyata), BUKAN systemActor_.
+function updateKegiatanTematik_(payload, actor){
+  if(!payload || !payload.id) return {success:false, code:'BAD_REQUEST', error:'id kosong'};
+  var existing=findRecordById_('T_UTAMA', payload.id);
+  if(!existing) return {success:false, code:'NOT_FOUND', error:'Data tidak ditemukan'};
+  var wajib=['tanggal','unit_id','fungsi_id','kategori_id','jenis_id','periode_id','lokasi_id','uraian','jumlah','satuan_id'];
+  for(var i=0;i<wajib.length;i++){ if(!payload[wajib[i]]) return {success:false, code:'BAD_REQUEST', error:'Field '+wajib[i]+' wajib diisi'}; }
+  var rec={
+    id:payload.id, kode:existing.kode, tanggal:payload.tanggal, unit_id:payload.unit_id, fungsi_id:payload.fungsi_id,
+    kategori_id:payload.kategori_id, jenis_id:payload.jenis_id, periode_id:payload.periode_id, lokasi_id:payload.lokasi_id,
+    uraian:payload.uraian, jumlah:Number(payload.jumlah)||0, satuan_id:payload.satuan_id,
+    anggaran:Number(payload.anggaran)||0, status:payload.status||existing.status,
+    keterangan:payload.keterangan||'', status_aktif:true
+  };
+  saveRecord_('T_UTAMA', rec, actor);
+  var total=0;
+  if(payload.atribut){
+    hapusAtributKegiatan_(payload.id);
+    if(payload.atribut.length) total=simpanAtributKegiatan_(payload.id, payload.atribut).total;
+  }
+  return {success:true, id:payload.id, kode:rec.kode, total_atribut:total};
+}
 function getKegiatanDetailTematik_(id){
   var r=findRecordById_('T_UTAMA', id);
   if(!r) return null;

@@ -47,11 +47,9 @@ window.StarterKitActions = {
             keterangan: this.utamaForm.catatan || this.utamaForm.deskripsi || '',
             atribut: atribut
           };
-          var fn = this.utamaForm.id ? 'updateKegiatan' : 'simpanKegiatan';
+          var aksi = this.utamaForm.id ? 'update_kegiatan_tematik' : 'simpan_kegiatan_tematik';
           if(this.utamaForm.id) payload.id=this.utamaForm.id;
-          var res = await new Promise(function(resolve, reject){
-            google.script.run.withSuccessHandler(resolve).withFailureHandler(function(e){ reject(e); })[fn](payload);
-          });
+          var res = await this.callServer(aksi, payload);
           if (res && res.success) {
             this.showToast(this.utamaForm.id ? 'Kegiatan diperbarui.' : 'Kegiatan tersimpan: '+(res.kode||''), 'success');
             this.showUtamaForm = false;

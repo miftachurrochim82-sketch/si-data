@@ -35,14 +35,7 @@
             var res = await this.callServer('get_kegiatan_detail_tematik', { id: id });
             if(res && res.success && res.data) detail = res.data;
             else if(res && res.data) detail = res.data;
-          }catch(e){ /* fallback direct */ }
-
-          // fallback via google.script.run.getKegiatanDetail jika dispatch gagal
-          if(!detail && typeof google !== 'undefined' && google.script && google.script.run){
-            detail = await new Promise(function(resolve, reject){
-              google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getKegiatanDetail(id);
-            });
-          }
+          }catch(e){ console.error('loadDetail', e); }
 
           // detail bisa berisi {utama, atribut} atau flat
           var utama = null, atribut = [], lampiran = [], audit = [];
@@ -75,19 +68,7 @@
             if(resAudit && resAudit.success && Array.isArray(resAudit.data)) audit = resAudit.data;
             else if(Array.isArray(resAudit)) audit = resAudit;
             else if(resAudit && Array.isArray(resAudit.logs)) audit = resAudit.logs;
-          }catch(e){
-            // fallback direct getAuditLogs
-            if(typeof google !== 'undefined' && google.script && google.script.run){
-              try{
-                var resA2 = await new Promise(function(resolve, reject){
-                  google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getAuditLogs({ tabel:'T_UTAMA', record_id:id });
-                });
-                if(resA2 && Array.isArray(resA2)) audit = resA2;
-                else if(resA2 && resA2.logs) audit = resA2.logs;
-                else if(resA2 && resA2.data) audit = resA2.data;
-              }catch(e2){}
-            }
-          }
+          }catch(e){ console.error('audit', e); }
 
           // Fallback audit mock jika masih kosong (biar timeline tidak kosong total saat demo)
           if(!audit.length && utama){
@@ -146,20 +127,7 @@
             size: file.size,
             data: base64
           };
-          // coba via dispatchAction save_lampiran / upload_lampiran_tematik
-          var res = null;
-          try{
-            res = await this.callServer('upload_lampiran_tematik', payload);
-          }catch(e){
-            // fallback direct
-            if(typeof google !== 'undefined' && google.script && google.script.run){
-              res = await new Promise(function(resolve, reject){
-                google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).uploadLampiran(payload);
-              });
-            } else {
-              throw e;
-            }
-          }
+          var res = await this.callServer('upload_lampiran_tematik', payload);
           // cek success
           if(res && (res.success || res.file_url || res.url)){
             this.showToast && this.showToast('Lampiran terunggah ✓', 'success');
@@ -181,16 +149,7 @@
         if(!file || !file.id) return;
         if(!confirm('Hapus lampiran \"' + (file.nama_file||file.file_name||file.id) + '\" ?')) return;
         try{
-          var res = null;
-          try{
-            res = await this.callServer('delete_lampiran', { id: file.id });
-          }catch(e){
-            if(typeof google !== 'undefined' && google.script && google.script.run){
-              res = await new Promise(function(resolve, reject){
-                google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).hapusLampiran(file.id);
-              });
-            } else throw e;
-          }
+          var res = await this.callServer('delete_lampiran', { id: file.id });
           if(res && (res.success || res.ok)){
             this.showToast && this.showToast('Lampiran dihapus', 'success');
             // hapus dari local array tanpa reload
