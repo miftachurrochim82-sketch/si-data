@@ -2,6 +2,11 @@
 
 Tanggal: 2026-10-02 · Commit: `aec80a2` · 4.452 baris `.gs` + 3.893 baris `.html`
 
+> ⚠️ **Dokumen ini adalah catatan audit bertanggal, bukan deskripsi sistem sekarang.**
+> Angka di badan dokumen menggambarkan keadaan pada saat tiap tahap ditulis dan sengaja
+> dibiarkan utuh sebagai riwayat. **Keadaan terkini ada di bagian "Status Akhir" di
+> paling bawah.** Untuk deskripsi sistem, lihat `docs/`.
+
 ---
 
 ## 🔴 Temuan paling penting: lubang otorisasi
@@ -199,3 +204,67 @@ nol aksi tanpa entri `actionLevels`; nol fungsi yatim.
 
 **Lubang otorisasi `09_BridgeFrontend.gs` belum ditutup** — masih 39 fungsi tanpa
 pemeriksaan role. Itu tetap blocker deploy dan jadi langkah berikutnya.
+
+---
+
+# Status Akhir — 2026-10-02, commit `14b8093`
+
+Bagian ini menggantikan seluruh angka di atas. Angka di atas adalah riwayat per tahap.
+
+## Perjalanan lengkap
+
+| | Awal audit | Sekarang | Selisih |
+|---|---|---|---|
+| Berkas `src/` | 32 | **28** | −4 |
+| Baris | 8.361 | **6.021** | **−2.340 (−28%)** |
+| Aksi dispatch | 117 | **59** | −58 |
+| Permukaan API | 2 | **1** | −1 |
+| Fungsi terekspos tanpa penjaga | 39 | **0** | −39 |
+| Dependensi eksternal | 4 | **3** | −1 |
+| Helper yatim | 21 | **0** | −21 |
+
+## Rantai commit
+
+| Commit | Isi |
+|---|---|
+| `95a78c7` | Modul Peta & RTL dihapus |
+| `11f971f` | `09_BridgeFrontend.gs` dihapus — permukaan API kedua ditutup |
+| `fdcd2e2` | Alur approval dibuang sepenuhnya |
+| `14b8093` | 36 aksi mati + 21 helper yatim (346 baris) dihapus |
+
+## Rincian 59 aksi
+
+| Kelompok | Jumlah |
+|---|---|
+| Dashboard & transaksi | 8 |
+| Master | 13 |
+| Laporan | 11 |
+| Analisa | 7 |
+| Evaluasi | 4 |
+| Lampiran | 3 |
+| Analitik lanjutan | 3 |
+| SIMPEG & sesi | 5 |
+| Sistem & audit | 5 |
+
+50 dipakai frontend, 5 cadangan operasional (`save`, `delete`, `ping`,
+`init_database`, `audit_master` — semuanya `admin` ke atas), 4 ditangani CoreLib.
+`actionLevels` berisi 61 entri; selisih 2 adalah `exchange_platform_ticket` dan
+`logout` milik CoreLib — normal, bukan yatim.
+
+## Verifikasi
+
+`node --check` lolos untuk seluruh `.gs` dan seluruh blok `<script>` di 18 berkas
+`.html`. Nol helper yatim. Nol aksi tanpa `actionLevels`. Nol aksi frontend tanpa
+handler. Nol sisa `approval`/`rtl`/`peta`/`leaflet`. Clone bersih dari remote cocok
+byte-per-byte dengan salinan lokal.
+
+## Blocker yang tersisa
+
+1. **`appsscript.json` masih `ANYONE_ANONYMOUS` + `executeAs USER_DEPLOYING`.** Gating
+   role sudah menutup celah data, tapi halaman tetap publik dan kuota membebani akun
+   deployer. Perlu kepastian alur SSO CoreLib sebelum pindah ke `ANYONE`.
+2. 4 sheet warisan tak terpakai (`M_KLASIFIKASI`, `M_PEJABAT`, `M_TEMPLATE`, `T_ITEM`).
+3. Literal `'prd_'` / `'atr_'` di `04_CrudTematik.gs` baris 18, 47, 55.
+
+Lubang otorisasi `09_BridgeFrontend.gs` yang disebut sebagai blocker di badan dokumen
+**sudah ditutup** pada `11f971f`.

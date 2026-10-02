@@ -1,27 +1,70 @@
-# 05 — UIUX SI-DATA Satu Data (v0.3 — CDN v2.9.1)
+# 05 — UI & Antarmuka
 
-> **CDN @v2.9.1 1 CSS+9 JS**, Vue 3.5.42, Tailwind TER-COMPILE, tema #065f46 emerald.
+---
 
-## 1. Shell
+## 1. Tumpukan
 
-- `Index.html` — `<?!= getThemeCss() ?>` + 1 CSS+9 JS (`app-core`, `app-components`, `app-modules`, `app-layout`, `app-ui`, `app-forms`, `app-data`, `app-charts`, `app-workflow`) + Vue 3.5.42, Tailwind compiled `A0_Tw` (bukan Play CDN).
-- `V_Shell` — `<app-sidebar>` + `<app-header>` + `<app-theme-picker>` di Pengaturan (admin).
+| Lapisan | Pilihan |
+|---|---|
+| Kerangka | Vue 3.5.42 (global build, tanpa langkah build) |
+| Gaya | `frontend-cdn` **v3.0.1** — `app.min.css`, Tailwind sudah ter-compile |
+| Perilaku bersama | `frontend-cdn` **v3.0.1** — `app.min.js` |
+| Ikon | Font Awesome 6.5.2 |
 
-## 2. Halaman
+Empat berkas eksternal, semuanya dari jsDelivr dengan tag versi terkunci. **Tidak ada
+Tailwind Play CDN** dan tidak ada Leaflet (peta sudah dibuang).
 
-| Halaman | Komponen Kit | Filter |
-|---|---|---|
-| **V_Dashboard** | `app-stat-card` 4, `app-chart-bar` 4, `app-chart-doughnut` 1, `app-panel` 4 | — |
-| **V_Master** | `app-crud-table` + `app-pegawai-picker` + `app-filter-bar` | `kode_tematik` |
-| **V_Utama** | `app-crud-table` + `app-filter-bar` (5 filter: tematik TRANTIBUM/GAKDA/DAMKAR + tahun + status + search + pegawai adminOnly + `scope Saya/Semua`) + pagination server | `tahun` select, `v-can` gate |
-| **V_Laporan** | 12 tab `L1-L12` (badge tematik: TRANTIBUM sky, GAKDA amber, DAMKAR rose) + `app-timeline` | `kode_tematik` |
-| **V_Analisa** | 8 tab `A1-A8` + `app-chart-line` |  |
-| **V_Evaluasi** | 6 tab `E1-E6` + `app-badge` (selesai/diproses/batal) |  |
-| **V_Rtl** | `T_TINDAK_LANJUT` + `app-workflow` FSM |  |
+> Pin versi wajib memakai tag (`@v3.0.1`), bukan `@main`. Tanpa tag, jsDelivr menyajikan
+> versi yang berubah sewaktu-waktu.
 
-## 3. Aturan UIUX v2
+## 2. Susunan berkas
 
-- Nama bukan ID — lookup `pegawai_id→nama`, `pejabat_id→nama` via SIMPEG.
-- Tahun/periode = `select` (`tahunOptions`), bukan text bebas.
-- Tombol aksi gate `v-can` — fail-closed.
-- `min-w` di `th` + `table-scroll`, modal `v-if` + `@close`, tema per app `--primary`.
+```
+Index.html          shell: head, CDN, mount Vue, include semua view
+V_*.html            markup per halaman
+J_*.html            logika per halaman
+```
+
+Delapan halaman: Dashboard, Transaksi, Laporan, Analisa, Evaluasi, Master,
+Pengaturan, Detail. Navigasi sisi klien, tanpa muat ulang.
+
+## 3. Komponen bersama dari CDN
+
+Dipakai apa adanya — **jangan mengarang prop baru**, periksa dulu di repo `frontend-cdn`.
+
+| Komponen | Guna |
+|---|---|
+| `AppShell` | Kerangka sidebar + header |
+| `DataTable` | Tabel dengan sort, filter, paginasi |
+| `StatCard` | Kartu angka ringkas |
+| `ChartBlock` | Pembungkus chart |
+| `FormModal` | Modal form |
+| `Toast` | Notifikasi |
+
+Pembungkus pemanggilan server: `callServer(aksi, payload)` di `app-core.js`.
+
+## 4. Pola yang berlaku
+
+- **Server yang menghitung.** Dashboard, laporan, analisa, evaluasi mengembalikan angka
+  siap pakai. Frontend tidak mengagregasi.
+- **Paginasi di server** untuk daftar transaksi. Tidak pernah menarik seluruh sheet.
+- **Satu pintu.** Semua panggilan lewat `callServer`. Tidak ada
+  `google.script.run.<fungsi>` langsung.
+- **Status sebagai badge berwarna**, mengikuti `STATUS_MAP`.
+- **Bahasa Indonesia** untuk seluruh label, pesan, dan galat.
+- **Format WIB** untuk tanggal; rupiah dengan pemisah ribuan.
+
+## 5. Tema
+
+Admin memilih tema di Pengaturan; disimpan lewat `save_theme` ke properti
+`THEME_JSON` dan dibaca saat muat awal. Tidak ada tema per pengguna.
+
+## 6. Responsif
+
+Dirancang untuk desktop, dapat dipakai di tablet. Tabel lebar bergulir horizontal pada
+layar sempit. Fitur RTL **sudah dihapus** — tidak ada dukungan arah kanan-ke-kiri.
+
+## 7. Aksesibilitas — status jujur
+
+Kontras dan ukuran font mengikuti bawaan komponen CDN. Navigasi keyboard dan label ARIA
+**belum diaudit**. Ini utang yang diakui, bukan fitur yang diklaim.

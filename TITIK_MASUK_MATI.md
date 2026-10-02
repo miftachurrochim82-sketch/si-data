@@ -1,5 +1,10 @@
 # 45 Titik Masuk Mati — Rincian & Rekomendasi
 
+> ⚠️ **Sudah dieksekusi.** Dokumen ini adalah analisis yang mendahului commit `fdcd2e2`
+> dan `14b8093`. Rekomendasinya kini **sudah dijalankan**; angka di badan dokumen adalah
+> keadaan sebelum eksekusi dan dibiarkan utuh sebagai riwayat. **Hasil akhirnya ada di
+> bagian "Hasil Eksekusi" di paling bawah.**
+
 Dibuat 2026-10-02, setelah commit `11f971f`.
 
 > **Koreksi.** Angka "78" yang saya sebut sebelumnya **salah**. Itu sisa audit lama
@@ -138,3 +143,69 @@ Bila A + C + D + B(non-approval) dihapus: **36 aksi**, menyisakan 66 aksi — da
 helper yatim yang ikut terbuang jauh lebih besar dari 36 baris registrasi.
 
 T_APPROVAL ditahan karena menyangkut fitur, bukan kerapian.
+
+---
+
+# Hasil Eksekusi — 2026-10-02
+
+## Keputusan T_APPROVAL
+
+Pertanyaan "bangun UI-nya atau buang alurnya" **dijawab: buang.** Aplikasi dipakai satu
+analis; persetujuan berjenjang tidak diperlukan. Commit `fdcd2e2` mencabut 4 aksi
+approval beserta L12, A8, E2, kartu "Menunggu Verifikasi", dan panel daftar approval di
+Dashboard. Nol sisa `approval` di seluruh `src/`.
+
+## Penghitungan ulang
+
+Setelah approval dibuang, hitungan diulang dari nol dengan pemindaian **4 jalur**:
+literal `callServer`, peta `SK_MAPS`, 9 aksi yang di-dispatch CDN sendiri, dan pasangan
+`update`/`simpan_kegiatan_tematik`.
+
+Hasil: **95 aksi → 54 hidup, 41 mati.** Dari 41, sebanyak **36 dihapus** dan 5 kelompok
+E dipertahankan.
+
+> Pelajaran: memindai hanya `callServer` menghasilkan positif palsu. Sembilan aksi
+> (`exchange_platform_ticket`, `get_jabatan_list`, `get_master_jabatan`,
+> `get_master_pegawai`, `get_master_unit`, `get_my_profile`, `get_pegawai_list`,
+> `get_unit_list`, `logout`) dipanggil CDN secara internal dan **bukan aksi mati**.
+
+## 36 aksi yang dihapus — commit `14b8093`
+
+**6 kembaran identik** — `dashboard`, `get_heatmap`, `get_config_list`,
+`save_config_item`, `delete_config_item`, `get_cross_tab_tematik`
+
+**6 digantikan `get_master_satelit`** — `get_jenis_list`, `get_kategori_list`,
+`get_lokasi_list`, `get_periode_list`, `get_satuan_list`, `get_periode_list_simple`
+
+**14 tematik generasi lama** — `get_ringkasan`, `get_trend_bulanan`, `get_per_fungsi`,
+`get_per_grup`, `get_per_unit`, `get_per_lokasi`, `get_kegiatan_list`,
+`get_perbandingan`, `get_filter_options`, `get_atribut_detail`, `get_target_list`,
+`get_target_evaluasi`, `get_cross_tab_per_grup`, `get_utama_detail`
+
+**10 fitur tanpa UI** — T_ITEM (4), Config (3), `get_theme`, `save_lampiran`,
+`save_my_profile`
+
+**5 dipertahankan (kelompok E)** — `save`, `delete`, `ping`, `init_database`,
+`audit_master`. Semuanya `admin` ke atas, cadangan operasional.
+
+## Penghematan sebenarnya
+
+Dugaan di badan dokumen terbukti benar: nilainya bukan pada 36 baris registrasi,
+melainkan pada **21 helper yatim / 346 baris** yang ikut terbuang.
+
+Terbesar: `getCrossTabPerGrupTematik_` (68), `getTargetEvaluasi_` (49),
+`getPerbandinganTematik_` (35), `getKegiatanListTematik_` (19),
+`writeAuditLogTematik_` (19), `getTrendBulanan_` (17), `getConfigList_` (16),
+`getKategoriList_` (15), `getRingkasan_` (14), `getDataPerGrup_` (13),
+`saveGeneric_` (12).
+
+Penghapusan dilakukan **iteratif** sampai konvergen (maks 12 putaran), dengan daftar
+aman `assertEditorOnly_`, `localPreSaveHook_`, `systemActor_`. Konvergen di putaran 1.
+
+## Keadaan akhir
+
+**59 aksi** — bukan 66 seperti perkiraan di badan dokumen, karena pembuangan approval
+mendahului penghitungan ulang. Nol helper yatim, nol aksi tanpa `actionLevels`, nol
+aksi frontend tanpa handler. `node --check` lolos seluruhnya.
+
+Daftar 59 aksi beserta levelnya ada di `docs/02_FUNGSI.md`.
