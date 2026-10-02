@@ -27,9 +27,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/vue@3.5.42/dist/vue.global.prod.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <!--
     Shared CDN Pemkab Trenggalek v2.9.2 — 10 FILE (1 CSS + 9 JS) & 31 OPSI (2026-09-22)
@@ -65,9 +63,6 @@
     .filter-label { font-size:11px; color:#64748b; font-weight:500; display:block; margin-bottom:2px; }
     .dark .filter-label{ color:#94a3b8; }
     .table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    .progress-track { width:4rem; height:0.5rem; background:#e2e8f0; border-radius:9999px; overflow:hidden; display:inline-block; vertical-align:middle; }
-    .dark .progress-track{ background:#334155; }
-    .progress-fill { height:100%; background:#10b981; transition:all 0.3s; }
   </style>
   <style><?!= getThemeCss() ?></style>
 
@@ -140,9 +135,7 @@
           <?!= include('V_Laporan'); ?>
           <?!= include('V_Analisa'); ?>
           <?!= include('V_Evaluasi'); ?>
-          <?!= include('V_Rtl'); ?>
           <?!= include('V_Master'); ?>
-          <?!= include('V_Peta'); ?>
           <?!= include('V_Pengaturan'); ?>
         </main>
       </div>
@@ -207,7 +200,6 @@
   <?!= include('J_Helpers'); ?>
   <?!= include('J_Api'); ?>
   <?!= include('J_Actions'); ?>
-  <?!= include('J_Peta'); ?>
   <?!= include('J_FilterGlobal'); ?>
   <?!= include('J_Detail'); ?>
   <?!= include('J_App'); ?>

@@ -50,23 +50,6 @@ window.StarterKitHelpers = {
       return 'menunggu';
     },
 
-    badgeStatusRtl(status) {
-      var s = String(status || '').toLowerCase().trim();
-      if (s === 'selesai') return 'disetujui';
-      if (s === 'batal') return 'ditolak';
-      if (s === 'diproses') return 'menunggu';
-      if (s === 'baru') return 'proses';
-      return 'proses';
-    },
-
-    badgeSumberEvaluasi(sumber) {
-      var s = String(sumber || '').toUpperCase().trim();
-      if (s === 'E2') return 'ditolak';
-      if (s === 'E3') return 'menunggu';
-      if (s === 'E1') return 'proses';
-      return 'disetujui';
-    },
-
     // ==================== LOOKUP NAMA (standar: nama, bukan ID) ====================
     _lookup(list, key, fields) {
       var k = String(key || '').trim();

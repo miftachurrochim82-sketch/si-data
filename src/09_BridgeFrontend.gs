@@ -337,38 +337,3 @@ function cleanAuditLogsOlderThan(days){
   });
   return {success:true, hapus:count};
 }
-
-// ---------- Peta ----------
-function getPetaKegiatan(filter){
-  filter=filter||{};
-  var rows=getRowsUtama_(filter);
-  var lokasiMap=getLokasiMap_();
-  var fungsiMap=getFungsiMap_();
-  var map={};
-  rows.forEach(function(r){
-    var nama=lokasiMap[r.lokasi_id]||String(r.lokasi_id||'Tidak diketahui');
-    if(!map[nama]) map[nama]={nama:nama, jumlah:0, volume:0, anggaran:0, byFungsi:{}};
-    map[nama].jumlah++;
-    map[nama].volume+=Number(r.jumlah)||0;
-    map[nama].anggaran+=Number(r.anggaran)||0;
-    var fname=(fungsiMap[r.fungsi_id]&&fungsiMap[r.fungsi_id].nama)||String(r.fungsi_id);
-    map[nama].byFungsi[fname]=(map[nama].byFungsi[fname]||0)+1;
-  });
-  var wilayah=Object.values(map).map(function(w){
-    var topF='-'; var max=0;
-    Object.keys(w.byFungsi).forEach(function(f){ if(w.byFungsi[f]>max){max=w.byFungsi[f]; topF=f;} });
-    return {nama:w.nama, jumlah:w.jumlah, volume:w.volume, anggaran:w.anggaran, topFungsi:topF};
-  }).sort(function(a,b){return b.jumlah-a.jumlah;});
-  return {wilayah:wilayah, totalKegiatan:rows.length};
-}
-function getGeoJSONContent(fileName){
-  try{
-    var folder=DRIVE_FOLDER_IDS.GEOJSON ? DriveApp.getFolderById(DRIVE_FOLDER_IDS.GEOJSON) : null;
-    if(!folder) return {success:false, error:'Folder GEOJSON tidak dikonfigurasi'};
-    var files=folder.getFilesByName(fileName);
-    if(!files.hasNext()) return {success:false, error:'File tidak ditemukan: '+fileName};
-    var file=files.next();
-    var content=file.getBlob().getDataAsString();
-    return {success:true, data:content};
-  }catch(e){ return {success:false, error:e.message}; }
-}

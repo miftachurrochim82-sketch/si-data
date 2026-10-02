@@ -14,8 +14,7 @@
 //   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             5 master = 5 dimensi laporan: M_KATEGORI (hierarki), M_JENIS,
 //             M_PERIODE, M_SATUAN, M_LOKASI.
-//             5 tabel inti: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL,
-//             T_TINDAK_LANJUT (RTL).
+//             4 tabel inti: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL.
 //             BUANG: M_REFERENSI (filler), T_LOGBOOK (AUDIT_LOGS CoreLib
 //             sudah cukup), T_JADWAL & T_REKAP (rekap = fungsi laporan,
 //             bukan sheet). JADWAL/LOGBOOK tetap tersedia opsional —
@@ -52,7 +51,6 @@
 //     T_ITEM            — detail per T_UTAMA (N)
 //     T_LAMPIRAN        — file/dokumen bukti (N)
 //     T_APPROVAL        — alur verifikasi
-//     T_TINDAK_LANJUT   — RTL (puncak piramida)
 //
 // Opsional (tambahkan bila app membutuhkannya):
 //   T_JADWAL   — deadline/kalender per kejadian
@@ -118,7 +116,6 @@ function getThemeCss() {
 var DRIVE_FOLDER_IDS = {
   ROOT:      '1kTrUTLK5jJXfGk1766aJtUW3MEARDqfo',
   CONFIG:    '1TaUHMxeAi3np9kbp53VZp4p813Q01-mB',
-  GEOJSON:   '14H5irW3GI_oqE_Fxst2chFQKfxXdOuFw',
   TEMPLATE:  '1MHHuipe87WhMmvyQ-QDoDxTFD4MBrdQ6',
   LAMPIRAN:  '1R18L5kwcN2GS8n19AlXAIIQZF13xqvG6',
   BACKUP:    '1G-dGmtQrT-mlve8wyyXxdO8SnJQkAapD',
@@ -167,13 +164,6 @@ var STATUS_MAP = {
     'ditolak':    ['diajukan', 'arsip'],
     'selesai':    ['arsip'],
     'arsip':      []
-  },
-  'T_TINDAK_LANJUT': {
-    'baru':       ['proses', 'batal'],
-    'proses':     ['selesai', 'tertunda'],
-    'tertunda':   ['proses', 'batal'],
-    'selesai':    [],
-    'batal':      []
   }
 };
 
@@ -233,7 +223,6 @@ var LOCAL_SHEETS = {
   T_LAMPIRAN:      'T_LAMPIRAN',
   T_LOGBOOK:       'T_LOGBOOK',
   T_APPROVAL:      'T_APPROVAL',
-  T_TINDAK_LANJUT: 'T_TINDAK_LANJUT',
   T_ITEM:          'T_ITEM', // legacy — tetap ada
   AUDIT_LOGS:      'AUDIT_LOGS'
 };
@@ -258,7 +247,6 @@ var LOCAL_ID_PREFIX_ = {
   'T_LAMPIRAN':      'tl',
   'T_LOGBOOK':       'tlb',
   'T_APPROVAL':      'apr',
-  'T_TINDAK_LANJUT': 'rtl',
   'T_ITEM':          'itm',
   'AUDIT_LOGS':      'log'
 };
@@ -293,7 +281,6 @@ var ALL_SHEET_HEADERS = {
   T_LAMPIRAN:      ['id', 'kegiatan_id', 'nama_file', 'tipe', 'file_url', 'deskripsi', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LOGBOOK:       ['id', 'tanggal', 'pegawai_id', 'kegiatan_id', 'uraian', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_APPROVAL:      ['id', 'utama_id', 'approver_id', 'status', 'catatan', 'tanggal_approve', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_TINDAK_LANJUT: ['id', 'evaluasi_id', 'kode_tematik', 'uraian', 'target_selesai', 'status', 'penanggung_jawab', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_ITEM:          ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   AUDIT_LOGS:      ['id', 'timestamp', 'user', 'aksi', 'tabel', 'record_id', 'data_lama', 'data_baru', 'keterangan', 'status'],
   ZZ_TEST_CRUD:    ['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru']
@@ -484,7 +471,6 @@ function findRecordById_(sheetName, id) {
 // ==================== §6 PRE-SAVE HOOK (P1 + P2) ====================
 // P1: id kosong → generate (cegah PK jatuh ke kolom lain = data loss).
 // P2: kunci field verifikasi untuk T_APPROVAL (hanya verifikator+).
-// P2b: normalisasi RTL status + progress.
 
 function localPreSaveHook_(canonical, record, actor) {
   var C = String(canonical || '').toUpperCase();
@@ -509,22 +495,14 @@ function localPreSaveHook_(canonical, record, actor) {
     }
   }
 
-  // P2b: RTL — status default + progress default
-  if (C === 'T_TINDAK_LANJUT') {
-    if (!record.status_rtl) record.status_rtl = record.status_rtl || record.status || 'baru';
-    if (record.progress_pct === undefined || record.progress_pct === '') {
-      record.progress_pct = 0;
-    }
-  }
-
   // P3: Workflow guard (C4) — cegah loncat status ilegal via validateTransition
   // Hanya bila record sudah ada (update) dan status berubah
   if (STATUS_MAP[C] && record.id) {
     try {
       var oldForTransition = findRecordById_(canonical, record.id);
       if (oldForTransition) {
-        var oldStatus = String(oldForTransition.status || oldForTransition.status_rtl || '').toLowerCase();
-        var newStatus = String(record.status || record.status_rtl || '').toLowerCase();
+        var oldStatus = String(oldForTransition.status || '').toLowerCase();
+        var newStatus = String(record.status || '').toLowerCase();
         if (oldStatus && newStatus && oldStatus !== newStatus) {
           // pakai CoreLib bila tersedia (CoreLib v2.4.0+), fallback ke STATUS_MAP lokal
           if (CoreLib.validateTransition) {
@@ -553,10 +531,10 @@ function localPreSaveHook_(canonical, record, actor) {
 
 // ==================== §7 KONTRAK DISPATCHER v2 ====================
 // actionLevels fail-closed: aksi tak dikenal = 'viewer' (default dispatcher).
-// Total 110+ handler (v2.14.0-tematik):
+// Total 95+ handler (v2.14.0-tematik):
 //   config 6 + self 2 + dashboard 2 + simpeg 4 + master 15 + utama 4 +
-//   item 4 + lampiran 3 + approval 4 + RTL 12 + laporan 12 +
-//   analisa 8 + evaluasi 6 + generic 2 + publik 3 + sistem 1
+//   item 4 + lampiran 3 + approval 4 + laporan 12 +
+//   analisa 8 + evaluasi 5 + generic 2 + publik 3 + sistem 1
 
 function getAppConfig_() {
   return {
@@ -647,20 +625,6 @@ function getAppConfig_() {
       'delete_approval':      'user',
       'verifikasi_approval':  'verifikator',
 
-      // T_TINDAK_LANJUT / RTL — 12 (6 generic + 6 alias rtl_*)
-      'get_tindak_lanjut_list':    'viewer',
-      'rtl_get_list':              'viewer',
-      'get_tindak_lanjut_detail':  'viewer',
-      'rtl_get_detail':            'viewer',
-      'save_tindak_lanjut':        'user',
-      'rtl_save':                  'user',
-      'delete_tindak_lanjut':      'admin',
-      'rtl_delete':                'admin',
-      'ubah_status_tindak_lanjut': 'user',
-      'rtl_ubah_status':           'user',
-      'generate_tindak_lanjut':    'user',
-      'rtl_generate':              'user',
-
       // Laporan (12) — L1..L12
       'lap_kategori':        'viewer',
       'lap_jenis':           'viewer',
@@ -691,7 +655,6 @@ function getAppConfig_() {
       'evaluasi_kepatuhan_periode': 'viewer',
       'evaluasi_kualitas_data':      'viewer',
       'evaluasi_lampiran':          'viewer',
-      'evaluasi_rtl_terbuka':       'viewer',
 
       // Generic routing — 2
       'save':                 'admin',
@@ -729,7 +692,6 @@ function getAppConfig_() {
       'get_cross_tab_per_grup':     'viewer',
       'get_cross_tab_tematik':      'viewer',
       'get_perbandingan':           'viewer',
-      'get_peta_kegiatan':          'viewer',
       'get_target_evaluasi':        'viewer',
       'get_target_list':            'viewer',
       'upload_lampiran_tematik':    'user',
@@ -743,8 +705,7 @@ function getAppConfig_() {
     // FE cukup kirim filterScope: AppCore.getMyScope() → 'mine'|'all', BE filter otomatis.
     resources: {
       'T_UTAMA':         { ownerField: 'pegawai_id' },
-      'T_ITEM':          { ownerField: 'pegawai_id' },
-      'T_TINDAK_LANJUT': { ownerField: 'assigned_to' }
+      'T_ITEM':          { ownerField: 'pegawai_id' }
     },
 
     // Peta transisi status (dipakai CoreLib.validateTransition di preSaveHook / handler)

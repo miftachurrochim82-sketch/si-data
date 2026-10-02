@@ -28,7 +28,7 @@
         <button class="btn btn-ghost btn-sm !px-2 !py-1 text-xs" @click="resetGlobalFilter()" title="Reset">
           <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline ml-1">Reset</span>
         </button>
-        <button class="btn btn-primary btn-sm !px-3 !py-1 text-xs" @click="applyGlobalFilter()" :disabled="utamaLoading || petaLoading || lapLoading">
+        <button class="btn btn-primary btn-sm !px-3 !py-1 text-xs" @click="applyGlobalFilter()" :disabled="utamaLoading || lapLoading">
           <i class="fa-solid fa-check"></i> Terapkan
         </button>
       </div>
@@ -67,7 +67,7 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-        <span class="text-[11px] text-slate-400"><i class="fa-solid fa-circle-info"></i> Filter ini sinkron ke Dashboard, Transaksi, Laporan, Analisa, Evaluasi &amp; Peta.</span>
+        <span class="text-[11px] text-slate-400"><i class="fa-solid fa-circle-info"></i> Filter ini sinkron ke Dashboard, Transaksi, Laporan, Analisa &amp; Evaluasi.</span>
         <div class="ml-auto flex items-center gap-1.5">
           <button class="btn btn-ghost btn-sm text-xs" @click="exportGlobalCsv()" title="Export CSV halaman aktif">
             <i class="fa-solid fa-file-csv text-emerald-600"></i> Export CSV

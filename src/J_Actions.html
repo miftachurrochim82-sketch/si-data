@@ -1,11 +1,9 @@
 <script>
 // ============================================================
-// STARTER-KIT - J_Actions.html (v2.14.0-tematik — aksi 5M + T_UTAMA + RTL + FSM)
+// STARTER-KIT - J_Actions.html (v2.14.0-tematik — aksi 5M + T_UTAMA + FSM)
 // ============================================================
 // Handler aksi user — simpan/hapus/transisi/generate.
 // Master: satu simpanMaster/hapusMaster generik (aksi per-tab).
-// RTL: status HANYA via modal Ubah Status (state machine backend) —
-//      field status tidak ada di form (standar UIUX v2).
 
 window.StarterKitActions = {
   methods: {
@@ -166,57 +164,6 @@ window.StarterKitActions = {
         if (res && res.success) { this.showToast('Dihapus.', 'success'); this.loadMasterSatelit(true); }
         else this.showToast(res.error || 'Gagal hapus (masih dipakai?)', 'error');
       } catch (e) { this.showToast('Error hapus', 'error'); }
-    },
-
-    // ==================== RTL ====================
-    async simpanRtl() {
-      if (!String(this.rtlForm.judul_rtl || '').trim()) { this.showToast('Judul RTL wajib.', 'warning'); return; }
-      this.rtlSaving = true;
-      try {
-        var res = await this.callServer('save_tindak_lanjut', { record: this.rtlForm });
-        if (res && res.success) {
-          this.showToast('RTL disimpan.', 'success');
-          this.showRtlForm = false;
-          this.loadRtl(this.rtlPage);
-        } else this.showToast(res.error || 'Gagal simpan RTL', 'error');
-      } catch (e) { this.showToast('Error simpan RTL', 'error'); }
-      finally { this.rtlSaving = false; }
-    },
-
-    async hapusRtl(r) {
-      if (!confirm('Hapus RTL "' + (r.judul_rtl || r.judul) + '"?')) return;
-      try {
-        var res = await this.callServer('delete_tindak_lanjut', { id: r.id });
-        if (res && res.success) { this.showToast('RTL dihapus.', 'success'); this.loadRtl(this.rtlPage); }
-        else this.showToast(res.error || 'Gagal hapus RTL', 'error');
-      } catch (e) { this.showToast('Error hapus RTL', 'error'); }
-    },
-
-    openRtlEdit(r) {
-      this.rtlForm = Object.assign({ id: '', sumber_evaluasi: 'manual', judul_rtl: '', deskripsi: '', assigned_to: '', due_date: '', status_rtl: 'baru', progress_pct: 0, dokumen_terkait: '', catatan: '' }, r);
-      if (r.judul && !this.rtlForm.judul_rtl) this.rtlForm.judul_rtl = r.judul;
-      this.showRtlForm = true;
-    },
-
-    openRtlStatus(r) {
-      this.rtlStatusTarget = r;
-      this.rtlStatusBaru = r.status_rtl || r.status || 'diproses';
-      this.rtlStatusProgress = r.progress_pct || 0;
-      this.rtlStatusCatatan = '';
-      this.showRtlStatusForm = true;
-    },
-
-    async ubahStatusRtl() {
-      this.rtlSaving = true;
-      try {
-        var res = await this.callServer('ubah_status_tindak_lanjut', { id: this.rtlStatusTarget.id, status_rtl: this.rtlStatusBaru, progress_pct: this.rtlStatusProgress, catatan: this.rtlStatusCatatan });
-        if (res && res.success) {
-          this.showToast('Status RTL diubah.', 'success');
-          this.showRtlStatusForm = false;
-          this.loadRtl(this.rtlPage);
-        } else this.showToast(res.error || 'Gagal ubah status (cek transisi legal)', 'error');
-      } catch (e) { this.showToast('Error ubah status', 'error'); }
-      finally { this.rtlSaving = false; }
     }
   }
 };

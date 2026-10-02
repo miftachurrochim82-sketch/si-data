@@ -6,7 +6,7 @@
 // Pola: satu loader per domain; data laporan/analisa/evaluasi disimpan
 // per-tab (objek keyed) agar pindah tab tak memuat ulang data lama.
 
-// Peta tab → aksi backend (global — tidak boleh di dalam methods Vue)
+// Peta aksi backend (global — tidak boleh di dalam methods Vue)
 window.SK_MAPS = {
   LAP_AKSI: {
     kategori: 'lap_kategori', jenis: 'lap_jenis', lokasi: 'lap_lokasi',
@@ -24,7 +24,7 @@ window.SK_MAPS = {
   EVA_AKSI: {
     kelengkapan: 'evaluasi_kelengkapan', sla: 'evaluasi_sla_verifikasi',
     periode: 'evaluasi_kepatuhan_periode', kualitas: 'evaluasi_kualitas_data',
-    lampiran: 'evaluasi_lampiran', rtl: 'evaluasi_rtl_terbuka'
+    lampiran: 'evaluasi_lampiran'
   },
   MASTER_AKSI: {
     kategori: { save: 'save_kategori', del: 'delete_kategori' },
@@ -46,8 +46,7 @@ window.StarterKitApi = {
         this.loadMasterSatelit(s),
         this.loadTematikMasters(),
         this.loadAnalitikLanjutan(),
-        this.loadUtama(1, s),
-        this.loadRtl(1, s)
+        this.loadUtama(1, s)
       ]);
     },
 
@@ -59,14 +58,13 @@ window.StarterKitApi = {
         if (res && res.success && res.data) {
           var d = res.data;
           this.dashboardData = {
-            summary: d.summary || { totalUtama: 0, totalSelesai: 0, approvalMenunggu: 0, rtlTerbuka: 0 },
+            summary: d.summary || { totalUtama: 0, totalSelesai: 0, approvalMenunggu: 0 },
             chartTren: d.chartTren || { labels: [], counts: [] },
             chartJenis: d.chartJenis || { labels: [], counts: [] },
             chartKategori: d.chartKategori || { labels: [], counts: [] },
             chartLokasi: d.chartLokasi || { labels: [], counts: [] },
             panelTerbaru: d.panelTerbaru || [],
             panelApproval: d.panelApproval || [],
-            panelRtl: d.panelRtl || [],
             panelTidakLengkap: d.panelTidakLengkap || [],
             role: d.role || 'viewer',
             nama: d.nama || ''
@@ -267,7 +265,7 @@ window.StarterKitApi = {
       } catch (e) { this.showToast('Error koneksi evaluasi.', 'error'); }
       finally { this.evaLoading = false; }
     },
-    // Evaluasi — grid 1 halaman (6 sekaligus)
+    // Evaluasi — grid 1 halaman (5 sekaligus)
     async loadEvaluasiGrid() {
       var tabs = Object.keys(window.SK_MAPS.EVA_AKSI);
       this.evaLoading = true;
@@ -279,43 +277,6 @@ window.StarterKitApi = {
         await Promise.all(promises);
         this.evaGridLoaded = true;
       } finally { this.evaLoading = false; }
-    },
-
-    // RTL
-    async loadRtl(page, silent) {
-      var isSilent = silent === true;
-      this.rtlLoading = true;
-      try {
-        var p = page || this.rtlPage || 1;
-        var res = await this.callServer('get_tindak_lanjut_list', {
-          page: p,
-          search: this.rtlSearch,
-          status_rtl: this.rtlFilters.status_rtl,
-          sumber_evaluasi: this.rtlFilters.sumber_evaluasi,
-          tahun: this.rtlFilters.tahun,
-          per_page: 10
-        });
-        if (res && res.success) {
-          this.rtlList = res.data || [];
-          this.rtlTotalData = res.total || this.rtlList.length;
-          this.rtlTotalPages = res.total_pages || 1;
-          this.rtlPage = res.page || p;
-        } else if (!isSilent) this.showToast((res && res.error) || 'Gagal memuat RTL', 'error');
-      } catch (e) {
-        if (!isSilent) this.showToast('Error koneksi RTL', 'error');
-      } finally { this.rtlLoading = false; }
-    },
-
-    async generateRtl() {
-      this.rtlGenerating = true;
-      try {
-        var res = await this.callServer('generate_tindak_lanjut', { sumber_evaluasi: this.rtlGenerateSumber, tahun: this.rtlGenerateTahun });
-        if (res && res.success) {
-          this.showToast('Generate RTL: ' + (res.data.generated || 0) + ' baru', 'success');
-          this.loadRtl(1);
-        } else this.showToast(res.error || 'Gagal generate RTL', 'error');
-      } catch (e) { this.showToast('Error generate RTL', 'error'); }
-      finally { this.rtlGenerating = false; }
     }
   }
 };

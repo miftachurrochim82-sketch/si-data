@@ -20,14 +20,13 @@ window.StarterKitState = {
       // ==================== DASHBOARD 4+4+4 ====================
       dashboardReady: false,
       dashboardData: {
-        summary: { totalUtama: 0, totalSelesai: 0, approvalMenunggu: 0, rtlTerbuka: 0 },
+        summary: { totalUtama: 0, totalSelesai: 0, approvalMenunggu: 0 },
         chartTren: { labels: [], counts: [] },
         chartJenis: { labels: [], counts: [] },
         chartKategori: { labels: [], counts: [] },
         chartLokasi: { labels: [], counts: [] },
         panelTerbaru: [],
         panelApproval: [],
-        panelRtl: [],
         panelTidakLengkap: [],
         // tahap 2 analitik lanjutan
         topPegawai: [],
@@ -98,36 +97,6 @@ window.StarterKitState = {
       evaTahun: th,
       evaData: {},
       evaGridLoaded: false,
-
-      // ==================== RTL ====================
-      rtlList: [],
-      rtlLoading: false,
-      rtlSaving: false,
-      rtlGenerating: false,
-      rtlGenerateSumber: 'semua',
-      rtlGenerateTahun: th,
-      rtlSearch: '',
-      rtlFilters: { status_rtl: '', sumber_evaluasi: '', tahun: '' },
-      rtlPage: 1,
-      rtlTotalPages: 1,
-      rtlTotalData: 0,
-      showRtlForm: false,
-      showRtlStatusForm: false,
-      rtlForm: { id: '', sumber_evaluasi: 'manual', judul_rtl: '', deskripsi: '', assigned_to: '', due_date: '', status_rtl: 'baru', progress_pct: 0, dokumen_terkait: '', catatan: '' },
-      rtlStatusTarget: {},
-      rtlStatusBaru: 'diproses',
-      rtlStatusProgress: 0,
-      rtlStatusCatatan: '',
-
-      // ==================== PETA (Tahap 3 Leaflet) ====================
-      petaLoading: false,
-      petaError: '',
-      petaTahun: th,
-      petaLevel: 'lokasi',
-      petaWarna: 'jumlah',
-      petaData: { wilayah: [], totalKegiatan: 0 },
-      petaMap: null,
-      petaGeoJsonLayer: null,
 
       // ==================== GLOBAL FILTER — Tahap 4 ====================
       filterGlobal: { tahun: th, bidangId: '', seksiId: '', keyword: '' },
@@ -227,15 +196,6 @@ window.StarterKitState = {
       var m=this.dashboardData.heatmap && this.dashboardData.heatmap.matrix || {};
       var s=0; for(var k in m) s+=m[k];
       return s;
-    },
-    petaMaxJumlah() {
-      var w=this.petaData && this.petaData.wilayah || [];
-      if(!w.length) return 1;
-      return Math.max.apply(null, w.map(function(x){ return x.jumlah||0; })) || 1;
-    },
-    petaSortedWilayah() {
-      var w=(this.petaData && this.petaData.wilayah || []).slice();
-      return w.sort(function(a,b){ return (b.jumlah||0)-(a.jumlah||0); });
     },
     // Tahap 4 — global filter
     globalFilterActiveCount() {

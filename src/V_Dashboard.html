@@ -1,6 +1,6 @@
 <!-- ============================================================
      STARTER-KIT - V_Dashboard.html (v2.14.0-tematik — ukuran sedang: 4+4+4)
-     4 kartu summary + 4 chart + 4 panel — SEMUA data dari server
+     3 kartu summary + 4 chart + 3 panel — SEMUA data dari server
      (get_dashboard_) — tidak ada grafik berbasis sample halaman.
      ============================================================ -->
 <section v-if="currentPage === 'dashboard'" class="space-y-6 animate-fade-in">
@@ -11,7 +11,7 @@
         <i class="fa-solid fa-gauge-high text-sky-600 dark:text-sky-400"></i> Dashboard
       </h2>
       <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-        4 kartu summary · 4 chart · 4 panel — dihitung server dari data penuh
+        3 kartu summary · 4 chart · 3 panel — dihitung server dari data penuh
       </p>
     </div>
     <button class="btn btn-ghost" @click="loadAll()" :disabled="utamaLoading || masterLoading">
@@ -19,12 +19,11 @@
     </button>
   </div>
 
-  <!-- 4 KARTU SUMMARY -->
+  <!-- 3 KARTU SUMMARY -->
   <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
     <app-stat-card title="Total Transaksi" :value="dashboardData.summary.totalUtama || 0" icon="fa-solid fa-database" color="sky" subtext="T_UTAMA"></app-stat-card>
     <app-stat-card title="Selesai" :value="dashboardData.summary.totalSelesai || 0" icon="fa-solid fa-check" color="emerald" subtext="status tuntas"></app-stat-card>
     <app-stat-card title="Menunggu Verifikasi" :value="dashboardData.summary.approvalMenunggu || 0" icon="fa-solid fa-hourglass-half" color="amber" subtext="T_APPROVAL"></app-stat-card>
-    <app-stat-card title="RTL Terbuka" :value="dashboardData.summary.rtlTerbuka || 0" icon="fa-solid fa-list-check" color="purple" subtext="baru + diproses"></app-stat-card>
   </div>
 
   <!-- 4 CHART — hanya render saat di dashboard & dashboardReady agar tidak error getContext saat di tab lain — matikan animasi untuk tablet -->
@@ -47,7 +46,7 @@
     </div>
   </div>
 
-  <!-- 4 PANEL -->
+  <!-- 3 PANEL -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
     <!-- Panel 1: Transaksi terbaru -->
@@ -104,37 +103,7 @@
       </div>
     </div>
 
-    <!-- Panel 3: RTL berjalan -->
-    <div class="card overflow-hidden !p-0">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <i class="fa-solid fa-list-check text-purple-500"></i>
-        <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm">RTL Berjalan</h3>
-      </div>
-      <div v-if="!dashboardData.panelRtl.length" class="px-4 py-6 text-xs text-slate-400 text-center">Tidak ada RTL terbuka.</div>
-      <div v-else class="table-scroll">
-        <table class="w-full text-xs">
-          <thead class="border-b bg-slate-50 dark:bg-slate-800/50">
-            <tr>
-              <th class="text-left py-2 px-3 min-w-[220px]">Judul</th>
-              <th class="text-left py-2 px-3 min-w-[80px]">Status</th>
-              <th class="text-right py-2 px-3 min-w-[110px]">Progress</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y">
-            <tr v-for="r in dashboardData.panelRtl" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer" @click="currentPage='rtl'">
-              <td class="py-2 px-3"><div class="font-semibold truncate max-w-[220px]">{{ r.judul }}</div><div class="text-[11px] text-slate-400">{{ r.sumber }}</div></td>
-              <td class="py-2 px-3"><app-badge size="sm" :status="badgeStatusRtl(r.status)" :label="r.status"></app-badge></td>
-              <td class="py-2 px-3 text-right">
-                <div class="progress-track mr-1"><div class="progress-fill" :style="{ width: (r.progress_pct || 0) + '%' }"></div></div>
-                <span class="text-[11px]">{{ r.progress_pct || 0 }}%</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Panel 4: Data tidak lengkap (E1) -->
+    <!-- Panel 3: Data tidak lengkap (E1) -->
     <div class="card overflow-hidden !p-0">
       <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
         <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>

@@ -4,16 +4,15 @@
 // Changelog:
 //   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             - Master 5: M_KATEGORI, M_JENIS, M_PERIODE, M_SATUAN, M_LOKASI
-//             - Tabel 5: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL, T_TINDAK_LANJUT
+//             - Tabel 4: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL
 //             - Piramida output (baseline, tidak kaku):
-//               LAPORAN 12 · ANALISA 8 · EVALUASI 6 · RTL 4 sumber = 30
+//               LAPORAN 12 · ANALISA 8 · EVALUASI 5
 //             - Dashboard "ukuran sedang" 4 kartu + 4 chart + 4 panel,
 //               SEMUA dihitung server-side (tidak ada lagi grafik dari
 //               sample halaman pertama — pelajaran audit si-dokumen).
 //             - initDatabase seed master awal (kategori/jenis/periode/
 //               satuan/lokasi) agar app baru langsung hidup.
 //             - Guard referensial: delete master yang masih dipakai DITOLAK.
-//   v2.10.1 — FIX P1 (RTL FSM) — tetap dipertahankan (RTL_TRANSISI_LEGAL_).
 // Entry HTTP + Dispatcher + Registry Handler (86 handler) + Setup + Handler.
 //
 // ⚠️ Setiap handler di sini WAJIB sinkron dengan actionLevels di 01
@@ -204,21 +203,6 @@ function buildLocalHandlers_() {
   h['evaluasi_kepatuhan_periode'] = function (d) { return evaluasiKepatuhanPeriode_(d || {}); };
   h['evaluasi_kualitas_data']      = function (d) { return evaluasiKualitasData_(d || {}); };
   h['evaluasi_lampiran']          = function (d) { return evaluasiLampiran_(d || {}); };
-  h['evaluasi_rtl_terbuka']       = function (d) { return evaluasiRtlTerbuka_(d || {}); };
-
-  // T_TINDAK_LANJUT / RTL — 12 handler (6 generic + 6 alias)
-  h['get_tindak_lanjut_list']    = function (d) { return getTindakLanjutList_(d || {}); };
-  h['rtl_get_list']              = function (d) { return getTindakLanjutList_(d || {}); };
-  h['get_tindak_lanjut_detail']  = function (d) { return getTindakLanjutDetail_(d || {}); };
-  h['rtl_get_detail']            = function (d) { return getTindakLanjutDetail_(d || {}); };
-  h['save_tindak_lanjut']        = function (d, u) { return saveTindakLanjut_(d || {}, u); };
-  h['rtl_save']                  = function (d, u) { return saveTindakLanjut_(d || {}, u); };
-  h['delete_tindak_lanjut']      = function (d, u) { return deleteTindakLanjut_(d || {}, u); };
-  h['rtl_delete']                = function (d, u) { return deleteTindakLanjut_(d || {}, u); };
-  h['ubah_status_tindak_lanjut'] = function (d, u) { return ubahStatusTindakLanjut_(d || {}, u); };
-  h['rtl_ubah_status']           = function (d, u) { return ubahStatusTindakLanjut_(d || {}, u); };
-  h['generate_tindak_lanjut']    = function (d, u) { return generateTindakLanjut_(d || {}, u); };
-  h['rtl_generate']              = function (d, u) { return generateTindakLanjut_(d || {}, u); };
 
   // Sistem
   h['init_database'] = function (d, u) { return initDatabase(u); };
@@ -243,7 +227,6 @@ function buildLocalHandlers_() {
   h['get_cross_tab_per_grup'] = function(d,u){ return {success:true, data:getCrossTabPerGrupTematik_(d||{})}; };
   h['get_cross_tab_tematik'] = function(d,u){ return {success:true, data:getCrossTabPerGrupTematik_(d||{})}; };
   h['get_perbandingan'] = function(d,u){ var r=getPerbandinganTematik_(d||{}); return r.error?{success:false, error:r.error}:{success:true, data:r}; };
-  h['get_peta_kegiatan'] = function(d,u){ return {success:true, data:getRowsUtama_(d||{})}; };
   h['get_target_evaluasi'] = function(d,u){ return {success:true, data:getTargetEvaluasi_(d||{})}; };
   h['get_target_list'] = function(d,u){ return {success:true, data:getSheetData_('M_TARGET')}; };
   h['upload_lampiran_tematik'] = function(d,u){ return uploadLampiranTematik_(d||{}, u); };
@@ -328,28 +311,23 @@ function namaPegawaiMap_() {
   return m;
 }
 
-// ==================== §4 DASHBOARD (4 kartu + 4 chart + 4 panel) ====================
+// ==================== §4 DASHBOARD (3 kartu + 4 chart + 3 panel) ====================
 // SEMUA dihitung di server dari data penuh — tidak memakai sample halaman.
 
 function getDashboard_(user) {
   try {
     var utama    = getSheetData_('T_UTAMA');
     var approval = getSheetData_('T_APPROVAL');
-    var rtl      = getSheetData_('T_TINDAK_LANJUT');
     var lampiran = getSheetData_('T_LAMPIRAN');
     var namaJenis   = namaMap_('M_JENIS', 'nama');
     var namaKategori = namaMap_('M_KATEGORI', 'nama');
     var namaLokasi  = namaMap_('M_LOKASI', 'nama');
     var namaPegawai = namaPegawaiMap_();
 
-    // ---------- 4 KARTU SUMMARY ----------
+    // ---------- 3 KARTU SUMMARY ----------
     var totalUtama = utama.length;
     var totalSelesai = utama.filter(function (r) { return String(r.status).toLowerCase() === 'selesai'; }).length;
     var approvalMenunggu = approval.filter(function (r) { return String(r.status).toLowerCase() === 'menunggu'; }).length;
-    var rtlTerbuka = rtl.filter(function (r) {
-      var s = String(r.status_rtl || r.status).toLowerCase();
-      return s === 'baru' || s === 'diproses';
-    }).length;
 
     // ---------- CHART 1: tren 12 bulan (dari tanggal T_UTAMA) ----------
     var now = new Date();
@@ -405,13 +383,6 @@ function getDashboard_(user) {
       return { id: r.id, urutan: r.urutan, utama_id: r.utama_id, kode: u.kode || '', judul: u.judul || '', dibuat: String(r.created_at || '').slice(0, 10) };
     });
 
-    var panelRtl = rtl.filter(function (r) {
-      var s = String(r.status_rtl || r.status).toLowerCase();
-      return s === 'baru' || s === 'diproses';
-    }).slice(0, 5).map(function (r) {
-      return { id: r.id, judul: r.judul_rtl, sumber: r.sumber_evaluasi, status: r.status_rtl || r.status, progress_pct: r.progress_pct || 0, due_date: r.due_date };
-    });
-
     var panelTidakLengkap = utama.filter(function (r) {
       return !String(r.judul || '').trim() || !r.jenis_id || !r.lokasi_id || !r.periode_id || !r.tanggal;
     }).slice(0, 5).map(function (r) {
@@ -427,22 +398,20 @@ function getDashboard_(user) {
     return {
       success: true,
       data: {
-        // 4 kartu
+        // 3 kartu
         summary: {
           totalUtama: totalUtama,
           totalSelesai: totalSelesai,
-          approvalMenunggu: approvalMenunggu,
-          rtlTerbuka: rtlTerbuka
+          approvalMenunggu: approvalMenunggu
         },
         // 4 chart
         chartTren: { labels: trendLabels, counts: trendKeys.map(function (k) { return trendCounts[k]; }) },
         chartJenis: chartJenis,
         chartKategori: chartKategori,
         chartLokasi: chartLokasi,
-        // 4 panel
+        // 3 panel
         panelTerbaru: panelTerbaru,
         panelApproval: panelApproval,
-        panelRtl: panelRtl,
         panelTidakLengkap: panelTidakLengkap,
         // meta
         role: (user && user.role) || 'viewer',
@@ -1219,7 +1188,7 @@ function analisaSlaApproval_(params) {
   } catch (err) { return { success: false, error: err.message }; }
 }
 
-// ==================== §11 EVALUASI (6) ====================
+// ==================== §11 EVALUASI (5) ====================
 
 // E1 — kelengkapan field wajib T_UTAMA
 var FIELD_WAJIB_UTAMA_ = [
@@ -1397,267 +1366,6 @@ function evaluasiLampiran_(params) {
       }
     };
   } catch (err) { return { success: false, error: err.message }; }
-}
-
-// E6 — RTL terbuka + lewat due date
-function evaluasiRtlTerbuka_(params) {
-  try {
-    var rtl = getSheetData_('T_TINDAK_LANJUT');
-    var today = CoreLib.dateKey10(new Date());
-    var terbuka = [], lewat = 0;
-    rtl.forEach(function (r) {
-      var s = String(r.status_rtl || r.status).toLowerCase();
-      if (s === 'baru' || s === 'diproses') {
-        var lewatIni = false;
-        if (r.due_date) {
-          var d = CoreLib.dateKey10(r.due_date);
-          if (d && d < today) { lewatIni = true; lewat++; }
-        }
-        terbuka.push({ id: r.id, judul: r.judul_rtl, sumber: r.sumber_evaluasi, status: r.status_rtl || r.status, due_date: r.due_date, lewat: lewatIni });
-      }
-    });
-    terbuka.sort(function (a, b) {
-      var da = CoreLib.dateKey10(a.due_date) || '9999';
-      var db = CoreLib.dateKey10(b.due_date) || '9999';
-      return da < db ? -1 : 1;
-    });
-    return {
-      success: true,
-      data: { terbuka: terbuka.length, lewat_deadline: lewat, rincian: terbuka.slice(0, 10) }
-    };
-  } catch (err) { return { success: false, error: err.message }; }
-}
-
-// ==================== §12 RTL / TINDAK LANJUT (puncak piramida) ====================
-// State machine — transisi legal antar status RTL (warisan v2.10.1 / si-dokumen)
-//   baru      → diproses | batal
-//   diproses  → selesai | batal
-//   selesai   → (final)
-//   batal     → baru (reaktivasi)
-var RTL_TRANSISI_LEGAL_ = {
-  'baru':     ['diproses', 'batal'],
-  'diproses': ['selesai', 'batal'],
-  'selesai':  [],
-  'batal':    ['baru']
-};
-
-function getTindakLanjutList_(params) {
-  try {
-    var list = getSheetData_('T_TINDAK_LANJUT');
-    if (params.status_rtl) list = list.filter(function (r) { return CoreLib.normStr(r.status_rtl || r.status) === CoreLib.normStr(params.status_rtl); });
-    if (params.sumber_evaluasi) list = list.filter(function (r) { return CoreLib.normStr(r.sumber_evaluasi) === CoreLib.normStr(params.sumber_evaluasi); });
-    if (params.tahun) {
-      var th = String(params.tahun);
-      list = list.filter(function (r) {
-        var d = CoreLib.dateKey10(r.due_date) || '';
-        return d.indexOf(th) === 0 || String(r.created_at).indexOf(th) === 0;
-      });
-    }
-    if (params.search) {
-      var q = CoreLib.normStr(params.search);
-      list = list.filter(function (r) { return CoreLib.matchSearch(r, q, ['judul_rtl', 'deskripsi', 'assigned_to', 'catatan']); });
-    }
-    list = list.slice().sort(function (a, b) {
-      var da = CoreLib.dateKey10(a.due_date) || '';
-      var db = CoreLib.dateKey10(b.due_date) || '';
-      return da < db ? -1 : (da > db ? 1 : 0);
-    });
-    var page = Number(params.page) || 1;
-    var perPage = Number(params.per_page) || 20;
-    var total = list.length;
-    var totalPages = Math.max(1, Math.ceil(total / perPage));
-    var start = (page - 1) * perPage;
-    return {
-      success: true,
-      data: list.slice(start, start + perPage).map(function (r) { return Object.assign({}, r); }),
-      total: total,
-      total_pages: totalPages,
-      page: page,
-      per_page: perPage
-    };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-}
-
-function getTindakLanjutDetail_(params) {
-  try {
-    if (!params || !params.id) return { success: false, code: 'BAD_REQUEST', error: 'ID wajib.' };
-    var row = findRecordById_('T_TINDAK_LANJUT', params.id);
-    if (!row) return { success: false, code: 'NOT_FOUND', error: 'Tidak ditemukan.' };
-    return { success: true, data: row };
-  } catch (err) { return { success: false, error: err.message }; }
-}
-
-function saveTindakLanjut_(data, user) {
-  try {
-    var record = data.record || data;
-    if (!String(record.judul_rtl || record.judul || '').trim()) return { success: false, code: 'BAD_REQUEST', error: 'Judul RTL wajib.' };
-    if (record.judul && !record.judul_rtl) record.judul_rtl = record.judul;
-    if (record.judul_rtl && !record.judul) record.judul = record.judul_rtl;
-
-    var isUpdate = !!record.id;
-    if (isUpdate) {
-      var old = findRecordById_('T_TINDAK_LANJUT', record.id);
-      if (!old) return { success: false, code: 'NOT_FOUND', error: 'RTL tidak ditemukan.' };
-      // (P1) blokir ubah status_rtl via save — harus via ubah_status (FSM)
-      if (record.status_rtl && String(record.status_rtl).toLowerCase() !== String(old.status_rtl || 'baru').toLowerCase()) {
-        return { success: false, code: 'BAD_REQUEST', error: 'Ubah status_rtl via save_tindak_lanjut tidak diizinkan. Gunakan ubah_status_tindak_lanjut.' };
-      }
-      // (P1) blokir ubah judul (idempotensi generate)
-      if (String(record.judul_rtl).trim() !== String(old.judul_rtl || '').trim()) {
-        return { success: false, code: 'BAD_REQUEST', error: 'Judul RTL tidak boleh diubah setelah dibuat (idempotensi generate).' };
-      }
-      record.status_rtl = old.status_rtl || 'baru';
-    } else {
-      if (!record.sumber_evaluasi) record.sumber_evaluasi = 'manual';
-      if (!record.status_rtl) record.status_rtl = 'baru';
-      var existing = getSheetData_('T_TINDAK_LANJUT');
-      var tahunBaru = record.due_date ? String(record.due_date).slice(0, 4) : String(new Date().getFullYear());
-      var dup = existing.find(function (r) {
-        var t = r.due_date ? String(r.due_date).slice(0, 4) : '';
-        return String(r.judul_rtl).toLowerCase() === String(record.judul_rtl).toLowerCase() && t === tahunBaru;
-      });
-      if (dup) return { success: false, code: 'BAD_REQUEST', error: 'RTL dengan judul + tahun ini sudah ada.' };
-    }
-
-    // (P1) validasi progress_pct 0..100
-    if (record.progress_pct === undefined || record.progress_pct === '') {
-      record.progress_pct = 0;
-    } else {
-      var p = Number(record.progress_pct);
-      if (isNaN(p) || p < 0 || p > 100) return { success: false, code: 'BAD_REQUEST', error: 'progress_pct harus 0..100.' };
-      record.progress_pct = p;
-    }
-
-    if (record.due_date) record.due_date = CoreLib.dateKey10(record.due_date) || record.due_date;
-
-    var saved = saveRecord_('T_TINDAK_LANJUT', record, user);
-    return { success: true, data: saved };
-  } catch (err) { return { success: false, code: 'BAD_REQUEST', error: err.message }; }
-}
-
-function deleteTindakLanjut_(data, user) {
-  try {
-    if (!data || !data.id) return { success: false, code: 'BAD_REQUEST', error: 'ID tidak valid.' };
-    var ok = softDeleteRecord_('T_TINDAK_LANJUT', data.id, user);
-    return { success: ok, message: ok ? 'RTL dihapus.' : 'Tidak ditemukan.' };
-  } catch (err) { return { success: false, code: 'BAD_REQUEST', error: err.message }; }
-}
-
-function ubahStatusTindakLanjut_(data, user) {
-  try {
-    var id = data.id;
-    var statusBaru = String(data.status_rtl || data.status || '').toLowerCase().trim();
-    if (!id) return { success: false, code: 'BAD_REQUEST', error: 'ID wajib.' };
-    if (['baru', 'diproses', 'selesai', 'batal'].indexOf(statusBaru) === -1) {
-      return { success: false, code: 'BAD_REQUEST', error: 'Status harus baru/diproses/selesai/batal.' };
-    }
-    var row = findRecordById_('T_TINDAK_LANJUT', id);
-    if (!row) return { success: false, code: 'NOT_FOUND', error: 'Tidak ditemukan.' };
-
-    // (P1) state machine — blokir transisi ilegal
-    var oldStatus = String(row.status_rtl || 'baru').toLowerCase().trim();
-    if (oldStatus !== statusBaru) {
-      var legal = RTL_TRANSISI_LEGAL_[oldStatus] || [];
-      if (legal.indexOf(statusBaru) === -1) {
-        return { success: false, code: 'BAD_REQUEST', error: 'Transisi tidak legal: ' + oldStatus + ' → ' + statusBaru + '. Legal: ' + (legal.join(', ') || '(tidak ada)') };
-      }
-    }
-
-    row.status_rtl = statusBaru;
-
-    // (P1) auto progress — selesai=100, batal=0
-    if (data.progress_pct !== undefined && data.progress_pct !== '') {
-      var p = Number(data.progress_pct);
-      if (isNaN(p) || p < 0 || p > 100) return { success: false, code: 'BAD_REQUEST', error: 'progress_pct harus 0..100.' };
-      row.progress_pct = p;
-    } else if (statusBaru === 'selesai') {
-      row.progress_pct = 100;
-    } else if (statusBaru === 'batal') {
-      row.progress_pct = 0;
-    }
-
-    if (data.catatan !== undefined) row.catatan = data.catatan;
-    var saved = saveRecord_('T_TINDAK_LANJUT', row, user);
-    return { success: true, data: saved };
-  } catch (err) { return { success: false, code: 'BAD_REQUEST', error: err.message }; }
-}
-
-// Generate R1-R4 dari evaluasi (v2.11): R1 kelengkapan (E1), R2 SLA (E2),
-// R3 kepatuhan periode (E3), R4 manual. Idempoten (judul+tahun unik).
-function generateTindakLanjut_(data, user) {
-  try {
-    var sumber = String(data.sumber_evaluasi || 'semua').toLowerCase();
-    var tahun = String(data.tahun || new Date().getFullYear());
-    var toGenerate = [];
-
-    if (sumber === 'semua' || sumber === 'e1') {
-      var e1 = evaluasiKelengkapan_({ tahun: tahun });
-      if (e1.success && e1.data.tidak_lengkap > 0) {
-        toGenerate.push({
-          sumber: 'E1',
-          judul: 'R1 Kelengkapan — ' + e1.data.tidak_lengkap + ' data tidak lengkap ' + tahun,
-          deskripsi: e1.data.tidak_lengkap + ' T_UTAMA dengan field wajib kurang (lihat E1).',
-          count: e1.data.tidak_lengkap
-        });
-      }
-    }
-    if (sumber === 'semua' || sumber === 'e2') {
-      var e2 = evaluasiSlaVerifikasi_({});
-      if (e2.success && (e2.data.menunggu > 0 || e2.data.terlambat > 0)) {
-        toGenerate.push({
-          sumber: 'E2',
-          judul: 'R2 SLA Verifikasi — ' + e2.data.menunggu + ' menanti (' + e2.data.terlambat + ' terlambat) ' + tahun,
-          deskripsi: e2.data.menunggu + ' approval menunggu, ' + e2.data.terlambat + ' melebihi SLA ' + e2.data.sla_hari + ' hari.',
-          count: e2.data.menunggu
-        });
-      }
-    }
-    if (sumber === 'semua' || sumber === 'e3') {
-      var e3 = evaluasiKepatuhanPeriode_({ tahun: tahun });
-      if (e3.success && e3.data.tidak_patuh > 0) {
-        toGenerate.push({
-          sumber: 'E3',
-          judul: 'R3 Kepatuhan Periode — ' + e3.data.tidak_patuh + ' jenis periodik tanpa data ' + tahun,
-          deskripsi: e3.data.tidak_patuh + ' dari ' + e3.data.jenis_periodik + ' jenis periodik tidak punya data ' + tahun + ' (lihat E3).',
-          count: e3.data.tidak_patuh
-        });
-      }
-    }
-    if (sumber === 'manual' || (sumber === 'semua' && !toGenerate.length)) {
-      toGenerate.push({
-        sumber: 'manual',
-        judul: 'R4 Manual — Review ' + tahun,
-        deskripsi: 'Rencana tindak lanjut manual untuk tahun ' + tahun,
-        count: 1
-      });
-    }
-
-    var existing = getSheetData_('T_TINDAK_LANJUT');
-    var created = [];
-    toGenerate.forEach(function (g) {
-      var dup = existing.find(function (r) { return String(r.judul_rtl).toLowerCase() === g.judul.toLowerCase(); });
-      if (dup) return;
-      var rec = {
-        sumber_evaluasi: g.sumber,
-        judul_rtl: g.judul,
-        deskripsi: g.deskripsi,
-        status_rtl: 'baru',
-        progress_pct: 0,
-        due_date: tahun + '-12-31',
-        assigned_to: '',
-        catatan: 'Auto-generate dari ' + g.sumber
-      };
-      try {
-        var saved = saveRecord_('T_TINDAK_LANJUT', rec, user);
-        created.push(saved);
-        existing.push(saved);
-      } catch (e) { Logger.log('[generate RTL] ' + e.message); }
-    });
-
-    return { success: true, data: { generated: created.length, items: created, tahun: tahun, sumber: sumber } };
-  } catch (err) { return { success: false, code: 'BAD_REQUEST', error: err.message }; }
 }
 
 // ==================== §13 UTIL TANGGAL ====================

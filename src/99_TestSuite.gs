@@ -5,7 +5,7 @@
 // 1) runLibraryTests → CoreLib.runCoreTests
 // 2) testAdopsiG18d → util publik CoreLib
 // 3) testDispatcherRouting → registry 86 handler + fail-closed
-// 4) runDomainTestsStarterKit → master 5 + T_UTAMA + RTL + hook +
+// 4) runDomainTestsStarterKit → master 5 + T_UTAMA + hook +
 //    schema 10 sheet + smoke piramida (12L/8A/6E) + dashboard
 //
 // v2.14.0-tematik: testDomainReferensi → testDomainMasters (guard hierarki,
@@ -100,7 +100,6 @@ function runDomainTestsStarterKit() {
   var results = [];
   results = results.concat(testDomainMasters());
   results = results.concat(testDomainUtama());
-  results = results.concat(testDomainRtl());
   results = results.concat(testSimpegReadOnly());
   results = results.concat(testLocalPreSaveHook());
   results = results.concat(testInitDatabaseSchema());
@@ -221,38 +220,6 @@ function testDomainUtama() {
   return results;
 }
 
-// ---------- RTL ----------
-function testDomainRtl() {
-  Logger.log(''); Logger.log('--- T_TINDAK_LANJUT / RTL (FSM + R1-R4) ---');
-  var results = [];
-  var savedId = '';
-  try {
-    var r1 = saveTindakLanjut_({ judul_rtl: 'Test RTL ' + Date.now(), sumber_evaluasi: 'manual', status_rtl: 'baru', progress_pct: 0, due_date: CoreLib.todayIsoLocal() }, TEST_USER_USER_);
-    _assert_(results, 'RTL.1 save valid', r1.success && r1.data && r1.data.id, r1.error || '');
-    savedId = (r1.success && r1.data) ? r1.data.id : '';
-  } catch (e) { _assert_(results, 'RTL.1', false, e.message); }
-  try {
-    var r2 = getTindakLanjutList_({ page: 1, per_page: 5 });
-    _assert_(results, 'RTL.2 get list success + pagination', r2.success && Array.isArray(r2.data), r2.error || '');
-  } catch (e) { _assert_(results, 'RTL.2', false, e.message); }
-  if (savedId) {
-    try {
-      var r3 = ubahStatusTindakLanjut_({ id: savedId, status_rtl: 'selesai' }, TEST_USER_USER_);
-      _assert_(results, 'RTL.3 transisi ilegal baru→selesai DITOLAK', !r3.success && r3.code === 'BAD_REQUEST', r3.error || '');
-    } catch (e) { _assert_(results, 'RTL.3', false, e.message); }
-    try {
-      var r4 = ubahStatusTindakLanjut_({ id: savedId, status_rtl: 'diproses', progress_pct: 50 }, TEST_USER_USER_);
-      _assert_(results, 'RTL.4 ubah status baru→diproses', r4.success && r4.data && String(r4.data.status_rtl) === 'diproses', r4.error || '');
-    } catch (e) { _assert_(results, 'RTL.4', false, e.message); }
-    try {
-      var r5 = generateTindakLanjut_({ sumber_evaluasi: 'semua', tahun: String(new Date().getFullYear()) }, TEST_USER_USER_);
-      _assert_(results, 'RTL.5 generate R1-R4 (idempoten)', r5.success, r5.error || '');
-    } catch (e) { _assert_(results, 'RTL.5', false, e.message); }
-    try { softDeleteRecord_('T_TINDAK_LANJUT', savedId, TEST_USER_USER_); } catch (e) {}
-  }
-  return results;
-}
-
 // ---------- SIMPEG READ-ONLY ----------
 function testSimpegReadOnly() {
   Logger.log(''); Logger.log('--- SIMPEG READ-ONLY ---');
@@ -271,30 +238,29 @@ function testLocalPreSaveHook() {
   Logger.log(''); Logger.log('--- PRE-SAVE HOOK P1+P2 ---');
   var results = [];
   try { var r1 = localPreSaveHook_('M_JENIS', {}, TEST_USER_USER_); _assert_(results, 'P1.1 jen- prefix', r1 && r1.record && /^jen\-/.test(r1.record.id), ''); } catch (e) { _assert_(results, 'P1.1', false, e.message); }
-  try { var r2 = localPreSaveHook_('T_TINDAK_LANJUT', {}, TEST_USER_USER_); _assert_(results, 'P1.2 rtl- prefix', r2 && r2.record && /^rtl\-/.test(r2.record.id), ''); } catch (e) { _assert_(results, 'P1.2', false, e.message); }
   try { var r3 = localPreSaveHook_('M_PERIODE', {}, TEST_USER_USER_); _assert_(results, 'P1.3 per- prefix', r3 && r3.record && /^per\-/.test(r3.record.id), ''); } catch (e) { _assert_(results, 'P1.3', false, e.message); }
   try { var r4 = localPreSaveHook_('T_APPROVAL', { id: 'apr-test-' + Date.now() }, TEST_USER_USER_); _assert_(results, 'P2.1 non-verifikator → menunggu', r4 && r4.record && r4.record.status === 'menunggu', ''); } catch (e) { _assert_(results, 'P2.1', false, e.message); }
   return results;
 }
 
-// ---------- SKEMA 10 SHEET ----------
+// ---------- SKEMA SHEET BISNIS ----------
 function testInitDatabaseSchema() {
-  Logger.log(''); Logger.log('--- SKEMA 10 SHEET (5M+5T) ---');
+  Logger.log(''); Logger.log('--- SKEMA SHEET BISNIS ---');
   var results = [];
   try {
     var ss = CoreLib.getDb(SPREADSHEET_ID);
     var sheetsBisnis = Object.keys(LOCAL_SHEETS).map(function (k) { return LOCAL_SHEETS[k]; });
     var missing = sheetsBisnis.filter(function (name) { return !ss.getSheetByName(name); });
-    _assert_(results, 'SCHEMA.1 10 sheet bisnis terbuat (' + sheetsBisnis.length + ')', missing.length === 0, missing.length ? 'MISSING: ' + missing.join(', ') : '');
+    _assert_(results, 'SCHEMA.1 semua sheet bisnis terbuat (' + sheetsBisnis.length + ')', missing.length === 0, missing.length ? 'MISSING: ' + missing.join(', ') : '');
     var shTest = ss.getSheetByName('ZZ_TEST_CRUD');
     _assert_(results, 'SCHEMA.2 ZZ_TEST_CRUD ada', !!shTest, '');
   } catch (e) { _assert_(results, 'SCHEMA', false, e.message); }
   return results;
 }
 
-// ---------- SMOKE PIRAMIDA (12L + 8A + 6E) ----------
+// ---------- SMOKE PIRAMIDA (12L + 8A + 5E) ----------
 function testSmokePiramida() {
-  Logger.log(''); Logger.log('--- SMOKE PIRAMIDA 12L + 8A + 6E ---');
+  Logger.log(''); Logger.log('--- SMOKE PIRAMIDA 12L + 8A + 5E ---');
   var results = [];
   var tahun = String(new Date().getFullYear());
   var lap = [
@@ -307,7 +273,7 @@ function testSmokePiramida() {
   ];
   var eva = [
     'evaluasi_kelengkapan', 'evaluasi_sla_verifikasi', 'evaluasi_kepatuhan_periode',
-    'evaluasi_kualitas_data', 'evaluasi_lampiran', 'evaluasi_rtl_terbuka'
+    'evaluasi_kualitas_data', 'evaluasi_lampiran'
   ];
   var okLap = 0, okAna = 0, okEva = 0;
   // Piramida smoke: coba via dispatcher, fallback ke handler langsung bila fail-closed (tanpa session)
@@ -341,20 +307,18 @@ function testDashboard444() {
   try {
     var r = getDashboard_(TEST_USER_ADMIN_);
     var d = (r && r.success) ? r.data : null;
-    _assert_(results, 'DASH.1 4 kartu summary', !!d && !!d.summary
+    _assert_(results, 'DASH.1 3 kartu summary', !!d && !!d.summary
       && typeof d.summary.totalUtama === 'number'
       && typeof d.summary.totalSelesai === 'number'
-      && typeof d.summary.approvalMenunggu === 'number'
-      && typeof d.summary.rtlTerbuka === 'number', (r && r.error) || '');
+      && typeof d.summary.approvalMenunggu === 'number', (r && r.error) || '');
     _assert_(results, 'DASH.2 4 chart (12 titik tren)', !!d
       && d.chartTren && d.chartTren.labels.length === 12 && d.chartTren.counts.length === 12
       && d.chartJenis && Array.isArray(d.chartJenis.labels)
       && d.chartKategori && Array.isArray(d.chartKategori.labels)
       && d.chartLokasi && Array.isArray(d.chartLokasi.labels), '');
-    _assert_(results, 'DASH.3 4 panel (≤5 baris)', !!d
+    _assert_(results, 'DASH.3 3 panel (≤5 baris)', !!d
       && Array.isArray(d.panelTerbaru) && d.panelTerbaru.length <= 5
       && Array.isArray(d.panelApproval) && d.panelApproval.length <= 5
-      && Array.isArray(d.panelRtl) && d.panelRtl.length <= 5
       && Array.isArray(d.panelTidakLengkap) && d.panelTidakLengkap.length <= 5, '');
   } catch (e) { _assert_(results, 'DASH', false, e.message); }
   return results;
