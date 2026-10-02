@@ -1,4 +1,4 @@
-name: CI — Contract Check (pin 17 + CDN v2.9.0)
+name: CI — Contract Check (CoreLib pin 17 + CDN v3.0.1)
 
 on:
   push:
@@ -28,12 +28,22 @@ jobs:
           print('✅ pin 17 OK')
           "
 
-      - name: Check CDN @v2.9.0 (1 CSS + 9 JS)
+      - name: Check CDN @v3.0.1 (1 CSS + 1 JS)
         run: |
-          grep -q "frontend-cdn@v2.9.0" src/Index.html || (echo "❌ CDN bukan @v2.9.0" && exit 1)
-          grep -q "app-layout.min.js" src/Index.html || (echo "❌ app-layout.min.js tidak ditemukan (10 file)" && exit 1)
-          grep -q "app-workflow.min.js" src/Index.html || (echo "❌ app-workflow.min.js tidak ditemukan" && exit 1)
-          echo "✅ CDN @v2.9.0 1 CSS+9 JS OK"
+          PIN="v3.0.1"
+          grep -q "frontend-cdn@$PIN/frontend/app.min.css" src/Index.html \
+            || (echo "❌ app.min.css tidak di-pin ke $PIN" && exit 1)
+          grep -q "frontend-cdn@$PIN/frontend/app.min.js" src/Index.html \
+            || (echo "❌ app.min.js tidak di-pin ke $PIN" && exit 1)
+          # tidak boleh ada sisa berkas CDN lama (v3.0.0 menghapus 8 modul)
+          if grep -qE "frontend/app-(core|components|modules|layout|ui|forms|data|charts|workflow|common)\.min\." src/Index.html; then
+            echo "❌ masih memuat berkas CDN lama — v3 hanya app.min.css + app.min.js"
+            exit 1
+          fi
+          # semua pin harus seragam
+          PINS=$(grep -oE "frontend-cdn@v[0-9.]+" src/Index.html | sort -u | wc -l)
+          [ "$PINS" = "1" ] || (echo "❌ pin CDN campur aduk" && exit 1)
+          echo "✅ CDN $PIN — 1 CSS + 1 JS OK"
 
       - name: Check AppCore scope helper
         run: |

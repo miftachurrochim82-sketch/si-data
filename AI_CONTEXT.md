@@ -1,7 +1,7 @@
 # 🤖 AI_CONTEXT.md — Surat Pengantar Ekosistem (untuk AI coder / developer baru)
 
 > Baca file ini **DULU** sebelum menyentuh apa pun di folder ini.
-> Versi konteks: 2026-09-23 (starter-kit v2.12.0 — CDN v2.9.1 + CoreLib v2.4.0 A+B — 5 master + 5 tabel + piramida 12/8/6/4 + dashboard 4+4+4 + UIUX v2) • Pemelihara: Tim TI Diskominfo Kab. Trenggalek
+> Versi konteks: 2026-09-23 (starter-kit v2.12.0 — CDN v3.0.1 + CoreLib v2.4.0 A+B — 5 master + 5 tabel + piramida 12/8/6/4 + dashboard 4+4+4 + UIUX v2) • Pemelihara: Tim TI Diskominfo Kab. Trenggalek
 
 ---
 
@@ -38,7 +38,7 @@
 | Pilar | Bentuk | Versi pin | Peran |
 |---|---|---|---|
 | **CoreLib** | GAS Library ID `1GmeYflfMpRa1iTVgFHRD6K1DMoxc9OoKqpuucPJXgNZ9XBK06O7wgDkO` | **17** (v2.4.0 LIVE PASS 47) | Mesin sheet/CRUD/cache/sesi/SSO + dispatcher + WIB utils |
-| **frontend-cdn** | jsDelivr `@v2.9.1` (internal `2.9.0`) | **v2.9.1** eksplisit | 10 file (1 CSS + 9 JS) & 31 opsi + desain; `frontend/app-tailwind.min.css` = contoh CSS ter-compile |
+| **frontend-cdn** | jsDelivr `@v3.0.1` (internal `3.0.1`) | **v3.0.1** eksplisit | 2 berkas (`app.min.css` + `app.min.js`) & 11 komponen. Tailwind ter-compile kini di-inline aplikasi; `app-tailwind.min.css` dihapus di v3.0.0 |
 | **si-platform** | GAS web app SSO IdP | URL di 01_Config | Login/user/role/permission/audit/notifikasi/file |
 | **SIMPEG** | Spreadsheet master RO | — | 3 sheet PEGAWAI/JABATAN/UNIT_KERJA — CoreLib auto route |
 
@@ -87,7 +87,9 @@
   - `testDispatcherRouting()` → 6/0 (registry 86 handler + fail-closed)
   - `runDomainTestsStarterKit()` → ~35/0 (guard 5 master + T_UTAMA relasi + RTL FSM + hook P1/P2 + skema 10 sheet + **smoke piramida 12L/8A/6E** + **dashboard 4+4+4**)
 - Diagnostik: `runAllDiagnostics()` + `testKoneksiKePortalSso()`
-- Kontrak: `python3 frontend-cdn/tools/contract_check.py`
+- Kontrak: CI repo ini (`.github/workflows/ci.yml`) — cek pin CoreLib 17 + pin CDN v3.0.1.
+  (`contract_check.py` dihapus di frontend-cdn v3.0.0: skrip itu membuat repo pustaka
+  mengenal konsumennya dan menjaga 7 aplikasi yang 5 di antaranya sudah mati.)
 - UIUX: cek manual vs 12 aturan §3.13
 
 ---

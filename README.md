@@ -1,10 +1,10 @@
 # 🗂️ SI-DATA — Satu Data Satpol PP & Damkar Kab. Trenggalek
 
-Aplikasi **Satu Data** — admin Satu Data Satpol PP & Damkar Kab. Trenggalek. Dibuat dari **starter-kit v2.12.0** (pin 17 @v2.9.1).
+Aplikasi **Satu Data** — admin Satu Data Satpol PP & Damkar Kab. Trenggalek. Dibuat dari **starter-kit v2.12.0** (pin 17 @v3.0.1).
 
 > **Versi template**: **2.12.0** (2026-09-23) — redesign skema (keputusan user) + UIUX v2 (standar hasil audit si-dokumen).
 > **CoreLib**: pin **17** (v2.4.0 LIVE PASS 47) — util sadar-WIB + paginasi + pencarian + whitelist + C4-C8.
-> **CDN**: **`@v2.9.1`** — 10 FILE (1 CSS + 9 JS) & 31 OPSI (2026-09-22) — internal `"2.9.1"` — CoreLib v2.4.0 LIVE **pin 17** PASS 47. **Vue**: `3.5.42`.
+> **CDN**: **`@v3.0.1`** — 2 BERKAS (1 CSS + 1 JS) & 11 KOMPONEN (2026-09-22) — internal `"2.9.1"` — CoreLib v2.4.0 LIVE **pin 17** PASS 47. **Vue**: `3.5.42`.
 > **Skema (BASELINE — FLEKSIBEL, tidak wajib)**: **5 master = 5 dimensi laporan** + **5 tabel inti = 10 sheet**. App bisnis bebas menambah/mengurangi sheet & handler sesuai keunikan domainnya.
 > **Handler**: **86** (config 6 + self 2 + dash 2 + simpeg 4 + master 15 + utama 4 + item 4 + lampiran 3 + approval 4 + RTL 12 + **laporan 12 + analisa 8 + evaluasi 6** + generic 2 + publik 2 + sistem 1 = 86; +2 native CoreLib = 88 aksi)
 > **Piramida output (REFERENSI — tidak kaku)**: **Laporan 12 · Analisa 8 · Evaluasi 6 · RTL 4 sumber = 30**.
@@ -47,7 +47,7 @@ Aplikasi **Satu Data** — admin Satu Data Satpol PP & Damkar Kab. Trenggalek. D
 | Dispatcher + fail-closed | **CoreLib.dispatchAction** | `handleAction(payload)` di `02_AppLogic.gs` |
 | Util tanggal sadar-WIB | **CoreLib** (v2.3.0) | `todayIsoLocal()`, `dateKey10()` — JANGAN `todayIso()` (UTC) |
 | Audit HTTP ke SI-PLATFORM | `00_Utils.gs` → `audit_()` | wrapper — panggil `audit_(actor, action, type, id, ok, msg)` |
-| UI (sidebar, header, tabel, modal, filter, chart, badge, dll.) | **CDN kit v2.9.1 (10 file (1 CSS + 9 JS) & 31 opsi)** | 15+ komponen `app-*` — auto registrasi |
+| UI (login, sidebar, header, badge, stat-card, modal, skeleton, empty-state, chart, theme-picker) | **CDN kit v3.0.1 (2 berkas (1 CSS + 1 JS) & 11 komponen)** | 11 komponen `app-*` — auto registrasi |
 | RTL / Tindak Lanjut (puncak piramida) | **Generik R1-R4** | T_TINDAK_LANJUT + 12 handler + FSM + generate dari E1/E2/E3 + manual |
 | User/role/permission/notifikasi/file | **si-platform** | tidak perlu sheet lokal |
 
@@ -66,7 +66,7 @@ src/
 ├── 99_TestSuite.gs             # Test suite (library + adopsi + routing 86 + domain + smoke piramida + dashboard 4+4+4)
 │
 │  Frontend (10):
-├── Index.html                  # Shell tipis CDN @v2.9.1 (10 file — 1 CSS + 9 JS & 31 opsi) + CSS Tailwind TER-COMPILE (bukan Play CDN) + tema dinamis <?!= getThemeCss() ?> (6 preset) + <app-theme-picker> + scope Saya/Semua (9 view incl. Pengaturan)
+├── Index.html                  # Shell tipis CDN @v3.0.1 (2 berkas — 1 CSS + 1 JS & 11 komponen) + CSS Tailwind TER-COMPILE (bukan Play CDN) + tema dinamis <?!= getThemeCss() ?> (6 preset) + <app-theme-picker> + scope Saya/Semua (9 view incl. Pengaturan)
 ├── V_Dashboard.html            # Dashboard ukuran sedang: 4 kartu + 4 chart + 4 panel (server-side)
 ├── V_Utama.html                # Transaksi CRUD — 5 filter + tahun select + paginasi server-side + nama bukan ID
 ├── V_Laporan.html              # 12 tab laporan (L1-L12) — nama, bukan ID
@@ -121,7 +121,7 @@ src/
 
 10. Logika bisnis di `02_AppLogic.gs`: pola `buildLocalHandlers_()` — 86 handler sudah (termasuk piramida 12L/8A/6E/4R), tambah domain baru tinggal tambah di `actionLevels` (01) + handler di 02 (WAJIB sinkron — fail-closed).
 11. Tampilan pakai komponen kit + **UIUX v2**: CSS ter-compile (bukan Play CDN), nama bukan ID, tahun = select, tombol di-gate `v-can`, `min-w-[...]` di th, wrapper `table-scroll`, badge via `app-badge :status` valid, KPI via `app-stat-card`, pagination `btn-icon`, filter label `.filter-label`, modal `v-if` + `@close`, form tanpa field yang dikunci backend.
-12. Contract-check: `python3 frontend-cdn/tools/contract_check.py` — exit 0 aman.
+12. Contract-check: CI repo ini (`.github/workflows/ci.yml`) — pin CoreLib 17 + pin CDN v3.0.1 seragam.
 13. Stabil → minta Track D + repo GitHub baru.
 
 > Untuk AI coder: baca `AI_CONTEXT.md` dulu.
@@ -146,12 +146,12 @@ Satu pintu: `runAllTestsStarterKit()`.
 
 ---
 
-## 📏 Aturan wajib (kontrak ekosistem) — v2.12.0 = CDN v2.9.1 + CoreLib v2.4.0 A+B
+## 📏 Aturan wajib (kontrak ekosistem) — v2.12.0 = CDN v3.0.1 + CoreLib v2.4.0 A+B
 
 1. CoreLib first — cek katalog sebelum util baru.
 2. Tolerant reader SIMPEG.
 3. Tag kit berpasangan `<app-x></app-x>`, jangan `/>`.
-4. Pin CDN eksplisit `@v2.9.1` (10 file: 1 CSS + 9 JS) + CoreLib pin **17**.
+4. Pin CDN eksplisit `@v3.0.1` (2 berkas: 1 CSS + 1 JS) + CoreLib pin **17**.
 5. Contract-check sebelum salin.
 6. Tanggal: `CoreLib.todayIsoLocal()` / `dateKey10()` (WIB), jangan `todayIso()`.
 7. Setiap handler baru → daftarkan di `actionLevels` (01) — fail-closed.
@@ -245,7 +245,7 @@ si-NAMA-APP/
 - **J_Actions**: tambah simpanRtl/hapusRtl/openRtlEdit/openRtlStatus/ubahStatusRtl
 - **J_App**: menu 5 item (dashboard, rtl, laporan, utama, master) + brand v2.10.0
 - **Index.html**: tema #0369a1 locked + include V_Rtl + V_Utama + V_Master + V_Laporan + filter-bar-analytics + progress-track CSS (kandidat CDN C1-C3 lokal)
-- **CDN**: @v2.9.1 (10 file — 1 CSS + 9 JS & 31 opsi, 20 .min sinkron) + 6 preset tema dinamis + AppCore.getMyScope() — sesuai persetujuan user 2026-09-23
+- **CDN**: @v3.0.1 (2 berkas — 1 CSS + 1 JS & 11 komponen, 20 .min sinkron) + 6 preset tema dinamis + AppCore.getMyScope() — sesuai persetujuan user 2026-09-23
 
 ---
 
