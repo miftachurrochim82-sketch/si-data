@@ -4,9 +4,9 @@
 // Changelog:
 //   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             - Master 5: M_KATEGORI, M_JENIS, M_PERIODE, M_SATUAN, M_LOKASI
-//             - Tabel 4: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL
+//             - Tabel 3: T_UTAMA, T_ITEM, T_LAMPIRAN
 //             - Piramida output (baseline, tidak kaku):
-//               LAPORAN 12 · ANALISA 8 · EVALUASI 5
+//               LAPORAN 11 · ANALISA 7 · EVALUASI 4
 //             - Dashboard "ukuran sedang" 4 kartu + 4 chart + 4 panel,
 //               SEMUA dihitung server-side (tidak ada lagi grafik dari
 //               sample halaman pertama — pelajaran audit si-dokumen).
@@ -167,11 +167,6 @@ function buildLocalHandlers_() {
   h['save_lampiran']     = function (d, u) { return saveGeneric_('T_LAMPIRAN', d || {}, u); };
   h['delete_lampiran']   = function (d, u) { return deleteGeneric_('T_LAMPIRAN', d || {}, u); };
 
-  // T_APPROVAL
-  h['get_approval_list']   = function (d) { return getGenericList_('T_APPROVAL', d || {}); };
-  h['save_approval']       = function (d, u) { return saveGeneric_('T_APPROVAL', d || {}, u); };
-  h['delete_approval']     = function (d, u) { return deleteGeneric_('T_APPROVAL', d || {}, u); };
-  h['verifikasi_approval'] = function (d, u) { return verifikasiApproval_(d || {}, u); };
 
   // Laporan (12) — L1..L12
   h['lap_kategori']      = function (d) { return lapKategori_(d || {}); };
@@ -185,7 +180,6 @@ function buildLocalHandlers_() {
   h['lap_jenis_lokasi']  = function (d) { return lapJenisLokasi_(d || {}); };
   h['lap_detail_utama']  = function (d) { return getUtamaList_(d || {}); };
   h['lap_lampiran']      = function (d) { return lapLampiran_(d || {}); };
-  h['lap_approval']      = function (d) { return lapApproval_(d || {}); };
 
   // Analisa (8) — A1..A8
   h['analisa_distribusi_lokasi']     = function (d) { return analisaDistribusi_(d || {}, 'lokasi_id'); };
@@ -195,11 +189,9 @@ function buildLocalHandlers_() {
   h['analisa_korelasi_jenis_lokasi'] = function (d) { return analisaKorelasi_(d || {}); };
   h['analisa_tren_periode']          = function (d) { return analisaTrenPeriode_(d || {}); };
   h['analisa_umur_data']             = function (d) { return analisaUmurData_(d || {}); };
-  h['analisa_sla_approval']          = function (d) { return analisaSlaApproval_(d || {}); };
 
   // Evaluasi (6) — E1..E6
   h['evaluasi_kelengkapan']       = function (d) { return evaluasiKelengkapan_(d || {}); };
-  h['evaluasi_sla_verifikasi']    = function (d) { return evaluasiSlaVerifikasi_(d || {}); };
   h['evaluasi_kepatuhan_periode'] = function (d) { return evaluasiKepatuhanPeriode_(d || {}); };
   h['evaluasi_kualitas_data']      = function (d) { return evaluasiKualitasData_(d || {}); };
   h['evaluasi_lampiran']          = function (d) { return evaluasiLampiran_(d || {}); };
@@ -312,23 +304,21 @@ function namaPegawaiMap_() {
   return m;
 }
 
-// ==================== §4 DASHBOARD (3 kartu + 4 chart + 3 panel) ====================
+// ==================== §4 DASHBOARD (2 kartu + 4 chart + 2 panel) ====================
 // SEMUA dihitung di server dari data penuh — tidak memakai sample halaman.
 
 function getDashboard_(user) {
   try {
     var utama    = getSheetData_('T_UTAMA');
-    var approval = getSheetData_('T_APPROVAL');
     var lampiran = getSheetData_('T_LAMPIRAN');
     var namaJenis   = namaMap_('M_JENIS', 'nama');
     var namaKategori = namaMap_('M_KATEGORI', 'nama');
     var namaLokasi  = namaMap_('M_LOKASI', 'nama');
     var namaPegawai = namaPegawaiMap_();
 
-    // ---------- 3 KARTU SUMMARY ----------
+    // ---------- 2 KARTU SUMMARY ----------
     var totalUtama = utama.length;
     var totalSelesai = utama.filter(function (r) { return String(r.status).toLowerCase() === 'selesai'; }).length;
-    var approvalMenunggu = approval.filter(function (r) { return String(r.status).toLowerCase() === 'menunggu'; }).length;
 
     // ---------- CHART 1: tren 12 bulan (dari tanggal T_UTAMA) ----------
     var now = new Date();
@@ -379,11 +369,6 @@ function getDashboard_(user) {
 
     var utamaMap = {};
     utama.forEach(function (r) { utamaMap[String(r.id)] = r; });
-    var panelApproval = approval.filter(function (r) { return String(r.status).toLowerCase() === 'menunggu'; }).slice(0, 5).map(function (r) {
-      var u = utamaMap[String(r.utama_id)] || {};
-      return { id: r.id, urutan: r.urutan, utama_id: r.utama_id, kode: u.kode || '', judul: u.judul || '', dibuat: String(r.created_at || '').slice(0, 10) };
-    });
-
     var panelTidakLengkap = utama.filter(function (r) {
       return !String(r.judul || '').trim() || !r.jenis_id || !r.lokasi_id || !r.periode_id || !r.tanggal;
     }).slice(0, 5).map(function (r) {
@@ -399,20 +384,18 @@ function getDashboard_(user) {
     return {
       success: true,
       data: {
-        // 3 kartu
+        // 2 kartu
         summary: {
           totalUtama: totalUtama,
-          totalSelesai: totalSelesai,
-          approvalMenunggu: approvalMenunggu
+          totalSelesai: totalSelesai
         },
         // 4 chart
         chartTren: { labels: trendLabels, counts: trendKeys.map(function (k) { return trendCounts[k]; }) },
         chartJenis: chartJenis,
         chartKategori: chartKategori,
         chartLokasi: chartLokasi,
-        // 3 panel
+        // 2 panel
         panelTerbaru: panelTerbaru,
-        panelApproval: panelApproval,
         panelTidakLengkap: panelTidakLengkap,
         // meta
         role: (user && user.role) || 'viewer',
@@ -691,7 +674,6 @@ function getUtamaDetail_(data) {
     var out = Object.assign({}, row);
     out.items = (getSheetData_('T_ITEM') || []).filter(function (i) { return CoreLib.normStr(i.utama_id) === CoreLib.normStr(row.id); });
     out.lampiran = (getSheetData_('T_LAMPIRAN') || []).filter(function (i) { return CoreLib.normStr(i.utama_id) === CoreLib.normStr(row.id); });
-    out.approvals = (getSheetData_('T_APPROVAL') || []).filter(function (i) { return CoreLib.normStr(i.utama_id) === CoreLib.normStr(row.id); });
     return { success: true, data: out };
   } catch (err) { return { success: false, error: err.message }; }
 }
@@ -718,31 +700,7 @@ function deleteUtama_(data, user) {
   } catch (err) { return { success: false, code: 'BAD_REQUEST', error: err.message }; }
 }
 
-// ==================== §8 T_APPROVAL VERIFIKASI ====================
-
-function verifikasiApproval_(data, user) {
-  try {
-    var isVerifikator = user && ['verifikator', 'admin', 'super'].indexOf(String(user.role).toLowerCase()) !== -1;
-    if (!isVerifikator) return { success: false, code: 'FORBIDDEN', error: 'Hanya verifikator/admin.' };
-    var id = data.id;
-    var status = String(data.status || '').toLowerCase().trim();
-    if (!id) return { success: false, code: 'BAD_REQUEST', error: 'ID wajib.' };
-    if (['disetujui', 'ditolak', 'revisi'].indexOf(status) === -1) {
-      return { success: false, code: 'BAD_REQUEST', error: 'Status harus disetujui/ditolak/revisi.' };
-    }
-    var row = findRecordById_('T_APPROVAL', id);
-    if (!row) return { success: false, code: 'NOT_FOUND', error: 'Tidak ditemukan.' };
-    row.status = status;
-    row.approver_id = (user && user.email) || '';
-    row.tanggal_approve = CoreLib.todayIsoLocal();
-    if (data.catatan !== undefined) row.catatan = data.catatan;
-    var result = CoreLib.apiSave(SPREADSHEET_ID, 'T_APPROVAL', row, user, ALL_SHEET_HEADERS, isRefSheet_, null, 'id');
-    if (!result.success) return { success: false, code: 'BAD_REQUEST', error: result.error };
-    return { success: true, data: result.data };
-  } catch (err) { return { success: false, code: 'BAD_REQUEST', error: err.message }; }
-}
-
-// ==================== §9 LAPORAN (12) ====================
+// ==================== §9 LAPORAN (11) ====================
 // Filter tahun: ambil T_UTAMA dengan tanggal di tahun param (default tahun ini).
 
 function filterTahun_(utama, tahun) {
@@ -973,28 +931,7 @@ function lapLampiran_(params) {
   } catch (err) { return { success: false, error: err.message }; }
 }
 
-// L12 — rekap approval per status + menanti
-function lapApproval_(params) {
-  try {
-    var approval = getSheetData_('T_APPROVAL');
-    var utama = getSheetData_('T_UTAMA');
-    var utamaMap = {};
-    utama.forEach(function (u) { utamaMap[String(u.id)] = u; });
-    var map = {};
-    approval.forEach(function (r) {
-      var k = String(r.status || 'menunggu');
-      map[k] = (map[k] || 0) + 1;
-    });
-    var rekapStatus = Object.keys(map).map(function (k) { return { status: k, jml: map[k] }; });
-    var menanti = approval.filter(function (r) { return String(r.status).toLowerCase() === 'menunggu'; }).slice(0, 20).map(function (r) {
-      var u = utamaMap[String(r.utama_id)] || {};
-      return { id: r.id, urutan: r.urutan, utama_id: r.utama_id, kode: u.kode || '', judul: u.judul || '', dibuat: String(r.created_at || '').slice(0, 10) };
-    });
-    return { success: true, data: { total: approval.length, rekap_status: rekapStatus, menanti: menanti, rekap: menanti } };
-  } catch (err) { return { success: false, error: err.message }; }
-}
-
-// ==================== §10 ANALISA (8) ====================
+// ==================== §10 ANALISA (7) ====================
 
 // A1/A2 — distribusi (lokasi atau jenis) + persen
 function analisaDistribusi_(params, field) {
@@ -1147,49 +1084,7 @@ function analisaUmurData_(params) {
   } catch (err) { return { success: false, error: err.message }; }
 }
 
-// A8 — SLA approval (menanti vs selesai + rata-rata hari + umur menanti)
-function analisaSlaApproval_(params) {
-  try {
-    var approval = getSheetData_('T_APPROVAL');
-    var menunggu = 0, disetujui = 0, ditolak = 0, revisi = 0;
-    var daysSum = 0, daysN = 0;
-    var menantiDetail = [];
-    var today = CoreLib.dateKey10(new Date());
-    approval.forEach(function (r) {
-      var s = String(r.status).toLowerCase();
-      if (s === 'menunggu') {
-        menunggu++;
-        var dibuat = String(r.created_at || '').slice(0, 10);
-        var umur = dibuat ? daysBetween_(dibuat, today) : null;
-        menantiDetail.push({ id: r.id, utama_id: r.utama_id, dibuat: dibuat, umur_hari: umur === null ? '' : umur });
-      } else if (s === 'disetujui') {
-        disetujui++;
-        var created = String(r.created_at || '').slice(0, 10);
-        var approved = CoreLib.dateKey10(r.tanggal_approve);
-        if (created && approved) {
-          var d = daysBetween_(created, approved);
-          if (d !== null && d >= 0) { daysSum += d; daysN++; }
-        }
-      } else if (s === 'ditolak') ditolak++;
-      else if (s === 'revisi') revisi++;
-    });
-    menantiDetail.sort(function (a, b) { return (b.umur_hari || 0) - (a.umur_hari || 0); });
-    return {
-      success: true,
-      data: {
-        total: approval.length,
-        menunggu: menunggu,
-        disetujui: disetujui,
-        ditolak: ditolak,
-        revisi: revisi,
-        rata_rata_hari: daysN ? Math.round(daysSum / daysN) : 0,
-        menanti_detail: menantiDetail.slice(0, 10)
-      }
-    };
-  } catch (err) { return { success: false, error: err.message }; }
-}
-
-// ==================== §11 EVALUASI (5) ====================
+// ==================== §11 EVALUASI (4) ====================
 
 // E1 — kelengkapan field wajib T_UTAMA
 var FIELD_WAJIB_UTAMA_ = [
@@ -1224,48 +1119,6 @@ function evaluasiKelengkapan_(params) {
         tidak_lengkap: tidakLengkap,
         pct_lengkap: total ? Math.round((total - tidakLengkap) / total * 100) : 0,
         rincian: rincian.slice(0, 20)
-      }
-    };
-  } catch (err) { return { success: false, error: err.message }; }
-}
-
-// E2 — SLA verifikasi ([SESUAIKAN] ambang terlambat = 30 hari)
-var SLA_HARI_ = 30;
-
-function evaluasiSlaVerifikasi_(params) {
-  try {
-    var approval = getSheetData_('T_APPROVAL');
-    var utama = getSheetData_('T_UTAMA');
-    var utamaMap = {};
-    utama.forEach(function (u) { utamaMap[String(u.id)] = u; });
-    var today = CoreLib.dateKey10(new Date());
-    var menunggu = 0, terverifikasi = 0, terlambat = 0;
-    var rincian = [];
-    approval.forEach(function (r) {
-      var s = String(r.status).toLowerCase();
-      if (s === 'menunggu') {
-        menunggu++;
-        var dibuat = String(r.created_at || '').slice(0, 10);
-        var umur = dibuat ? daysBetween_(dibuat, today) : null;
-        if (umur !== null && umur > SLA_HARI_) terlambat++;
-        var u = utamaMap[String(r.utama_id)] || {};
-        rincian.push({ id: r.id, urutan: r.urutan, kode: u.kode || '', judul: u.judul || '', dibuat: dibuat, umur_hari: umur === null ? '' : umur, terlambat: umur !== null && umur > SLA_HARI_ });
-      } else if (s === 'disetujui' || s === 'ditolak' || s === 'revisi') {
-        terverifikasi++;
-      }
-    });
-    rincian.sort(function (a, b) { return (b.umur_hari || 0) - (a.umur_hari || 0); });
-    var total = approval.length;
-    return {
-      success: true,
-      data: {
-        total_approval: total,
-        menunggu: menunggu,
-        terverifikasi: terverifikasi,
-        terlambat: terlambat,
-        sla_hari: SLA_HARI_,
-        pct_terverifikasi: total ? Math.round(terverifikasi / total * 100) : 0,
-        rincian_menanti: rincian.slice(0, 10)
       }
     };
   } catch (err) { return { success: false, error: err.message }; }

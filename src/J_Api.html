@@ -13,16 +13,16 @@ window.SK_MAPS = {
     periode: 'lap_periode', pegawai: 'lap_pegawai', status: 'lap_status',
     satuan: 'lap_satuan', jenis_periode: 'lap_jenis_periode',
     jenis_lokasi: 'lap_jenis_lokasi', detail: 'lap_detail_utama',
-    lampiran: 'lap_lampiran', approval: 'lap_approval'
+    lampiran: 'lap_lampiran'
   },
   ANA_AKSI: {
     lokasi: 'analisa_distribusi_lokasi', jenis: 'analisa_distribusi_jenis',
     top_pegawai: 'analisa_top_pegawai', beban_lokasi: 'analisa_beban_lokasi',
     korelasi: 'analisa_korelasi_jenis_lokasi', tren: 'analisa_tren_periode',
-    umur: 'analisa_umur_data', sla: 'analisa_sla_approval'
+    umur: 'analisa_umur_data'
   },
   EVA_AKSI: {
-    kelengkapan: 'evaluasi_kelengkapan', sla: 'evaluasi_sla_verifikasi',
+    kelengkapan: 'evaluasi_kelengkapan',
     periode: 'evaluasi_kepatuhan_periode', kualitas: 'evaluasi_kualitas_data',
     lampiran: 'evaluasi_lampiran'
   },
@@ -58,13 +58,12 @@ window.StarterKitApi = {
         if (res && res.success && res.data) {
           var d = res.data;
           this.dashboardData = {
-            summary: d.summary || { totalUtama: 0, totalSelesai: 0, approvalMenunggu: 0 },
+            summary: d.summary || { totalUtama: 0, totalSelesai: 0 },
             chartTren: d.chartTren || { labels: [], counts: [] },
             chartJenis: d.chartJenis || { labels: [], counts: [] },
             chartKategori: d.chartKategori || { labels: [], counts: [] },
             chartLokasi: d.chartLokasi || { labels: [], counts: [] },
             panelTerbaru: d.panelTerbaru || [],
-            panelApproval: d.panelApproval || [],
             panelTidakLengkap: d.panelTidakLengkap || [],
             role: d.role || 'viewer',
             nama: d.nama || ''
@@ -199,7 +198,7 @@ window.StarterKitApi = {
     // Laporan — 2 tab grid (dimensi 7 + matriks 5)
     async loadLaporanGrup(grup) {
       var g = grup || this.laporanGrupTab || 'dimensi';
-      var tabs = g==='dimensi' ? ['kategori','jenis','lokasi','periode','pegawai','status','satuan'] : ['jenis_periode','jenis_lokasi','detail','lampiran','approval'];
+      var tabs = g==='dimensi' ? ['kategori','jenis','lokasi','periode','pegawai','status','satuan'] : ['jenis_periode','jenis_lokasi','detail','lampiran'];
       this.lapLoading = true;
       try {
         var promises = tabs.map(async (t) => {
@@ -262,7 +261,7 @@ window.StarterKitApi = {
       } catch (e) { this.showToast('Error koneksi evaluasi.', 'error'); }
       finally { this.evaLoading = false; }
     },
-    // Evaluasi — grid 1 halaman (5 sekaligus)
+    // Evaluasi — grid 1 halaman (4 sekaligus)
     async loadEvaluasiGrid() {
       var tabs = Object.keys(window.SK_MAPS.EVA_AKSI);
       this.evaLoading = true;

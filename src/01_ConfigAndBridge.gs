@@ -14,7 +14,7 @@
 //   v2.14.0-tematik — ADOPSI SUMBER 18 SHEET (keputusan user 2026-09-22):
 //             5 master = 5 dimensi laporan: M_KATEGORI (hierarki), M_JENIS,
 //             M_PERIODE, M_SATUAN, M_LOKASI.
-//             4 tabel inti: T_UTAMA, T_ITEM, T_LAMPIRAN, T_APPROVAL.
+//             3 tabel inti: T_UTAMA, T_ITEM, T_LAMPIRAN.
 //             BUANG: M_REFERENSI (filler), T_LOGBOOK (AUDIT_LOGS CoreLib
 //             sudah cukup), T_JADWAL & T_REKAP (rekap = fungsi laporan,
 //             bukan sheet). JADWAL/LOGBOOK tetap tersedia opsional —
@@ -50,7 +50,6 @@
 //     T_UTAMA           — 1 baris = 1 kejadian bisnis
 //     T_ITEM            — detail per T_UTAMA (N)
 //     T_LAMPIRAN        — file/dokumen bukti (N)
-//     T_APPROVAL        — alur verifikasi
 //
 // Opsional (tambahkan bila app membutuhkannya):
 //   T_JADWAL   — deadline/kalender per kejadian
@@ -222,7 +221,6 @@ var LOCAL_SHEETS = {
   T_ATRIBUT:       'T_ATRIBUT',
   T_LAMPIRAN:      'T_LAMPIRAN',
   T_LOGBOOK:       'T_LOGBOOK',
-  T_APPROVAL:      'T_APPROVAL',
   T_ITEM:          'T_ITEM', // legacy — tetap ada
   AUDIT_LOGS:      'AUDIT_LOGS'
 };
@@ -246,13 +244,11 @@ var LOCAL_ID_PREFIX_ = {
   'T_ATRIBUT':       'atr',
   'T_LAMPIRAN':      'tl',
   'T_LOGBOOK':       'tlb',
-  'T_APPROVAL':      'apr',
   'T_ITEM':          'itm',
   'AUDIT_LOGS':      'log'
 };
 
 // Alias SIMPEG
-var SHEET_ALIAS_ = { 'T_APROVAL': 'T_APPROVAL' };
 var SIMPEG_SHEET_ALIAS_ = {
   'PEGAWAI': 'PEGAWAI', 'M_PEGAWAI': 'PEGAWAI', 'pegawai': 'PEGAWAI',
   'JABATAN': 'JABATAN', 'M_JABATAN': 'JABATAN', 'jabatan': 'JABATAN',
@@ -280,7 +276,6 @@ var ALL_SHEET_HEADERS = {
   T_ATRIBUT:       ['id', 'kegiatan_id', 'dimensi_id', 'nilai_id', 'nilai_text', 'nilai_number', 'nilai_date', 'keterangan', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LAMPIRAN:      ['id', 'kegiatan_id', 'nama_file', 'tipe', 'file_url', 'deskripsi', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_LOGBOOK:       ['id', 'tanggal', 'pegawai_id', 'kegiatan_id', 'uraian', 'status_aktif', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
-  T_APPROVAL:      ['id', 'utama_id', 'approver_id', 'status', 'catatan', 'tanggal_approve', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   T_ITEM:          ['id', 'utama_id', 'uraian', 'nilai', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'deleted_at'],
   AUDIT_LOGS:      ['id', 'timestamp', 'user', 'aksi', 'tabel', 'record_id', 'data_lama', 'data_baru', 'keterangan', 'status'],
   ZZ_TEST_CRUD:    ['id', 'laporan_id', 'nama', 'no_hp', 'catatan_baru']
@@ -470,7 +465,6 @@ function findRecordById_(sheetName, id) {
 
 // ==================== §6 PRE-SAVE HOOK (P1 + P2) ====================
 // P1: id kosong → generate (cegah PK jatuh ke kolom lain = data loss).
-// P2: kunci field verifikasi untuk T_APPROVAL (hanya verifikator+).
 
 function localPreSaveHook_(canonical, record, actor) {
   var C = String(canonical || '').toUpperCase();
@@ -480,19 +474,6 @@ function localPreSaveHook_(canonical, record, actor) {
     var pfx = LOCAL_ID_PREFIX_[C]
            || C.replace(/^M_/, '').replace(/^T_/, '').substring(0, 3).toLowerCase();
     record.id = pfx + '-' + String(Date.now()).slice(-6);
-  }
-
-  // P2: kunci field status verifikasi — hanya role verifikator+ yang boleh ubah
-  if (C === 'T_APPROVAL') {
-    var actorRole = String((actor && actor.role) || 'viewer').toLowerCase();
-    var isVerifikator = ['verifikator', 'admin', 'super'].indexOf(actorRole) !== -1;
-
-    if (!isVerifikator) {
-      var old = findRecordById_(canonical, record.id);
-      record.status          = old ? (old.status          || 'menunggu') : 'menunggu';
-      record.approver_id     = old ? (old.approver_id     || '')         : '';
-      record.tanggal_approve = old ? (old.tanggal_approve || '')         : '';
-    }
   }
 
   // P3: Workflow guard (C4) — cegah loncat status ilegal via validateTransition
@@ -533,8 +514,8 @@ function localPreSaveHook_(canonical, record, actor) {
 // actionLevels fail-closed: aksi tak dikenal = 'viewer' (default dispatcher).
 // Total 95+ handler (v2.14.0-tematik):
 //   config 6 + self 2 + dashboard 2 + simpeg 4 + master 15 + utama 4 +
-//   item 4 + lampiran 3 + approval 4 + laporan 12 +
-//   analisa 8 + evaluasi 5 + generic 2 + publik 3 + sistem 1
+//   item 4 + lampiran 3 + laporan 11 +
+//   analisa 7 + evaluasi 4 + generic 2 + publik 3 + sistem 1
 
 function getAppConfig_() {
   return {
@@ -619,12 +600,6 @@ function getAppConfig_() {
       'save_lampiran':        'user',
       'delete_lampiran':      'user',
 
-      // T_APPROVAL — 4
-      'get_approval_list':    'viewer',
-      'save_approval':        'user',
-      'delete_approval':      'user',
-      'verifikasi_approval':  'verifikator',
-
       // Laporan (12) — L1..L12
       'lap_kategori':        'viewer',
       'lap_jenis':           'viewer',
@@ -637,7 +612,6 @@ function getAppConfig_() {
       'lap_jenis_lokasi':    'viewer',
       'lap_detail_utama':    'viewer',
       'lap_lampiran':        'viewer',
-      'lap_approval':        'viewer',
 
       // Analisa (8) — A1..A8
       'analisa_distribusi_lokasi':     'viewer',
@@ -647,11 +621,9 @@ function getAppConfig_() {
       'analisa_korelasi_jenis_lokasi': 'viewer',
       'analisa_tren_periode':          'viewer',
       'analisa_umur_data':             'viewer',
-      'analisa_sla_approval':          'viewer',
 
       // Evaluasi (6) — E1..E6
       'evaluasi_kelengkapan':       'viewer',
-      'evaluasi_sla_verifikasi':    'viewer',
       'evaluasi_kepatuhan_periode': 'viewer',
       'evaluasi_kualitas_data':      'viewer',
       'evaluasi_lampiran':          'viewer',

@@ -2,7 +2,7 @@
      SI-DATA - V_Laporan.html (v2.14.0-tematik — grid 2 tab: dimensi 7 + matriks 5)
      1 baris kosong antar laporan (space-y-6), 12 laporan berurutan dalam 1 halaman per tab
      Grup 1 Dimensi: L1-L7 (kategori, jenis, lokasi, periode, pegawai, status, satuan)
-     Grup 2 Matriks: L8-L12 (jenis×tahun, jenis×lokasi, detail, lampiran, approval)
+     Grup 2 Matriks: L8-L11 (jenis×tahun, jenis×lokasi, detail, lampiran)
      ============================================================ -->
 <section v-if="currentPage === 'laporan'" class="space-y-6 animate-fade-in px-4 sm:px-6 lg:px-6">
 
@@ -111,15 +111,6 @@
       <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[220px]">Transaksi</th><th class="text-center py-2 px-2 min-w-[80px]">Jml</th><th class="text-left py-2 px-2 min-w-[240px]">File</th></tr></thead><tbody class="divide-y"><tr v-for="r in lapData['lampiran'].rekap" :key="r.kode"><td class="py-2 px-2"><div class="font-bold">{{ r.kode }}</div><div class="text-[10px] text-slate-400">{{ r.judul }}</div></td><td class="py-2 px-2 text-center">{{ r.jml_lampiran }}</td><td class="py-2 px-2 text-slate-400">{{ (r.lampiran||[]).map(x=>x.nama_file).join(', ') || '—' }}</td></tr></tbody></table></div>
     </div>
 
-    <!-- L12 Approval — rekap status + menanti -->
-    <div v-if="lapData['approval']" class="card space-y-4 lg:col-span-2">
-      <h3 class="font-bold"><i class="fa-solid fa-clipboard-check text-sky-500"></i> L12 — Rekap Approval</h3>
-      <div v-if="(lapData['approval'].rekap_status||[]).length" class="flex gap-2 flex-wrap text-xs">
-        <span v-for="s in lapData['approval'].rekap_status" :key="s.status" class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded"><app-badge :label="s.status" :status="s.status"></app-badge> {{ s.jml }}</span>
-      </div>
-      <div v-if="!(lapData['approval'].rekap||[]).length && !(lapData['approval'].menanti||[]).length" class="text-center py-4 text-xs text-slate-400">Tidak ada approval menunggu</div>
-      <div v-else class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2 min-w-[80px]">Langkah</th><th class="text-left py-2 px-2 min-w-[220px]">Transaksi</th><th class="text-left py-2 px-2 min-w-[100px]">Sejak</th></tr></thead><tbody class="divide-y"><tr v-for="r in (lapData['approval'].rekap || lapData['approval'].menanti)" :key="r.id"><td class="py-2 px-2">Langkah {{ r.urutan || 1 }}</td><td class="py-2 px-2">{{ r.kode }} — {{ r.judul || '—' }}</td><td class="py-2 px-2">{{ fmtTgl(r.dibuat) }}</td></tr></tbody></table></div>
-    </div>
 
   </div>
 

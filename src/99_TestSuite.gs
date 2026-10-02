@@ -219,7 +219,7 @@ function testDomainUtama() {
   if (savedId) {
     try {
       var r6 = getUtamaDetail_({ id: savedId });
-      _assert_(results, 'UTM.6 detail + relasi (items/lampiran/approvals)', r6.success && Array.isArray(r6.data.items) && Array.isArray(r6.data.lampiran) && Array.isArray(r6.data.approvals), r6.error || '');
+      _assert_(results, 'UTM.6 detail + relasi (items/lampiran)', r6.success && Array.isArray(r6.data.items) && Array.isArray(r6.data.lampiran), r6.error || '');
     } catch (e) { _assert_(results, 'UTM.6', false, e.message); }
     try { softDeleteRecord_('T_UTAMA', savedId, TEST_USER_USER_); } catch (e) {}
   }
@@ -247,7 +247,6 @@ function testLocalPreSaveHook() {
   var results = [];
   try { var r1 = localPreSaveHook_('M_JENIS', {}, TEST_USER_USER_); _assert_(results, 'P1.1 jen- prefix', r1 && r1.record && /^jen\-/.test(r1.record.id), ''); } catch (e) { _assert_(results, 'P1.1', false, e.message); }
   try { var r3 = localPreSaveHook_('M_PERIODE', {}, TEST_USER_USER_); _assert_(results, 'P1.3 per- prefix', r3 && r3.record && /^per\-/.test(r3.record.id), ''); } catch (e) { _assert_(results, 'P1.3', false, e.message); }
-  try { var r4 = localPreSaveHook_('T_APPROVAL', { id: 'apr-test-' + Date.now() }, TEST_USER_USER_); _assert_(results, 'P2.1 non-verifikator → menunggu', r4 && r4.record && r4.record.status === 'menunggu', ''); } catch (e) { _assert_(results, 'P2.1', false, e.message); }
   return results;
 }
 
@@ -267,22 +266,22 @@ function testInitDatabaseSchema() {
   return results;
 }
 
-// ---------- SMOKE PIRAMIDA (12L + 8A + 5E) ----------
+// ---------- SMOKE PIRAMIDA (11L + 7A + 4E) ----------
 function testSmokePiramida() {
   assertEditorOnly_();
-  Logger.log(''); Logger.log('--- SMOKE PIRAMIDA 12L + 8A + 5E ---');
+  Logger.log(''); Logger.log('--- SMOKE PIRAMIDA 11L + 7A + 4E ---');
   var results = [];
   var tahun = String(new Date().getFullYear());
   var lap = [
     'lap_kategori', 'lap_jenis', 'lap_lokasi', 'lap_periode', 'lap_pegawai', 'lap_status',
-    'lap_satuan', 'lap_jenis_periode', 'lap_jenis_lokasi', 'lap_detail_utama', 'lap_lampiran', 'lap_approval'
+    'lap_satuan', 'lap_jenis_periode', 'lap_jenis_lokasi', 'lap_detail_utama', 'lap_lampiran'
   ];
   var ana = [
     'analisa_distribusi_lokasi', 'analisa_distribusi_jenis', 'analisa_top_pegawai', 'analisa_beban_lokasi',
-    'analisa_korelasi_jenis_lokasi', 'analisa_tren_periode', 'analisa_umur_data', 'analisa_sla_approval'
+    'analisa_korelasi_jenis_lokasi', 'analisa_tren_periode', 'analisa_umur_data'
   ];
   var eva = [
-    'evaluasi_kelengkapan', 'evaluasi_sla_verifikasi', 'evaluasi_kepatuhan_periode',
+    'evaluasi_kelengkapan', 'evaluasi_kepatuhan_periode',
     'evaluasi_kualitas_data', 'evaluasi_lampiran'
   ];
   var okLap = 0, okAna = 0, okEva = 0;
@@ -318,18 +317,16 @@ function testDashboard444() {
   try {
     var r = getDashboard_(TEST_USER_ADMIN_);
     var d = (r && r.success) ? r.data : null;
-    _assert_(results, 'DASH.1 3 kartu summary', !!d && !!d.summary
+    _assert_(results, 'DASH.1 2 kartu summary', !!d && !!d.summary
       && typeof d.summary.totalUtama === 'number'
-      && typeof d.summary.totalSelesai === 'number'
-      && typeof d.summary.approvalMenunggu === 'number', (r && r.error) || '');
+      && typeof d.summary.totalSelesai === 'number', (r && r.error) || '');
     _assert_(results, 'DASH.2 4 chart (12 titik tren)', !!d
       && d.chartTren && d.chartTren.labels.length === 12 && d.chartTren.counts.length === 12
       && d.chartJenis && Array.isArray(d.chartJenis.labels)
       && d.chartKategori && Array.isArray(d.chartKategori.labels)
       && d.chartLokasi && Array.isArray(d.chartLokasi.labels), '');
-    _assert_(results, 'DASH.3 3 panel (≤5 baris)', !!d
+    _assert_(results, 'DASH.3 2 panel (≤5 baris)', !!d
       && Array.isArray(d.panelTerbaru) && d.panelTerbaru.length <= 5
-      && Array.isArray(d.panelApproval) && d.panelApproval.length <= 5
       && Array.isArray(d.panelTidakLengkap) && d.panelTidakLengkap.length <= 5, '');
   } catch (e) { _assert_(results, 'DASH', false, e.message); }
   return results;

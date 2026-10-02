@@ -1,6 +1,6 @@
 <!-- ============================================================
      STARTER-KIT - V_Dashboard.html (v2.14.0-tematik — ukuran sedang: 4+4+4)
-     3 kartu summary + 4 chart + 3 panel — SEMUA data dari server
+     2 kartu summary + 4 chart + 2 panel — SEMUA data dari server
      (get_dashboard_) — tidak ada grafik berbasis sample halaman.
      ============================================================ -->
 <section v-if="currentPage === 'dashboard'" class="space-y-6 animate-fade-in">
@@ -11,7 +11,7 @@
         <i class="fa-solid fa-gauge-high text-sky-600 dark:text-sky-400"></i> Dashboard
       </h2>
       <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-        3 kartu summary · 4 chart · 3 panel — dihitung server dari data penuh
+        2 kartu summary · 4 chart · 2 panel — dihitung server dari data penuh
       </p>
     </div>
     <button class="btn btn-ghost" @click="loadAll()" :disabled="utamaLoading || masterLoading">
@@ -19,11 +19,10 @@
     </button>
   </div>
 
-  <!-- 3 KARTU SUMMARY -->
+  <!-- 2 KARTU SUMMARY -->
   <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
     <app-stat-card title="Total Transaksi" :value="dashboardData.summary.totalUtama || 0" icon="fa-solid fa-database" color="sky" subtext="T_UTAMA"></app-stat-card>
     <app-stat-card title="Selesai" :value="dashboardData.summary.totalSelesai || 0" icon="fa-solid fa-check" color="emerald" subtext="status tuntas"></app-stat-card>
-    <app-stat-card title="Menunggu Verifikasi" :value="dashboardData.summary.approvalMenunggu || 0" icon="fa-solid fa-hourglass-half" color="amber" subtext="T_APPROVAL"></app-stat-card>
   </div>
 
   <!-- 4 CHART — hanya render saat di dashboard & dashboardReady agar tidak error getContext saat di tab lain — matikan animasi untuk tablet -->
@@ -46,7 +45,7 @@
     </div>
   </div>
 
-  <!-- 3 PANEL -->
+  <!-- 2 PANEL -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
     <!-- Panel 1: Transaksi terbaru -->
@@ -76,34 +75,7 @@
       </div>
     </div>
 
-    <!-- Panel 2: Menunggu verifikasi -->
-    <div class="card overflow-hidden !p-0">
-      <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-        <i class="fa-solid fa-hourglass-half text-amber-500"></i>
-        <h3 class="font-bold text-slate-700 dark:text-slate-200 text-sm">Menunggu Verifikasi</h3>
-      </div>
-      <div v-if="!dashboardData.panelApproval.length" class="px-4 py-6 text-xs text-slate-400 text-center">Tidak ada yang menunggu. ✅</div>
-      <div v-else class="table-scroll">
-        <table class="w-full text-xs">
-          <thead class="border-b bg-slate-50 dark:bg-slate-800/50">
-            <tr>
-              <th class="text-left py-2 px-3 min-w-[100px]">Langkah</th>
-              <th class="text-left py-2 px-3 min-w-[220px]">Transaksi</th>
-              <th class="text-left py-2 px-3 min-w-[110px]">Sejak</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y">
-            <tr v-for="r in dashboardData.panelApproval" :key="r.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer" @click="currentPage='utama'">
-              <td class="py-2 px-3 font-bold">Langkah {{ r.urutan || 1 }}</td>
-              <td class="py-2 px-3"><div class="font-semibold truncate max-w-[220px]">{{ r.kode }} — {{ r.judul || '—' }}</div></td>
-              <td class="py-2 px-3 text-slate-400">{{ fmtTgl(r.dibuat) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Panel 3: Data tidak lengkap (E1) -->
+    <!-- Panel 2: Data tidak lengkap (E1) -->
     <div class="card overflow-hidden !p-0">
       <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
         <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>

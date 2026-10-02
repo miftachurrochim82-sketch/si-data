@@ -8,16 +8,16 @@
     <h2 class="text-2xl font-bold tracking-tight flex items-center gap-2 text-slate-800 dark:text-white">
       <i class="fa-solid fa-chart-line text-sky-600 dark:text-sky-400"></i> Analisa
     </h2>
-    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">8 analisa — grid 1 halaman (2 kolom di desktop), tanpa tab</p>
+    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">7 analisa — grid 1 halaman (2 kolom di desktop), tanpa tab</p>
   </div>
 
   <div class="flex items-end gap-2">
     <div class="w-28"><label class="filter-label">Tahun</label><select class="input w-full" v-model="anaTahun"><option v-for="y in tahunOptions" :key="y" :value="y">{{ y }}</option></select></div>
     <button class="btn btn-primary" @click="loadAnalisaGrid()" :disabled="anaLoading"><i class="fa-solid fa-rotate"></i> Tampilkan 8 Analisa</button>
-    <span v-if="anaLoading" class="text-xs text-slate-400">Memuat 8 analisa...</span>
+    <span v-if="anaLoading" class="text-xs text-slate-400">Memuat 7 analisa...</span>
     <span v-else-if="anaGridLoaded" class="text-xs text-emerald-600">✓ 8 dimuat</span>
   </div>
-  <div class="text-xs text-slate-400">Filter tahun untuk A1-A5 (A6-A8 semua data)</div>
+  <div class="text-xs text-slate-400">Filter tahun untuk A1-A5 (A6-A7 semua data)</div>
 
   <div v-if="anaLoading && !anaGridLoaded" class="card"><app-skeleton type="table"></app-skeleton></div>
 
@@ -68,15 +68,6 @@
         <app-stat-card title="Total" :value="anaData['umur'].total" icon="fa-solid fa-hourglass" color="sky"></app-stat-card>
         <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Rentang</th><th class="text-center py-2 px-2">Jumlah</th></tr></thead><tbody class="divide-y"><tr v-for="b in anaData['umur'].buckets" :key="b.label"><td class="py-2 px-2">{{ b.label }}</td><td class="py-2 px-2 text-center font-bold">{{ b.jml }}</td></tr></tbody></table></div>
       </div>
-      <div v-if="anaData['sla']" class="card space-y-3">
-        <h3 class="font-bold text-sm"><i class="fa-solid fa-stopwatch text-sky-500"></i> A8 — SLA Approval</h3>
-        <div class="grid grid-cols-2 gap-2">
-          <app-stat-card title="Menunggu" :value="anaData['sla'].menunggu" icon="fa-solid fa-hourglass-half" color="amber"></app-stat-card>
-          <app-stat-card title="Rata-rata" :value="anaData['sla'].rata_rata_hari + ' hr'" icon="fa-solid fa-stopwatch" color="sky"></app-stat-card>
-        </div>
-        <div class="table-scroll"><table class="w-full text-xs"><thead class="text-slate-500 border-b"><tr><th class="text-left py-2 px-2">Approval</th><th class="text-left py-2 px-2">Sejak</th><th class="text-right py-2 px-2">Umur</th></tr></thead><tbody class="divide-y"><tr v-for="r in anaData['sla'].menanti_detail" :key="r.id"><td class="py-2 px-2 font-mono text-[11px]">{{ r.id }}</td><td class="py-2 px-2">{{ fmtTgl(r.dibuat) }}</td><td class="py-2 px-2 text-right">{{ r.umur_hari === '' ? '—' : r.umur_hari + ' hr' }}</td></tr></tbody></table></div>
-      </div>
-    </div>
 
   </div>
 

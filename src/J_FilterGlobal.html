@@ -237,7 +237,7 @@
       },
       exportDashboardCsv: function(){
         var s = this.dashboardData && this.dashboardData.summary || {};
-        var rows = [{ metric:'Total Transaksi', value: s.totalUtama||0 }, {metric:'Selesai', value: s.totalSelesai||0}, {metric:'Menunggu Verifikasi', value: s.approvalMenunggu||0}];
+        var rows = [{ metric:'Total Transaksi', value: s.totalUtama||0 }, {metric:'Selesai', value: s.totalSelesai||0}];
         // tambah top pegawai jika ada
         (this.dashboardData.topPegawai||[]).forEach(function(p, i){ rows.push({metric: 'Top '+(i+1)+' '+p.nama, value: p.jumlah}); });
         this._downloadCsv('si-data_dashboard_' + (this.filterGlobal.tahun||'semua') + '.csv', rows, ['metric','value']);

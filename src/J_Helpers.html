@@ -41,14 +41,6 @@ window.StarterKitHelpers = {
       return 'proses';
     },
 
-    badgeStatusApproval(status) {
-      var s = String(status || '').toLowerCase().trim();
-      if (s === 'disetujui' || s === 'selesai') return 'disetujui';
-      if (s === 'ditolak' || s === 'batal') return 'ditolak';
-      if (s === 'revisi') return 'revisi';
-      if (s === 'menunggu') return 'menunggu';
-      return 'menunggu';
-    },
 
     // ==================== LOOKUP NAMA (standar: nama, bukan ID) ====================
     _lookup(list, key, fields) {
