@@ -16,6 +16,7 @@ Tidak ada kerangka uji otomatis. Verifikasi dilakukan dengan **pemeriksaan stati
 | S3 | Setiap aksi punya level | Bandingkan kunci `h['...']` dengan `actionLevels` |
 | S4 | Tidak ada helper yatim | Fungsi `^function (\w+_)\s*\(` yang muncul ≤1 kali |
 | S5 | Tidak ada aksi hilang | Semua aksi di `callServer` + `SK_MAPS` punya handler |
+| S6 | Tidak ada berkas kosong | `find src -size -60c` — sisa cangkang setelah isi berkas dihapus |
 
 Hasil per 2026-10-02: **S1–S5 semuanya lulus.** 59 aksi, 61 entri `actionLevels`
 (2 selisih = `exchange_platform_ticket` dan `logout`, milik CoreLib — normal).
@@ -59,7 +60,7 @@ Hasil per 2026-10-02: **S1–S5 semuanya lulus.** 59 aksi, 61 entri `actionLevel
 | G05 | Alur approval yang tak pernah dipakai | `fdcd2e2` |
 | G06 | 36 aksi mati + 21 helper yatim (346 baris) | `14b8093` |
 
-Dampak kumulatif: **32 → 28 berkas**, **8.361 → 6.021 baris (−28%)**,
+Dampak kumulatif: **32 → 27 berkas**, **8.361 → 6.021 baris (−28%)**,
 **117 → 59 aksi**, **2 → 1 permukaan API**, **39 → 0 fungsi tanpa penjaga**.
 
 ### B.2 Gap terbuka

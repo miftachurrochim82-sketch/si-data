@@ -215,7 +215,7 @@ Bagian ini menggantikan seluruh angka di atas. Angka di atas adalah riwayat per 
 
 | | Awal audit | Sekarang | Selisih |
 |---|---|---|---|
-| Berkas `src/` | 32 | **28** | −4 |
+| Berkas `src/` | 32 | **27** | −5 |
 | Baris | 8.361 | **6.021** | **−2.340 (−28%)** |
 | Aksi dispatch | 117 | **59** | −58 |
 | Permukaan API | 2 | **1** | −1 |
