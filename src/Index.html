@@ -30,19 +30,17 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@3.5.42/dist/vue.global.prod.js"></script>
 
   <!--
-    Shared CDN Pemkab Trenggalek v2.9.2 — 10 FILE (1 CSS + 9 JS) & 31 OPSI (2026-09-22)
-    ATURAN: pin versi eksplisit @v2.9.2 — 1 CSS + 9 JS (10 file) · pakai .min · mix sesuai kebutuhan:
-      Sederhana (5 file): common + core + layout + ui + forms
-      Lengkap (10 file (1 CSS + 9 JS)): + data + charts + workflow (+ components/modules kompatibilitas)
-    Chart/xlsx/jspdf on-demand via AppCore.loadLib().
+    Shared CDN Pemkab Trenggalek — pin eksplisit @v3.0.1
+    DUA berkas saja: frontend/app.min.css + frontend/app.min.js (11 komponen).
+    Sebelum v3.0.0 ada 10 berkas a-la-carte; tidak ada app yang memilih
+    sebagian, jadi digabung. Chart/xlsx/jspdf on-demand via AppCore.loadLib().
 
-    Starter-kit v2.14.0-tematik (2026-09-28) — CDN v2.9.2 + CoreLib v2.4.0 A+B:
-    - Skema 10 sheet baseline (FLEKSIBEL, 5M+5T) + 2 opsional (JADWAL/LOGBOOK)
-    - 86 handler · piramida 12L+8A+6E+4R (=30) + dashboard 4+4+4 (server-side)
-    - CoreLib v2.4.0 A+B: WIB utils + assertOwnership/validateTransition + periode/hariKerja + findUnique + tema
-    - Tema Opsi B: <?!= getThemeCss() ?> + <app-theme-picker> di Pengaturan (6 preset)
-    - Menu "Saya": filterScope Saya/Semua via getMyScope() + ownerField
-    - UIUX v2: nama bukan ID, tahun select, v-can, CSS ter-compile, icon unik
+    si-data — CDN v3.0.1 + CoreLib pin 17:
+    - 9 sheet bisnis + master fungsi/dimensi (atribut dinamis per fungsi)
+    - 59 aksi - piramida 11L + 7A + 4E + dashboard 2 kartu/4 chart/2 panel
+    - Peta, RTL, dan Approval sudah dibuang (lihat AUDIT_SIDATA.md)
+    - Tema: <?!= getThemeCss() ?> + <app-theme-picker> di Pengaturan
+    - UIUX v2: nama bukan ID, tahun select, v-can, CSS ter-compile
   -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/miftachurrochim82-sketch/frontend-cdn@v3.0.1/frontend/app.min.css">
 
@@ -92,7 +90,7 @@
                :is-processing="isProcessing"
                :error-message="errorMessage"
                :app-title="appTitle"
-               app-subtitle="Satu Data — 5 master + 5 tabel + piramida 12/8/6/4"
+               app-subtitle="Satu Data — pencatatan &amp; pelaporan kegiatan"
                instansi="Pemkab Trenggalek"
                @login="goToPlatform">
     </app-login>
